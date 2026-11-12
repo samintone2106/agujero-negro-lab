@@ -170,7 +170,11 @@ class GenesisSound {
             if (this.realRec !== rec || !this.active) { rec.el.pause(); return; }
             if (rec.gain) rec.gain.gain.setTargetAtTime(0.32, this.ctx.currentTime, 1.5);
             else rec.el.volume = 0.3;
-        }).catch(() => { rec.failed = true; });
+        }).catch((err) => {
+            // pausa antes de arrancar o bloqueo de autoplay: no es un archivo roto
+            if (err && (err.name === 'AbortError' || err.name === 'NotAllowedError')) return;
+            rec.failed = true;
+        });
     }
 
     // Llamado cada cuadro con el estado de la simulación.
@@ -187,7 +191,7 @@ class GenesisSound {
     }
 
     setPaused(p) {
-        if (!this.master) return;
+        if (!this.master || !this.active) return;
         const t = this.ctx.currentTime;
         this.master.gain.setTargetAtTime(p ? 0 : 0.9, t, 0.15);
         if (this.realRec) p ? this.realRec.el.pause() : this.realRec.el.play().catch(() => {});
@@ -200,6 +204,7 @@ class GenesisSound {
             const rec = this.realRec;
             if (rec.gain) rec.gain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.3);
             setTimeout(() => { if (this.realRec !== rec || !this.active) rec.el.pause(); }, immediate ? 0 : 1200);
+            this.realRec = null;
         }
         if (!this.active) return;
         this.active = false;
