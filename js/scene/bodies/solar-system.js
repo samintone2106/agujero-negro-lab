@@ -30,7 +30,8 @@ targetGroups.sun.add(prominenceBillboard);
 
 const mercuryMesh = createPhotorealisticPlanet('mercury', 2.1, false);
 const venusMesh = createPhotorealisticPlanet('venus', 2.45, true);
-const earthMesh = createPhotorealisticPlanet('earth', 2.5, true);
+const earthCloudShadow = { map: { value: null }, shift: { value: 0 } };
+const earthMesh = createPhotorealisticPlanet('earth', 2.5, true, { cloudShadow: earthCloudShadow });
 
 const earthCloudsMat = new THREE.MeshLambertMaterial({
     transparent: true,
@@ -39,8 +40,10 @@ const earthCloudsMat = new THREE.MeshLambertMaterial({
     depthWrite: false
 });
 loadTextureWithFallback([ASTRO_TARGETS.earth.cloudsUrl], (cloudTex) => {
+    cloudTex.wrapS = THREE.RepeatWrapping;
     earthCloudsMat.map = cloudTex;
     earthCloudsMat.needsUpdate = true;
+    earthCloudShadow.map.value = cloudTex;
 });
 const earthCloudsMesh = new THREE.Mesh(new THREE.SphereGeometry(2.525, 64, 64), earthCloudsMat);
 targetGroups.earth.add(earthCloudsMesh);

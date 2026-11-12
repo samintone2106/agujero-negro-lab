@@ -17,31 +17,147 @@ const atmosphereFragmentShader = `
     }
 `;
 
-// Adds close-range surface detail and (optionally) city lights on the night side.
+// Superficie viva: detalle y relieve al acercarse, cráteres, tormentas de polvo,
+// bandas de nubes que fluyen, vórtices (Gran Mancha Roja, hexágono de Saturno),
+// sombra de nubes y luces nocturnas. Cada opción se compila solo si se usa.
+const DERIV_OK = '(defined(GL_OES_standard_derivatives) || __VERSION__ >= 300)';
 function enhancePlanetMaterial(mat, opts = {}) {
-    const detailStrength = (opts.detail ?? 0.32).toFixed(3);
-    mat.customProgramCacheKey = () => `planet-${detailStrength}-${opts.night ? 1 : 0}`;
+    const o = {
+        detail: opts.detail ?? 0.32, relief: opts.relief ?? 0, craters: opts.craters ?? 0,
+        night: !!opts.night, dust: !!opts.dust, bands: opts.bands ?? 0, spot: opts.spot || null,
+        hexagon: !!opts.hexagon, cloudShadow: opts.cloudShadow || null, tint: opts.tint || null, gamma: opts.gamma ?? 1
+    };
+    const f = (v) => Number(v).toFixed(4);
+    const cacheKey = 'planet-' + JSON.stringify({ ...o, cloudShadow: !!o.cloudShadow });
+    mat.customProgramCacheKey = () => cacheKey;
     mat.onBeforeCompile = (shader) => {
         shader.uniforms.uSunDirView = sharedUniforms.uSunDirView;
         shader.uniforms.uDetail = sharedUniforms.uDetail;
+        shader.uniforms.uTime = sharedUniforms.uTime;
+        if (o.cloudShadow) {
+            shader.uniforms.uCloudMap = o.cloudShadow.map;
+            shader.uniforms.uCloudShift = o.cloudShadow.shift;
+        }
         shader.fragmentShader = `
             uniform vec3 uSunDirView;
             uniform float uDetail;
+            uniform float uTime;
+            ${o.cloudShadow ? 'uniform sampler2D uCloudMap; uniform float uCloudShift;' : ''}
             float dHash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
             float dNoise(vec2 p) {
                 vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
                 return mix(mix(dHash(i), dHash(i + vec2(1.0, 0.0)), f.x), mix(dHash(i + vec2(0.0, 1.0)), dHash(i + vec2(1.0, 1.0)), f.x), f.y);
             }
             float dFbm(vec2 p) { float v = 0.0; float a = 0.5; for (int i = 0; i < 4; i++) { v += a * dNoise(p); p *= 2.1; a *= 0.5; } return v; }
-        ` + shader.fragmentShader;
-        shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>', `
-            #include <map_fragment>
-            #ifdef USE_MAP
-            float detailN = dFbm(vUv * vec2(320.0, 160.0)) * 0.6 + dFbm(vUv * vec2(1400.0, 700.0)) * 0.4;
-            diffuseColor.rgb *= mix(1.0, 0.72 + detailN * 0.56, uDetail * ${detailStrength});
+            // cráter: cuenco hundido con borde levantado; no todas las celdas tienen uno
+            float dCraters(vec2 uv, vec2 scale) {
+                vec2 g = uv * scale; vec2 ci = floor(g); vec2 cf = fract(g);
+                if (dHash(ci + 1.3) < 0.62) return 0.0;
+                float r = 0.12 + dHash(ci + 5.1) * 0.3;
+                vec2 c = 0.25 + vec2(dHash(ci + 3.1), dHash(ci + 7.7)) * 0.5;
+                float d = length((cf - c) * vec2(1.0, 2.0)) / r;
+                return -0.7 * (1.0 - smoothstep(0.0, 1.0, d)) + 0.4 * exp(-pow((d - 1.0) * 4.5, 2.0));
+            }
+            // rota la uv alrededor de un centro: remolino que decae con la distancia
+            vec2 dSwirl(vec2 uv, vec2 c, vec2 rad, float spin) {
+                vec2 d = (uv - c) / rad; float r = length(d);
+                float a = spin * exp(-r * r * 1.6);
+                float s = sin(a), co = cos(a);
+                return c + vec2(co * d.x - s * d.y, s * d.x + co * d.y) * rad;
+            }
+            // corriente en chorro: desplazamiento en x según la latitud
+            float dJet(float lat) { return sin(lat * 47.12) * 0.6 + sin(lat * 91.1 + 1.3) * 0.4; }
+            #if ${DERIV_OK}
+            // fbm que apaga las octavas más finas que un píxel (sin esto el relieve parpadea)
+            float dFbmAA(vec2 uv, vec2 scale) {
+                vec2 fw = fwidth(uv) * scale; float px = max(fw.x, fw.y);
+                vec2 p = uv * scale; float v = 0.0; float a = 0.5; float fq = 1.0;
+                for (int i = 0; i < 5; i++) { v += a * dNoise(p) * (1.0 - smoothstep(0.2, 0.55, px * fq)); p *= 2.1; fq *= 2.1; a *= 0.5; }
+                return v;
+            }
+            float dCratersAA(vec2 uv, vec2 scale) {
+                vec2 fw = fwidth(uv) * scale;
+                return dCraters(uv, scale) * (1.0 - smoothstep(0.06, 0.22, max(fw.x, fw.y)));
+            }
+            // normal perturbada con un gradiente de altura medido en uv (base tangente suave,
+            // a diferencia de dFdx(h), que sale en bloques de 2x2 píxeles)
+            float dHeight(vec2 uv) {
+                return dFbmAA(uv, vec2(300.0, 150.0)) * ${f(o.relief)}
+                    + (dCratersAA(uv, vec2(70.0, 35.0)) + dCratersAA(uv + 0.37, vec2(220.0, 110.0)) * 0.5) * ${f(o.craters)};
+            }
+            vec3 dPerturbUV(vec3 eyePos, vec3 n, vec2 uv, vec2 g) {
+                vec3 q0 = dFdx(eyePos); vec3 q1 = dFdy(eyePos);
+                vec2 st0 = dFdx(uv); vec2 st1 = dFdy(uv);
+                vec3 q1perp = cross(q1, n); vec3 q0perp = cross(n, q0);
+                vec3 T = q1perp * st0.x + q0perp * st1.x;
+                vec3 B = q1perp * st0.y + q0perp * st1.y;
+                float det = max(dot(T, T), dot(B, B));
+                float sc = det == 0.0 ? 0.0 : inversesqrt(det);
+                return normalize(n - (T * g.x + B * g.y) * sc);
+            }
             #endif
+        ` + shader.fragmentShader;
+
+        let uvCode = 'vec2 pUv = vUv;';
+        if (o.bands) {
+            uvCode += `
+            pUv.x += uTime * ${f(o.bands)} * dJet(pUv.y);
+            pUv.x += (dFbm(vec2(pUv.x * 40.0, pUv.y * 260.0) + uTime * 0.03) - 0.5) * 0.0025;`;
+        }
+        if (o.spot) {
+            const [u, v, ru, rv] = o.spot;
+            uvCode += `
+            pUv = dSwirl(pUv, vec2(${f(u)}, ${f(v)}), vec2(${f(ru)}, ${f(rv)}), uTime * 0.35);`;
+        }
+
+        shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>', `
+            ${uvCode}
+            #ifdef USE_MAP
+            vec4 texelColor = texture2D(map, pUv);
+            texelColor = mapTexelToLinear(texelColor);
+            diffuseColor *= texelColor;
+            ${o.gamma !== 1 ? `diffuseColor.rgb = pow(diffuseColor.rgb, vec3(${f(o.gamma)}));` : ''}
+            ${o.tint ? `diffuseColor.rgb *= vec3(${o.tint.map(f).join(', ')});` : ''}
+            float detailN = dFbm(vUv * vec2(320.0, 160.0)) * 0.6 + dFbm(vUv * vec2(1400.0, 700.0)) * 0.4;
+            diffuseColor.rgb *= mix(1.0, 0.72 + detailN * 0.56, uDetail * ${f(o.detail)});
+            #endif
+            ${o.dust ? `
+            // tormenta de polvo regional que avanza despacio
+            float storm = smoothstep(0.62, 0.85, dFbm(vec2(vUv.x * 5.0 - uTime * 0.006, vUv.y * 3.0) + 2.0));
+            storm *= smoothstep(0.15, 0.35, vUv.y) * (1.0 - smoothstep(0.7, 0.85, vUv.y));
+            diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.05, 0.82, 0.68) + vec3(0.06, 0.03, 0.01), storm * (0.45 + dNoise(vUv * 90.0 + uTime * 0.05) * 0.25));` : ''}
+            ${o.hexagon ? `
+            // hexágono del polo norte (~78° N)
+            float colat = (1.0 - vUv.y) * 3.14159;
+            if (colat < 0.5) {
+                float ang = vUv.x * 6.28318 + uTime * 0.01;
+                float seg = mod(ang, 1.0472) - 0.5236;
+                float hexR = 0.2 * cos(0.5236) / cos(seg);
+                float edge = exp(-pow((colat - hexR) * 60.0, 2.0));
+                float inside = 1.0 - smoothstep(hexR - 0.01, hexR + 0.01, colat);
+                diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(0.7, 0.8, 0.88), inside * 0.6);
+                diffuseColor.rgb *= 1.0 - edge * 0.35;
+                diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.25, 0.3, 0.35), (1.0 - smoothstep(0.0, 0.06, colat)) * 0.6);
+            }` : ''}
+            ${o.cloudShadow ? `
+            // sombra de las nubes (giran un poco más rápido que la superficie)
+            float cloudA = texture2D(uCloudMap, vec2(vUv.x - uCloudShift + 0.004, vUv.y)).r;
+            diffuseColor.rgb *= 1.0 - cloudA * 0.38;` : ''}
         `);
-        if (opts.night) {
+        if (o.relief || o.craters) {
+            shader.fragmentShader = shader.fragmentShader.replace('#include <normal_fragment_maps>', `
+                #include <normal_fragment_maps>
+                #if ${DERIV_OK}
+                if (uDetail > 0.001) {
+                    vec2 e = vec2(0.00025, 0.0);
+                    float h0 = dHeight(vUv);
+                    vec2 g = vec2(dHeight(vUv + e.xy) - h0, dHeight(vUv + e.yx) - h0) / e.x;
+                    normal = dPerturbUV(-vViewPosition, normal, vUv, g * uDetail * 0.0035);
+                }
+                #endif
+            `);
+        }
+        if (o.night) {
             shader.fragmentShader = shader.fragmentShader.replace('#include <emissivemap_fragment>', `
                 #include <emissivemap_fragment>
                 float nightMask = 1.0 - smoothstep(-0.12, 0.22, dot(normal, normalize(uSunDirView)));
@@ -51,6 +167,20 @@ function enhancePlanetMaterial(mat, opts = {}) {
     };
     mat.needsUpdate = true;
 }
+
+// Ajustes de superficie por astro (el resto usa solo el detalle básico).
+const SURFACE_OPTS = {
+    mercury: { relief: 1.0, craters: 1.4 },
+    moon: { relief: 1.0, craters: 1.6 },
+    mars: { relief: 0.55, craters: 0.22, dust: true, tint: [0.92, 0.72, 0.6] },
+    io: { relief: 0.8 },
+    europa: { relief: 0.6 },
+    pluto: { relief: 0.9, craters: 0.6 },
+    jupiter: { bands: 0.0009, spot: [0.366, 0.391, 0.024, 0.016], gamma: 1.6, tint: [1.0, 0.9, 0.8] },
+    saturn: { bands: 0.0006, hexagon: true, gamma: 1.3 },
+    uranus: { bands: 0.0003 },
+    neptune: { bands: 0.0007 }
+};
 
 // Soft additive halo used for stars, atmospheres and the pulsar.
 function makeGlowSprite(color, size, opacity = 1.0) {
@@ -137,7 +267,7 @@ const roundDotTexture = (() => {
 const ATMO_STRENGTH = { titan: 1.8, venus: 1.4, earth: 1.25, pluto: 0.7, io: 0.45, europa: 0.5, mars: 0.8 };
 const ATMO_SCALE = { titan: 1.09, venus: 1.06, pluto: 1.035, io: 1.03, europa: 1.03 };
 
-function createPhotorealisticPlanet(bodyId, radius = 2.5, hasAtmosphere = true) {
+function createPhotorealisticPlanet(bodyId, radius = 2.5, hasAtmosphere = true, extraSurface = {}) {
     const cfg = ASTRO_TARGETS[bodyId];
     // Real maps load first; the (slow) procedural texture is only built if they fail.
     const useProcedural = () => generateHiResPlanetaryTextures(bodyId);
@@ -165,6 +295,7 @@ function createPhotorealisticPlanet(bodyId, radius = 2.5, hasAtmosphere = true) 
     if (cfg.textureUrl) {
         loadTextureWithFallback([cfg.textureUrl, cfg.textureFallback, cfg.textureFallback2], (nasaTex) => {
             nasaTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+            if (SURFACE_OPTS[bodyId] && SURFACE_OPTS[bodyId].bands) nasaTex.wrapS = THREE.RepeatWrapping;
             if (mat.uniforms && mat.uniforms.uMap) {
                 mat.uniforms.uMap.value = nasaTex;
                 mat.uniforms.uHasMap.value = 1.0;
@@ -199,7 +330,7 @@ function createPhotorealisticPlanet(bodyId, radius = 2.5, hasAtmosphere = true) 
     }
     if (mat.isMeshPhongMaterial) {
         const gasGiant = ['jupiter', 'saturn', 'uranus', 'neptune', 'venus', 'titan'].includes(bodyId);
-        enhancePlanetMaterial(mat, { detail: gasGiant ? 0.1 : 0.38, night: !!cfg.nightUrl });
+        enhancePlanetMaterial(mat, { detail: gasGiant ? 0.1 : 0.38, night: !!cfg.nightUrl, ...(SURFACE_OPTS[bodyId] || {}), ...extraSurface });
     }
     if (cfg.normalUrl) {
         loadTextureWithFallback([cfg.normalUrl], (normTex) => {

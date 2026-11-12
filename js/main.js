@@ -2,7 +2,8 @@ const clock = new THREE.Clock();
 
 function animate() {
     requestAnimationFrame(animate);
-    const elapsedTime = clock.getElapsedTime();
+    const frameDt = Math.min(0.1, clock.getDelta());
+    const elapsedTime = clock.elapsedTime;
     sharedUniforms.uTime.value = elapsedTime;
 
     const t = state.currentTarget;
@@ -34,6 +35,7 @@ function animate() {
     } else if (t === 'earth') {
         earthMesh.rotation.y = elapsedTime * 0.14;
         earthCloudsMesh.rotation.y = elapsedTime * 0.175;
+        earthCloudShadow.shift.value = ((earthCloudsMesh.rotation.y - earthMesh.rotation.y) / (Math.PI * 2)) % 1;
     } else {
         const activeGroup = targetGroups[t];
         if (activeGroup && activeGroup.children[0]) {
@@ -60,9 +62,13 @@ function animate() {
         ioJupiter.rotation.y = elapsedTime * 0.05;
     } else if (t === 'europa') {
         europaJupiter.rotation.y = elapsedTime * 0.05;
+    } else if (t === 'mars') {
+        updateMarsWeather(elapsedTime, frameDt);
     } else if (t === 'pluto') {
         charon.position.set(Math.cos(elapsedTime * 0.12) * 9.5, 1.2, Math.sin(elapsedTime * 0.12) * 9.5 - 2);
     }
+
+    updateMoons(t, elapsedTime);
 
     const posAttr = particleGeo.attributes.position;
     const speedZ = (state.warpActive ? 0.95 : 0.08) + state.descentPercent * 0.004;

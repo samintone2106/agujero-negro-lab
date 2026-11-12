@@ -131,6 +131,11 @@
                     <span class="hidden sm:inline font-mono text-[10px] sm:text-xs font-bold text-singularity-amber glow-amber tracking-wider">IMPULSO</span>
                 </button>
 
+                <button id="moons-btn" type="button" aria-label="Mostrar u ocultar lunas" aria-pressed="true" class="glass-hud hover:border-sky-300/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5 group">
+                    <i data-lucide="orbit" class="w-3.5 h-3.5 text-sky-300 group-hover:rotate-45 transition-transform"></i>
+                    <span class="hidden xl:inline font-mono text-[10px] sm:text-xs font-bold text-sky-300 tracking-wider">LUNAS</span>
+                </button>
+
                 <button id="genesis-btn" type="button" aria-label="Génesis: cómo se formó este astro" class="glass-hud hover:border-singularity-violet/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5 group border-singularity-violet/50">
                     <i data-lucide="sparkles" class="w-3.5 h-3.5 text-purple-300 group-hover:scale-110 transition-transform"></i>
                     <span class="hidden sm:inline font-mono text-[10px] sm:text-xs font-bold text-purple-300 tracking-wider">GÉNESIS</span>
@@ -701,6 +706,7 @@
     <!-- ========================================================================= -->
     <script src="js/ui/icons.js"></script>
     <script src="js/config/targets.js"></script>
+    <script src="js/config/moons.js"></script>
     <script src="js/state.js"></script>
     <script src="js/audio/engine.js"></script>
     <script src="js/scene/core.js"></script>
@@ -708,6 +714,8 @@
     <script src="js/scene/bodies/solar-system.js"></script>
     <script src="js/scene/bodies/saturn-jupiter.js"></script>
     <script src="js/scene/bodies/pulsar-blackhole.js"></script>
+    <script src="js/scene/bodies/mars-weather.js"></script>
+    <script src="js/scene/bodies/moons.js"></script>
     <script src="js/scene/sky.js"></script>
     <script src="js/ui/nasa.js"></script>
     <script src="js/ui/telemetry.js"></script>
