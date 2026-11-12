@@ -83,7 +83,7 @@ function animate() {
     updateGenesis(elapsedTime);
 
     if (!genesis.active) controls.update();
-    if (!renderGenesisFrame(elapsedTime)) renderer.render(scene, camera);
+    if (!renderGenesisFrame(elapsedTime) && !gravLens.render(elapsedTime)) renderer.render(scene, camera);
 }
 
 window.onload = function () {

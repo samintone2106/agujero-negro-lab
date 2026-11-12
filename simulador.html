@@ -457,6 +457,17 @@
 
     </div>
 
+    <!-- GARGANTÚA: selector de vista de la lente gravitacional -->
+    <div id="lens-panel" class="hud-fade fixed left-1/2 -translate-x-1/2 top-[10rem] md:top-[6.25rem] z-20 w-[min(92vw,26rem)] pointer-events-none" hidden>
+        <div class="glass-hud rounded-2xl border-singularity-crimson/40 p-2 sm:p-2.5 pointer-events-auto">
+            <div class="flex items-center justify-between gap-2">
+                <span class="font-mono text-[9px] sm:text-[10px] font-bold tracking-widest text-rose-300 shrink-0">VISTA</span>
+                <div id="lens-modes" class="flex flex-wrap justify-end gap-1" role="group" aria-label="Modo de vista del agujero negro"></div>
+            </div>
+            <p id="lens-note" class="hidden sm:block mt-1.5 text-[10px] sm:text-[11px] leading-snug text-slate-300" aria-live="polite"></p>
+        </div>
+    </div>
+
     <!-- GENESIS: cinematic formation timeline -->
     <div class="genesis-letterbox" aria-hidden="true"><div></div><div></div></div>
     <div class="fixed inset-x-0 bottom-[calc(var(--genesis-bar)+10px)] z-30 flex justify-center px-3 sm:px-4 pointer-events-none">
@@ -716,6 +727,7 @@
     <script src="js/scene/bodies/pulsar-blackhole.js"></script>
     <script src="js/scene/bodies/mars-weather.js"></script>
     <script src="js/scene/bodies/moons.js"></script>
+    <script src="js/scene/lens.js"></script>
     <script src="js/scene/sky.js"></script>
     <script src="js/ui/nasa.js"></script>
     <script src="js/ui/telemetry.js"></script>

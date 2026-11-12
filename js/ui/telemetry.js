@@ -32,6 +32,7 @@ function switchTarget(targetId) {
     audioEngine.switchTargetSoundscape(targetId);
     updateRelativityTelemetry(state.descentPercent);
     fetchNasaMissionTelemetry(targetId);
+    if (typeof syncLensPanel === 'function') syncLensPanel();
 }
 
 function updateRelativityTelemetry(percentage) {
