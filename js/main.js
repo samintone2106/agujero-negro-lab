@@ -76,8 +76,8 @@ function animate() {
     if (!dom.modalLaser.classList.contains('hidden')) renderRedshiftWave();
     updateGenesis(elapsedTime);
 
-    controls.update();
-    renderer.render(scene, camera);
+    if (!genesis.active) controls.update();
+    if (!renderGenesisFrame(elapsedTime)) renderer.render(scene, camera);
 }
 
 window.onload = function () {

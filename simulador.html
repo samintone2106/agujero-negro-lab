@@ -47,6 +47,13 @@
     <!-- Three.js r128 & OrbitControls -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- Postproceso del Génesis (bloom) -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 
     <link rel="stylesheet" href="css/simulador.css">
 </head>
@@ -197,7 +204,7 @@
             </nav>
 
             <!-- CENTER: AIMING RETICLE CROSSHAIR + CLOSE-UP REAL NASA PHOTO OVERLAY -->
-            <div class="relative flex-1 flex flex-col items-center justify-center pointer-events-none">
+            <div class="hud-fade relative flex-1 flex flex-col items-center justify-center pointer-events-none">
                 <div id="reticle-outer" class="w-28 h-28 sm:w-44 sm:h-44 rounded-full border border-dashed border-singularity-cyan/20 flex items-center justify-center animate-spin-slow transition-transform duration-500">
                     <div class="w-16 h-16 sm:w-28 sm:h-28 rounded-full border border-singularity-cyan/15 border-t-singularity-cyan/50 border-b-singularity-amber/50 animate-spin-reverse"></div>
                 </div>
@@ -445,20 +452,28 @@
 
     </div>
 
-    <!-- GENESIS: scientific formation timeline caption -->
-    <div class="fixed inset-x-0 top-[17%] sm:top-[14%] z-30 flex justify-center px-4 pointer-events-none">
-        <div id="genesis-card" class="genesis-card glass-hud rounded-2xl border border-singularity-violet/50 w-full max-w-md p-3 sm:p-4" role="status" aria-live="polite" hidden>
-            <div class="flex items-center justify-between gap-2 mb-1.5">
-                <span id="genesis-kicker" class="font-mono text-[9px] sm:text-[10px] font-bold tracking-widest text-purple-300 uppercase">GÉNESIS</span>
-                <button id="genesis-skip" type="button" class="pointer-events-auto font-mono text-[9px] sm:text-[10px] px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/15 text-slate-300">SALTAR</button>
+    <!-- GENESIS: cinematic formation timeline -->
+    <div class="genesis-letterbox" aria-hidden="true"><div></div><div></div></div>
+    <div class="fixed inset-x-0 bottom-[calc(var(--genesis-bar)+10px)] z-30 flex justify-center px-3 sm:px-4 pointer-events-none">
+        <div id="genesis-card" class="genesis-card glass-hud rounded-2xl border border-singularity-violet/50 w-full max-w-xl p-3 sm:p-4" role="region" aria-label="Génesis" hidden>
+            <div class="flex items-center justify-between gap-2 mb-2">
+                <span id="genesis-kicker" class="font-mono text-[10px] font-bold tracking-widest text-purple-300 uppercase truncate">GÉNESIS</span>
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <button id="genesis-sound" type="button" class="genesis-ctl" aria-pressed="false">SONIDO</button>
+                    <button id="genesis-pause" type="button" class="genesis-ctl" aria-pressed="false" aria-keyshortcuts="Space">PAUSA</button>
+                    <button id="genesis-tour" type="button" class="genesis-ctl hidden sm:inline-block" aria-pressed="false" title="Ver todos los Génesis seguidos">MARATÓN</button>
+                    <button id="genesis-skip" type="button" class="genesis-ctl" aria-keyshortcuts="Escape">SALTAR</button>
+                </div>
             </div>
-            <div id="genesis-step" class="genesis-step">
-                <div id="genesis-title" class="text-xs sm:text-sm font-bold text-white"></div>
-                <p id="genesis-text" class="text-[11px] sm:text-xs text-slate-300 leading-snug mt-1"></p>
+            <div id="genesis-step" class="genesis-step" aria-live="polite">
+                <div class="flex items-baseline justify-between gap-3">
+                    <div id="genesis-clock" class="genesis-clock font-mono text-base sm:text-xl font-bold text-singularity-amber"></div>
+                    <div id="genesis-phase" class="font-mono text-[10px] text-slate-400 tracking-widest shrink-0"></div>
+                </div>
+                <div id="genesis-title" class="text-sm sm:text-base font-bold text-white mt-1"></div>
+                <p id="genesis-text" class="text-xs sm:text-sm text-slate-300 leading-snug mt-1"></p>
             </div>
-            <div class="mt-2.5 h-1 w-full rounded-full bg-white/10 overflow-hidden">
-                <div id="genesis-bar" class="h-full w-full origin-left bg-gradient-to-r from-singularity-violet via-singularity-amber to-singularity-cyan" style="transform: scaleX(0);"></div>
-            </div>
+            <div id="genesis-segs" class="genesis-segs mt-3" aria-hidden="true"></div>
         </div>
     </div>
 
@@ -697,7 +712,12 @@
     <script src="js/ui/nasa.js"></script>
     <script src="js/ui/telemetry.js"></script>
     <script src="js/ui/controls.js"></script>
-    <script src="js/genesis/genesis.js"></script>
+    <script src="js/audio/genesis-sound.js"></script>
+    <script src="js/genesis/data.js"></script>
+    <script src="js/genesis/particles.js"></script>
+    <script src="js/genesis/fx.js"></script>
+    <script src="js/genesis/postfx.js"></script>
+    <script src="js/genesis/director.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>

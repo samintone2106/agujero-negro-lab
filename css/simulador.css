@@ -211,6 +211,72 @@ button:focus-visible, input:focus-visible, [tabindex]:focus-visible {
     .genesis-card, .genesis-card.is-on, .genesis-step, .genesis-step.is-swapping { transform: none; }
 }
 
+/* Genesis cinematic mode: HUD fades away, letterbox bars slide in */
+:root {
+    --genesis-ease: cubic-bezier(0.23, 1, 0.32, 1);
+    --genesis-bar: clamp(28px, 7vh, 72px);
+}
+.glass-hud, .hud-fade {
+    transition: opacity 280ms var(--genesis-ease);
+}
+body.genesis-mode .glass-hud:not(.genesis-card),
+body.genesis-mode .hud-fade {
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+.genesis-letterbox > div {
+    position: fixed; left: 0; right: 0; z-index: 25;
+    height: var(--genesis-bar);
+    background: #000;
+    pointer-events: none;
+    transition: transform 300ms var(--genesis-ease);
+}
+.genesis-letterbox > div:first-child { top: 0; transform: translateY(-100%); }
+.genesis-letterbox > div:last-child { bottom: 0; transform: translateY(100%); }
+body.genesis-mode .genesis-letterbox > div { transform: none; }
+
+.genesis-clock {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+}
+.genesis-segs { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+.genesis-seg { height: 4px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
+.genesis-seg > span {
+    display: block; height: 100%; width: 100%;
+    transform-origin: left; transform: scaleX(0);
+    background: linear-gradient(90deg, #b026ff, #ffaa00);
+}
+.genesis-ctl {
+    pointer-events: auto;
+    min-height: 32px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.05);
+    color: #e2e8f0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    transition: background-color 160ms var(--genesis-ease), border-color 160ms var(--genesis-ease), transform 160ms var(--genesis-ease);
+}
+.genesis-ctl:hover { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.3); }
+.genesis-ctl:active { transform: scale(0.96); }
+.genesis-ctl[aria-pressed="true"] { border-color: rgba(176, 38, 255, 0.7); color: #e9d5ff; }
+.genesis-ctl.is-off {
+    border-color: rgba(255, 170, 0, 0.8);
+    color: #ffd27a;
+    animation: genesis-nudge 1.6s ease-in-out infinite;
+}
+@keyframes genesis-nudge {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 170, 0, 0); }
+    50% { box-shadow: 0 0 0 4px rgba(255, 170, 0, 0.18); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .genesis-ctl.is-off { animation: none; }
+    .genesis-letterbox > div { transition: none; }
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
     .animate-spin-slow, .animate-spin-reverse, .animate-ping, .animate-pulse, .alarm-active {

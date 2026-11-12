@@ -78,7 +78,7 @@ class SpatialAudioEngine {
         }
         this.recording = null;
         this.recordingOk = false;
-        if (this.synthBus()) this.bus.gain.setTargetAtTime(1.0, this.ctx.currentTime, 0.2);
+        if (this.synthBus()) this.bus.gain.setTargetAtTime(this.duckFactor(), this.ctx.currentTime, 0.2);
 
         if (!AUDIO_FILES[targetId]) return;
         if (!this.recordings) this.recordings = {};
@@ -117,9 +117,10 @@ class SpatialAudioEngine {
             if (this.recording !== rec || !this.isPlaying) { rec.el.pause(); return; }
             this.recordingOk = true;
             const t = this.ctx.currentTime;
-            if (rec.gain) rec.gain.gain.setTargetAtTime(0.9, t, 0.4);
-            else rec.el.volume = 0.6;
-            this.bus.gain.setTargetAtTime(0.35, t, 0.4);
+            const k = this.duckFactor();
+            if (rec.gain) rec.gain.gain.setTargetAtTime(0.9 * k, t, 0.4);
+            else rec.el.volume = 0.6 * k;
+            this.bus.gain.setTargetAtTime(0.35 * k, t, 0.4);
             this.updateByTelemetry(state.rs);
         }).catch((err) => { if (err && err.name === 'AbortError') return; rec.failed = true; });
     }
@@ -394,10 +395,10 @@ class SpatialAudioEngine {
 
         if (this.recording && this.recordingOk) {
             if (this.recording.direct) {
-                this.recording.el.volume = Math.min(1, 0.55 + prox * 0.45);
+                this.recording.el.volume = Math.min(1, 0.55 + prox * 0.45) * this.duckFactor();
             } else {
                 this.recording.filter.frequency.setTargetAtTime(900 + Math.pow(prox, 1.6) * 15000, now, 0.15);
-                this.recording.gain.gain.setTargetAtTime(0.55 + prox * 0.45, now, 0.2);
+                this.recording.gain.gain.setTargetAtTime((0.55 + prox * 0.45) * this.duckFactor(), now, 0.2);
             }
             const rate = Math.max(0.5, Math.min(1, 1 / Math.max(1, state.gamma)));
             this.recording.el.playbackRate = rate;
@@ -417,7 +418,23 @@ class SpatialAudioEngine {
         }
     }
 
+    // Baja el paisaje sonoro normal mientras suena el Génesis.
+    duckFactor() { return this.ducked ? 0.12 : 1; }
+
+    duck(on) {
+        this.ducked = on;
+        if (!this.ctx) return;
+        const t = this.ctx.currentTime;
+        const k = this.duckFactor();
+        if (this.bus) this.bus.gain.setTargetAtTime((this.recordingOk ? 0.35 : 1) * k, t, 0.6);
+        if (this.recording && this.recordingOk) {
+            if (this.recording.gain) this.recording.gain.gain.setTargetAtTime(0.9 * k, t, 0.6);
+            else this.recording.el.volume = 0.6 * k;
+        }
+    }
+
     stopAll() {
+        if (typeof genesisSound !== 'undefined') genesisSound.stop(true);
         this.isPlaying = false;
         this.clearCurrentNodes();
         if (this.recording) this.recording.el.pause();
