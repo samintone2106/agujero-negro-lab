@@ -1,6 +1,6 @@
 # Event Horizon
 
-Laboratorio interactivo de exploración espacial y gravedad relativista. La página de inicio está en `index.html`; el simulador original se conserva en `event_horizon_viaje_interactivo_hacia_un_agujero_negro.html`.
+Laboratorio interactivo de exploración espacial y gravedad relativista. La portada está en `index.html` y el simulador en `simulador.html` (el enlace antiguo `event_horizon_viaje_interactivo_hacia_un_agujero_negro.html` redirige al nuevo).
 
 ## Ejecutar localmente
 
@@ -11,6 +11,27 @@ python -m http.server 8000
 ```
 
 Abre `http://localhost:8000/`. No requiere instalación de paquetes ni compilación.
+
+## Estructura
+
+```
+index.html                 Portada
+simulador.html             Simulador (HTML de la interfaz)
+css/simulador.css          Estilos del simulador
+js/config/targets.js       Datos de los 16 astros, texturas y audios
+js/state.js                Estado global
+js/audio/engine.js         Motor de audio (síntesis + grabaciones reales)
+js/scene/core.js           Escena, cámara, luces y texturas procedurales
+js/scene/materials.js      Shaders y materiales de planetas
+js/scene/bodies/           Astros: sistema solar, Saturno/Júpiter, púlsar/agujero negro
+js/scene/sky.js            Fondo estelar
+js/ui/                     Íconos, panel NASA, telemetría y controles
+js/genesis/                Modo Génesis
+js/main.js                 Bucle de animación y arranque
+assets/                    Texturas y audios
+```
+
+Los scripts se cargan en orden desde `simulador.html` y comparten el ámbito global.
 
 ## Navegación
 
@@ -26,4 +47,4 @@ También se admiten los demás identificadores definidos en `ASTRO_TARGETS`. Si 
 
 La portada utiliza HTML, CSS y una ilustración SVG propia, sin JavaScript ni recursos externos. Incluye estilos adaptables, navegación con teclado y respeto por la preferencia de movimiento reducido.
 
-El simulador conserva sus dependencias externas existentes: Tailwind CSS, Lucide, Three.js, fuentes, texturas y archivos de la NASA. Requiere conexión a Internet y un navegador con WebGL. Las representaciones visuales son ilustrativas.
+El simulador usa dependencias externas: Tailwind CSS, Lucide, Three.js r128, fuentes, texturas y archivos de la NASA. Requiere conexión a Internet y un navegador con WebGL. Las representaciones visuales son ilustrativas.
