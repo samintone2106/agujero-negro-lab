@@ -6,7 +6,7 @@
 // 3 caída de gas a un agujero negro, 4 núcleo + envoltura de gas.
 const GENESIS_TYPES = {
     rocky: { mode: 0, gas: [0xc98a52, 0xffe0b0], dust: 0x3a2618, grow: [0.36, 0.6], nebula: [0x5a3a2a, 0x2a1a30], bloom: 0.9 },
-    gas:   { mode: 4, gas: [0x9fd8ff, 0xffd59e], dust: 0x2a2a3a, grow: [0.46, 0.78], nebula: [0x24324a, 0x3a2a40], bloom: 0.8 },
+    gas:   { mode: 4, gas: [0x9fd8ff, 0xffd59e], dust: 0x2a2a3a, grow: [0.46, 0.78], nebula: [0x24324a, 0x3a2a40], bloom: 0.8, bloomThreshold: 0.88 },
     star:  { mode: 1, gas: [0xff6a2a, 0xffe7a3], dust: 0x2a1410, grow: [0.5, 0.66], flashAt: 0.55, nebula: [0x8a2a4a, 0x2a3a7a], bloom: 1.4 },
     nova:  { mode: 2, gas: [0x7df9ff, 0xff4fa3], dust: 0x301020, grow: [0.6, 0.82], flashAt: 0.36, nebula: [0x2a4a7a, 0x6a1a4a], bloom: 1.6 },
     hole:  { mode: 3, gas: [0xffa040, 0x9fe8ff], dust: 0x201008, grow: [0.5, 0.84], flashAt: 0.12, nebula: [0x4a2a1a, 0x1a2a4a], bloom: 0.45, bloomThreshold: 0.92 }
@@ -15,7 +15,7 @@ const GENESIS_TYPES = {
 // Encuadre de cámara por fase: [distancia en radios finales, ángulo polar, velocidad de órbita].
 const GENESIS_SHOTS = {
     rocky: [[14, 0.55, 0.10], [9, 1.25, 0.16], [5.5, 1.05, 0.22], [4.2, 1.2, 0.14], [3.6, 1.0, 0.10], [3.4, 1.15, 0.06]],
-    gas:   [[13, 0.6, 0.08], [8, 1.3, 0.14], [5.2, 1.1, 0.2], [4.6, 1.35, 0.16], [3.8, 1.25, 0.1], [3.5, 1.3, 0.06]],
+    gas:   [[13, 0.6, 0.08], [8, 1.3, 0.14], [5.2, 1.1, 0.2], [4.6, 1.2, 0.16], [4.8, 0.95, 0.1], [5.2, 0.9, 0.06]],
     star:  [[16, 0.9, 0.05], [11, 0.5, 0.1], [7, 1.35, 0.16], [5, 1.15, 0.08], [5.5, 1.2, 0.08], [6, 1.1, 0.05]],
     nova:  [[5.5, 1.2, 0.05], [4.2, 1.3, 0.08], [9, 1.35, 0.1], [16, 1.0, 0.06], [8, 1.2, 0.12], [6, 1.4, 0.1]],
     hole:  [[14, 1.1, 0.06], [10, 1.3, 0.12], [9, 1.25, 0.16], [6.5, 1.38, 0.2], [5, 1.3, 0.16], [6, 1.25, 0.08]]

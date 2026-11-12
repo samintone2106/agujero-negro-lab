@@ -275,6 +275,10 @@
                         <i data-lucide="external-link" class="w-3 h-3"></i>
                         <span>VER IMÁGENES REALES NASA</span>
                     </button>
+                    <button type="button" data-open-missions class="mt-1.5 w-full py-1 px-2 rounded-lg bg-singularity-amber/10 hover:bg-singularity-amber/20 border border-singularity-amber/40 text-singularity-amber font-mono text-[9px] font-bold flex items-center justify-center gap-1 transition-colors">
+                        <i data-lucide="rocket" class="w-3 h-3"></i>
+                        <span>CATÁLOGO DE MISIONES</span>
+                    </button>
                 </div>
             </aside>
 
@@ -489,6 +493,10 @@
                 <div id="genesis-title" class="text-sm sm:text-base font-bold text-white mt-1"></div>
                 <p id="genesis-text" class="text-xs sm:text-sm text-slate-300 leading-snug mt-1"></p>
             </div>
+            <div id="genesis-proof" class="genesis-proof mt-2.5 flex items-start gap-2" hidden>
+                <span class="font-mono text-[9px] font-bold tracking-widest text-singularity-emerald shrink-0 pt-0.5">DATO REAL</span>
+                <p class="text-[11px] leading-snug text-slate-300 min-w-0"><span id="genesis-proof-text"></span> <button id="genesis-proof-btn" type="button" class="pointer-events-auto underline decoration-dotted underline-offset-2 text-singularity-amber hover:text-white font-mono text-[10px]"></button></p>
+            </div>
             <div id="genesis-segs" class="genesis-segs mt-3" aria-hidden="true"></div>
         </div>
     </div>
@@ -674,6 +682,27 @@
         </div>
     </div>
 
+    <!-- MODAL 5: Catálogo de misiones reales por astro -->
+    <div id="modal-missions" role="dialog" aria-modal="true" aria-labelledby="missions-title" class="fixed inset-0 z-50 hidden items-center justify-center p-3 bg-void/85 backdrop-blur-md">
+        <div class="glass-hud-amber rounded-2xl max-w-2xl w-full p-4 sm:p-5 shadow-2xl max-h-[92dvh] flex flex-col gap-3">
+            <div class="flex items-start justify-between gap-2 border-b border-white/10 pb-2">
+                <div class="min-w-0">
+                    <h3 id="missions-title" class="font-mono text-xs sm:text-sm font-bold text-singularity-amber uppercase flex items-center gap-1.5">
+                        <i data-lucide="rocket" class="w-4 h-4 shrink-0"></i>
+                        <span id="missions-title-text">Misiones</span>
+                    </h3>
+                    <p id="missions-subtitle" class="font-mono text-[9px] text-slate-400 mt-0.5"></p>
+                </div>
+                <button type="button" data-close-modal="modal-missions" aria-label="Cerrar" class="shrink-0 text-slate-400 hover:text-white p-2 -m-1 rounded-lg">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div id="missions-filters" class="flex flex-wrap gap-1" role="group" aria-label="Filtrar por tipo de misión"></div>
+            <ol id="missions-list" class="missions-list overflow-y-auto -mr-2 pr-2 space-y-2"></ol>
+            <p class="font-mono text-[9px] text-slate-500 leading-snug">Datos curados de NASA, ESA, JAXA, CNSA, ISRO y Roscosmos. Las fotos llegan en vivo de images-api.nasa.gov.</p>
+        </div>
+    </div>
+
     <!-- MODAL 4: Official NASA Image & Video Library Gallery -->
     <div id="modal-nasa" role="dialog" aria-modal="true" class="fixed inset-0 z-50 hidden items-center justify-center p-3 bg-void/85 backdrop-blur-md">
         <div class="glass-hud rounded-2xl max-w-2xl w-full p-4 sm:p-5 border border-singularity-emerald/50 shadow-2xl space-y-3 max-h-[92dvh] overflow-y-auto">
@@ -686,6 +715,7 @@
                     <p id="modal-nasa-subtitle" class="font-mono text-[9px] text-slate-400">API EN VIVO: images-api.nasa.gov</p>
                 </div>
                 <div class="flex flex-wrap justify-end items-center gap-1.5">
+                    <button type="button" data-open-missions class="px-2 py-1 rounded bg-singularity-amber/15 border border-singularity-amber/40 font-mono text-[9px] text-singularity-amber">MISIONES</button>
                     <button id="open-compare-from-nasa" type="button" class="px-2 py-1 rounded bg-singularity-cyan/15 border border-singularity-cyan/40 font-mono text-[9px] text-singularity-cyan">TABLA 16 ASTROS</button>
                     <button id="nasa-refresh-btn" type="button" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 font-mono text-[9px] text-slate-300">RECARGAR</button>
                     <button type="button" data-close-modal="modal-nasa" aria-label="Cerrar" class="shrink-0 text-slate-400 hover:text-white p-2 -m-1 rounded-lg">
@@ -718,6 +748,7 @@
     <script src="js/ui/icons.js"></script>
     <script src="js/config/targets.js"></script>
     <script src="js/config/moons.js"></script>
+    <script src="js/config/missions.js"></script>
     <script src="js/state.js"></script>
     <script src="js/audio/engine.js"></script>
     <script src="js/scene/core.js"></script>
@@ -732,6 +763,7 @@
     <script src="js/ui/nasa.js"></script>
     <script src="js/ui/telemetry.js"></script>
     <script src="js/ui/controls.js"></script>
+    <script src="js/ui/missions.js"></script>
     <script src="js/audio/genesis-sound.js"></script>
     <script src="js/genesis/data.js"></script>
     <script src="js/genesis/particles.js"></script>

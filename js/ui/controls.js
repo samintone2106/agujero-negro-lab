@@ -246,6 +246,8 @@ fitViewport();
 
 document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
+    // con el catálogo abierto, Escape solo lo cierra (lo maneja js/ui/missions.js)
+    if (document.getElementById('modal-missions')?.classList.contains('flex')) return;
     stopGenesis();
     [dom.modalSpaghetti, dom.modalLaser, dom.modalCompare, dom.modalNasa].forEach(modal => {
         if (modal && !modal.classList.contains('hidden')) {

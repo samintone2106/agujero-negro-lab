@@ -19,13 +19,16 @@ index.html                 Portada
 simulador.html             Simulador (HTML de la interfaz)
 css/simulador.css          Estilos del simulador
 js/config/targets.js       Datos de los 16 astros, texturas y audios
+js/config/moons.js         Lunas reales de cada planeta (periodos NASA)
+js/config/missions.js      Catálogo de misiones por astro y datos reales del Génesis
 js/state.js                Estado global
 js/audio/engine.js         Motor de audio (síntesis + grabaciones reales)
 js/scene/core.js           Escena, cámara, luces y texturas procedurales
 js/scene/materials.js      Shaders y materiales de planetas
-js/scene/bodies/           Astros: sistema solar, Saturno/Júpiter, púlsar/agujero negro
+js/scene/bodies/           Astros, lunas en órbita y torbellinos de polvo de Marte
+js/scene/lens.js           Lente gravitacional de Gargantúa (modos cine, EHT, caída)
 js/scene/sky.js            Fondo estelar
-js/ui/                     Íconos, panel NASA, telemetría y controles
+js/ui/                     Íconos, panel NASA, telemetría, controles y catálogo de misiones
 js/genesis/                Modo Génesis
 js/main.js                 Bucle de animación y arranque
 assets/                    Texturas y audios

@@ -65,6 +65,7 @@ function showGenesisPhase(idx) {
         genesisDom.title.textContent = step[0];
         genesisDom.text.textContent = step[1];
         genesisDom.step.classList.remove('is-swapping');
+        updateGenesisProof(genesis.target, idx);
     }, 180);
 }
 
@@ -184,6 +185,7 @@ function stopGenesis(silent = false) {
     updateRelativityTelemetry(state.descentPercent);
 
     document.body.classList.remove('genesis-mode');
+    updateGenesisProof(null, -1);
     if (!silent) {
         genesisDom.card.classList.remove('is-on');
         setTimeout(() => { if (!genesis.active) genesisDom.card.hidden = true; }, 260);
@@ -446,7 +448,9 @@ function updateGenesis() {
     const pxPerUnit = renderer.domElement.height / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2));
     setGenesisParticleUniforms({
         uTime: time, uClump: clump, uP: collapse, uExpand: expand,
-        uHeat: heat, uAlpha: alpha * (typeKey === 'nova' ? smooth01(type.flashAt - 0.01, type.flashAt + 0.01, prog) : 1),
+        uHeat: heat, uAlpha: alpha * (typeKey === 'nova' ? smooth01(type.flashAt - 0.01, type.flashAt + 0.01, prog) : 1)
+            // en los gigantes gaseosos la envoltura de partículas se disuelve cuando aparece el planeta
+            * (typeKey === 'gas' ? 1 - smooth01(0.7, 0.82, prog) * 0.95 : 1),
         uPx: pxPerUnit
     });
 
