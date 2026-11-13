@@ -28,9 +28,19 @@ function makeHeightFn(site, seed) {
     }
     // un cráter cercano siempre visible para dar escala
     if (site.craters) craters.push({ x: 120, z: -260, r: 70, d: 14 });
+    // cráteres hondos a pocos pasos, para bajar caminando o saltando: [x, z, radio]
+    (site.nearCraters || []).forEach(([x, z, r]) => craters.push({ x, z, r, d: r * 0.3 }));
     const R = site.radiusKm * 1000;
+    const pk = site.peaks || 0;
     return (x, z) => {
-        let h = (fbm2D(x / 900 + seed, z / 900, 5) - 0.5) * site.relief * 4
+        let h = 0;
+        if (pk) {
+            // cordillera lejana: plana cerca de la llegada, montañas hacia el horizonte
+            const dist = Math.hypot(x, z);
+            const far = Math.min(1, Math.max(0, (dist - 900) / 2600));
+            if (far > 0) h += pk * far * far * Math.pow(Math.max(0, fbm2D(x / 2600 + 4, z / 2600 - 2, 4) - 0.42) * 2.4, 1.6);
+        }
+        h += (fbm2D(x / 900 + seed, z / 900, 5) - 0.5) * site.relief * 4
             + (fbm2D(x / 120, z / 120 + seed, 4) - 0.5) * site.relief * 0.6
             + (fbm2D(x / 12, z / 12, 3) - 0.5) * site.relief * 0.05;
         if (site.dunes) h += Math.sin((x * 0.8 + z * 0.6) / 38 + fbm2D(x / 300, z / 300, 2) * 6) * 1.6;
@@ -169,7 +179,7 @@ function buildStars() {
 
 function buildRocks(site, heightFn, seed) {
     const rnd = surfRng(seed + 99);
-    const count = site.pebbles ? 2600 : 1600;
+    const count = Math.round((site.pebbles ? 2600 : 1600) * (site.rockMul ?? 1));
     const geo = new THREE.SphereGeometry(1, 22, 16); // indexada: normales suaves, sin facetas
     if (!site.pebbles) {
         const p = geo.attributes.position;
@@ -335,7 +345,10 @@ function buildSite(id) {
         water.position.y = site.lake ? -4 : -10;
         root.add(water);
     }
-    return (surface.built[id] = { root, heightFn, devils, site });
+    // vida y detalle propios de cada mundo (árboles, rover, módulo lunar, lluvia...): js/surface/biomes.js
+    const biome = buildBiome(id, site, heightFn, seed, devils);
+    if (biome) root.add(biome.group);
+    return (surface.built[id] = { root, heightFn, devils, site, biome });
 }
 
 /* ------------------------------ entrar / salir ------------------------------ */
@@ -418,6 +431,7 @@ function updateSurface(dt, time) {
     // caminar, correr, saltar y la cámara: js/surface/player.js
     updatePlayer(dt);
 
+    if (surface.site.biome) surface.site.biome.update(dt, time);
     const dv = surface.site.devils;
     if (dv) dv.children.forEach(d => {
         d.userData.a += d.userData.speed * dt;

@@ -22,7 +22,7 @@ const PL_JET = 2.2;             // m/s² del propulsor de la mochila (tecla Q)
 const player = {
     pos: new THREE.Vector3(), vel: new THREE.Vector3(), onGround: true,
     facing: 0, phase: 0, air: 0, peak: 0, takeoffY: 0, best: 0, lastAir: 0,
-    cam: 'third', phys: PHYS.moon, wind: new THREE.Vector3(), windF: 0, jetting: false, flapping: false,
+    cam: 'third', phys: PHYS.moon, wind: new THREE.Vector3(), gust: new THREE.Vector3(), windF: 0, jetting: false, flapping: false,
     joy: { x: 0, y: 0 }, jumpHeld: false, jetHeld: false
 };
 
@@ -130,7 +130,8 @@ function resetPlayer(id) {
     surface.scene.add(plModel.root, plModel.shadow);
     player.pos.set(0, surface.site.heightFn(0, 0), 0);
     player.vel.set(0, 0, 0);
-    Object.assign(player, { onGround: true, facing: surface.yaw, phase: 0, air: 0, peak: 0, best: 0, lastAir: 0, wind: new THREE.Vector3() });
+    Object.assign(player, { onGround: true, facing: surface.yaw, phase: 0, air: 0, peak: 0, best: 0, lastAir: 0 });
+    player.wind.set(0, 0, 0); player.gust.set(0, 0, 0);
     plDom.weight.textContent = plWeightText();
     plDom.hint.textContent = plHintText();
     syncPlayerCam();
@@ -168,7 +169,8 @@ function stepPlayer(dt) {
         const s = base + gust * Math.max(0, fbm2D(t * 0.15, 3.1, 3) - 0.35) * 1.6;
         const dir = 0.6 + (fbm2D(t * 0.02, 9.7, 2) - 0.5) * 1.2;
         player.wind.set(Math.cos(dir) * s, 0, Math.sin(dir) * s);
-    }
+    } else player.wind.set(0, 0, 0);
+    player.wind.add(player.gust); // viento local (p. ej. un torbellino de Marte encima)
 
     const { walk, run: runV } = plWalkSpeeds(g);
     const target = wishLen * (run ? runV : walk);

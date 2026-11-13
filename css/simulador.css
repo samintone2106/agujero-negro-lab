@@ -412,6 +412,15 @@ body.surface-mode:not(.descent-mode) .play-hud { display: block; }
 .play-btn:active { transform: scale(0.95); }
 .play-btn:focus-visible, .play-joy:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
+.play-toast { position: fixed; z-index: 32; left: 50%; top: max(16px, env(safe-area-inset-top)); width: min(calc(100vw - 32px), 30rem);
+    padding: 10px 14px; border-radius: 14px; font-size: 13px; line-height: 1.4; color: #fff7ed;
+    background: rgba(40, 22, 8, .82); border: 1px solid rgba(251, 191, 36, .45); backdrop-filter: blur(8px);
+    opacity: 0; transform: translate(-50%, -6px) scale(0.97); transition: opacity .22s cubic-bezier(0.23, 1, 0.32, 1), transform .22s cubic-bezier(0.23, 1, 0.32, 1); }
+.play-toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+#play-toast[hidden] { display: none !important; }
+@media (min-width: 900px) { .play-toast { left: calc(50% + 7rem); } }
+@media (prefers-reduced-motion: reduce) { .play-toast { transition: none; } }
+
 /* Visor del casco: borde del vidrio, reflejo, vaho y datos proyectados */
 .visor { position: fixed; inset: 0; z-index: 25; pointer-events: none; --fog: 0; }
 .visor-glass { position: absolute; inset: 0; background:
