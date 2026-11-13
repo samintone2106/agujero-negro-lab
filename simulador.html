@@ -115,33 +115,33 @@
             <!-- Right Controls: NASA Live API, Ring Skim Camera, Warp Boost & Web Audio -->
             <div class="flex items-center gap-1.5 flex-wrap">
                 <a href="index.html" class="glass-hud rounded-xl p-2 sm:px-2.5 sm:py-1.5 text-singularity-cyan text-[10px] sm:text-xs font-mono hover:text-white focus:outline focus:outline-2" aria-label="Volver a la página de inicio">← <span class="hidden sm:inline">INICIO</span></a>
-                <button id="nasa-live-btn" type="button" aria-label="Fotos NASA" class="glass-hud hover:border-singularity-emerald/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5 group border-singularity-emerald/40" title="Abrir Galería Oficial de Misiones NASA en Tiempo Real">
+                <button id="nasa-live-btn" type="button" aria-label="Fotos NASA" class="planet-only glass-hud hover:border-singularity-emerald/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5 group border-singularity-emerald/40" title="Abrir Galería Oficial de Misiones NASA en Tiempo Real">
                     <span class="w-2 h-2 rounded-full bg-singularity-emerald animate-ping"></span>
                     <i data-lucide="satellite" class="w-3.5 h-3.5 text-singularity-emerald"></i>
                     <span class="hidden sm:inline font-mono text-[10px] sm:text-xs font-bold text-singularity-emerald tracking-wider">FOTOS NASA</span>
                 </button>
 
-                <button id="skim-btn" type="button" aria-label="Vista anillos" class="glass-hud hover:border-singularity-cyan/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5 group" title="Vuelo rasante sobre los anillos de hielo 3D">
+                <button id="skim-btn" type="button" aria-label="Vista anillos" class="planet-only glass-hud hover:border-singularity-cyan/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5 group" title="Vuelo rasante sobre los anillos de hielo 3D">
                     <i data-lucide="disc" class="w-3.5 h-3.5 text-singularity-cyan group-hover:rotate-45 transition-transform"></i>
                     <span id="skim-label" class="hidden sm:inline font-mono text-[10px] sm:text-xs font-bold text-singularity-cyan tracking-wider">VISTA ANILLOS</span>
                 </button>
 
-                <button id="warp-btn" type="button" aria-label="Impulso" class="glass-hud hover:border-singularity-amber/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5 group">
+                <button id="warp-btn" type="button" aria-label="Impulso" class="planet-only glass-hud hover:border-singularity-amber/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5 group">
                     <i data-lucide="zap" class="w-3.5 h-3.5 text-singularity-amber group-hover:scale-110 transition-transform"></i>
                     <span class="hidden sm:inline font-mono text-[10px] sm:text-xs font-bold text-singularity-amber glow-amber tracking-wider">IMPULSO</span>
                 </button>
 
-                <button id="moons-btn" type="button" aria-label="Mostrar u ocultar lunas" aria-pressed="true" class="glass-hud hover:border-sky-300/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5 group">
+                <button id="moons-btn" type="button" aria-label="Mostrar u ocultar lunas" aria-pressed="true" class="planet-only glass-hud hover:border-sky-300/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5 group">
                     <i data-lucide="orbit" class="w-3.5 h-3.5 text-sky-300 group-hover:rotate-45 transition-transform"></i>
                     <span class="hidden xl:inline font-mono text-[10px] sm:text-xs font-bold text-sky-300 tracking-wider">LUNAS</span>
                 </button>
 
-                <button id="land-btn" type="button" aria-label="Aterrizar en la superficie" class="glass-hud hover:border-singularity-emerald/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5 group border-singularity-emerald/50" hidden>
+                <button id="land-btn" type="button" aria-label="Aterrizar en la superficie" class="planet-only glass-hud hover:border-singularity-emerald/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5 group border-singularity-emerald/50" hidden>
                     <i data-lucide="chevrons-down" class="w-3.5 h-3.5 text-emerald-300 group-hover:translate-y-0.5 transition-transform"></i>
                     <span class="hidden sm:inline font-mono text-[10px] sm:text-xs font-bold text-emerald-300 tracking-wider">ATERRIZAR</span>
                 </button>
 
-                <button id="genesis-btn" type="button" aria-label="Génesis: cómo se formó este astro" class="glass-hud hover:border-singularity-violet/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5 group border-singularity-violet/50">
+                <button id="genesis-btn" type="button" aria-label="Génesis: cómo se formó este astro" class="planet-only glass-hud hover:border-singularity-violet/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5 group border-singularity-violet/50">
                     <i data-lucide="sparkles" class="w-3.5 h-3.5 text-purple-300 group-hover:scale-110 transition-transform"></i>
                     <span class="hidden sm:inline font-mono text-[10px] sm:text-xs font-bold text-purple-300 tracking-wider">GÉNESIS</span>
                 </button>
@@ -163,7 +163,7 @@
         <div class="relative flex-1 min-h-0 flex flex-col md:flex-row items-stretch md:items-center justify-between w-full gap-2 my-0.5 pointer-events-none">
 
             <!-- LEFT VERTICAL SIDEBAR: 12 Celestial Bodies Selector -->
-            <nav aria-label="Selector vertical de cuerpos celestes" class="glass-hud rounded-2xl p-1.5 sm:p-2 flex flex-row md:flex-col gap-1 md:max-h-full overflow-x-auto md:overflow-x-hidden md:overflow-y-auto no-scrollbar pointer-events-auto w-full md:w-36 shrink-0 border border-singularity-cyan/30 shadow-2xl">
+            <nav aria-label="Selector vertical de cuerpos celestes" class="glass-hud rounded-2xl p-1.5 sm:p-2 flex flex-row md:flex-col gap-1 md:max-h-full overflow-x-auto md:overflow-x-hidden md:overflow-y-auto no-scrollbar pointer-events-auto w-full md:w-44 shrink-0 border border-singularity-cyan/30 shadow-2xl">
                 <div class="hidden md:flex text-[8px] sm:text-[9px] font-mono text-singularity-cyan uppercase tracking-wider font-bold px-1.5 py-0.5 border-b border-white/10 items-center justify-between">
                     <span>16 ASTROS</span>
                     <i data-lucide="orbit" class="w-3 h-3"></i>
@@ -479,6 +479,45 @@
                 <div id="lens-modes" class="flex flex-wrap justify-end gap-1" role="group" aria-label="Modo de vista del agujero negro"></div>
             </div>
             <p id="lens-note" class="hidden sm:block mt-1.5 text-[10px] sm:text-[11px] leading-snug text-slate-300" aria-live="polite"></p>
+        </div>
+    </div>
+
+    <!-- Migas de pan: en qué escala del universo estás -->
+    <nav id="breadcrumb" class="breadcrumb hidden md:flex" aria-label="Ubicación en el universo"></nav>
+
+    <!-- UNIVERSO: ficha de lo que tocas en la galaxia o el vecindario -->
+    <div id="cosmos-panel" class="fixed z-30 left-1/2 -translate-x-1/2 bottom-4 w-[min(92vw,30rem)]" role="region" aria-label="Universo" hidden>
+        <div class="glass-hud rounded-2xl p-3 sm:p-4 border-indigo-300/40">
+            <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                    <div id="cosmos-kicker" class="font-mono text-[9px] font-bold tracking-widest text-indigo-200"></div>
+                    <h3 id="cosmos-title" class="text-base font-bold text-white leading-tight"></h3>
+                </div>
+                <button id="cosmos-close" type="button" aria-label="Cerrar ficha" class="shrink-0 text-slate-400 hover:text-white p-2 -m-1 rounded-lg">✕</button>
+            </div>
+            <p id="cosmos-text" class="mt-1.5 text-[11px] sm:text-xs leading-snug text-slate-300"></p>
+            <div id="cosmos-actions" class="mt-2 flex flex-wrap gap-1.5"></div>
+        </div>
+    </div>
+
+    <!-- ORIGEN: Big Bang (ciencia) / En el principio (fe) -->
+    <div class="fixed inset-x-0 bottom-4 z-40 flex justify-center px-3 sm:px-4 pointer-events-none">
+        <div id="origin-card" class="genesis-card glass-hud rounded-2xl border border-amber-200/40 w-full max-w-xl p-3 sm:p-4 pointer-events-auto" role="region" aria-label="Origen del universo" hidden>
+            <div class="flex items-center justify-between gap-2 mb-2">
+                <span id="origin-kicker" class="font-mono text-[10px] font-bold tracking-widest text-amber-200 uppercase truncate"></span>
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <button id="origin-pause" type="button" class="genesis-ctl">PAUSA</button>
+                    <button id="origin-skip" type="button" class="genesis-ctl hidden sm:inline-block">AL FINAL</button>
+                    <button id="origin-exit" type="button" class="genesis-ctl">SALIR</button>
+                </div>
+            </div>
+            <div aria-live="polite">
+                <div id="origin-clock" class="genesis-clock font-mono text-base sm:text-xl font-bold text-singularity-amber"></div>
+                <div id="origin-title" class="text-sm sm:text-base font-bold text-white mt-1"></div>
+                <p id="origin-text" class="text-xs sm:text-sm text-slate-300 leading-snug mt-1"></p>
+            </div>
+            <button id="origin-end" type="button" class="mt-2 w-full min-h-[36px] rounded-xl border border-amber-300/60 bg-amber-300/10 hover:bg-amber-300/20 font-mono text-[11px] font-bold text-amber-100" hidden></button>
+            <div id="origin-segs" class="genesis-segs mt-3" aria-hidden="true"></div>
         </div>
     </div>
 
@@ -858,6 +897,10 @@
     <script src="js/genesis/postfx.js"></script>
     <script src="js/genesis/events.js"></script>
     <script src="js/genesis/director.js"></script>
+    <script src="js/cosmos/stars.js"></script>
+    <script src="js/cosmos/cosmos.js"></script>
+    <script src="js/cosmos/bigbang.js"></script>
+    <script src="js/cosmos/nav.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>

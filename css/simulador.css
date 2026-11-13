@@ -397,3 +397,48 @@ body.surface-mode .hud-fade { opacity: 0 !important; pointer-events: none !impor
 .surface-walk:active { background: rgba(16, 185, 129, 0.25); transform: scale(0.96); }
 @media (pointer: fine) { .surface-walk { display: none; } }
 @media (prefers-reduced-motion: reduce) { .surface-fade { transition: none; } }
+
+/* Navegador cósmico */
+.nav-group {
+    flex-shrink: 0; align-self: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 700; letter-spacing: 0.14em;
+    color: rgba(165, 180, 252, 0.8); padding: 6px 6px 2px; white-space: nowrap;
+}
+.cosmos-btn {
+    flex-shrink: 0; display: flex; align-items: center; gap: 8px; text-align: left;
+    padding: 6px 10px; border-radius: 8px; border: 1px solid transparent;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; color: #cbd5e1;
+    transition: background-color 160ms cubic-bezier(0.23, 1, 0.32, 1), color 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+@media (min-width: 768px) { .cosmos-btn { width: 100%; padding: 4px 8px; font-size: 11px; } }
+.cosmos-btn:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
+.cosmos-btn[aria-pressed="true"] { border-color: rgba(165, 180, 252, 0.7); background: rgba(129, 140, 248, 0.18); color: #e0e7ff; }
+.nav-dot { width: 8px; height: 8px; border-radius: 999px; flex-shrink: 0; box-shadow: 0 0 8px currentColor; }
+.nav-moons { display: flex; flex-wrap: nowrap; gap: 4px; flex-shrink: 0; }
+@media (min-width: 768px) { .nav-moons { flex-direction: column; padding: 2px 0 4px 14px; border-left: 1px solid rgba(125, 211, 252, 0.25); margin-left: 10px; } }
+.nav-moon {
+    flex-shrink: 0; text-align: left; padding: 4px 8px; border-radius: 6px; border: 1px solid transparent;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #bae6fd;
+}
+.nav-moon:hover { background: rgba(125, 211, 252, 0.1); }
+.nav-moon[aria-pressed="true"] { border-color: rgba(125, 211, 252, 0.6); background: rgba(125, 211, 252, 0.15); color: #fff; }
+.cosmos-btn:focus-visible, .nav-moon:focus-visible, .breadcrumb button:focus-visible { outline: 2px solid #a5b4fc; outline-offset: 2px; }
+nav.in-cosmos .target-btn { opacity: 0.7; }
+.breadcrumb {
+    position: fixed; z-index: 25; left: 50%; transform: translateX(-50%); top: 4.1rem;
+    align-items: center; gap: 6px; padding: 3px 12px; border-radius: 999px;
+    background: rgba(5, 5, 14, 0.55); border: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(10px);
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #94a3b8; white-space: nowrap;
+}
+.breadcrumb button { color: #c7d2fe; }
+.breadcrumb button:hover { color: #fff; text-decoration: underline; }
+.breadcrumb > :last-child { color: #fff; font-weight: 700; }
+.crumb-sep { color: #475569; }
+
+/* Fuera del Sistema Solar se ocultan los paneles de los astros */
+body.cosmos-mode .planet-only, body.cosmos-mode .hud-fade, body.cosmos-mode #bottom-hud-deck,
+body.cosmos-mode #nasa-hud-widget, body.cosmos-mode #toggle-bottom-hud-btn, body.cosmos-mode #mini-zoom-bar,
+body.cosmos-mode #moon-card, body.cosmos-mode #surface-note { display: none !important; }
+/* El origen es una película: solo queda su tarjeta */
+body[data-cosmos^="origin"] header, body[data-cosmos^="origin"] nav, body[data-cosmos^="origin"] #cosmos-panel { display: none !important; }
+#cosmos-panel[hidden], #origin-card[hidden], #origin-end[hidden] { display: none !important; }

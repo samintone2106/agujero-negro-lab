@@ -6,7 +6,12 @@ function animate() {
     const elapsedTime = clock.elapsedTime;
     sharedUniforms.uTime.value = elapsedTime;
 
-    // en la superficie solo se dibuja esa escena
+    // escenas aparte: universo (galaxia, vecindario, origen) y superficie
+    if (cosmos.active) {
+        updateCosmos(frameDt, elapsedTime);
+        renderer.render(cosmos.scene, cosmos.camera);
+        return;
+    }
     if (surface.active) {
         updateSurface(frameDt, elapsedTime);
         renderer.render(surface.scene, surface.camera);
@@ -96,5 +101,7 @@ window.onload = function () {
         ? requestedTarget
         : 'saturn';
     switchTarget(initialTarget);
+    const requestedView = new URLSearchParams(window.location.search).get('view');
+    if (requestedView && cosmos.views[requestedView]) enterCosmos(requestedView);
     animate();
 };

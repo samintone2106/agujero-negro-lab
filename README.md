@@ -29,6 +29,9 @@ js/scene/bodies/           Astros, lunas en órbita y torbellinos de polvo de Ma
 js/scene/lens.js           Lente gravitacional de Gargantúa (modos cine, EHT, caída)
 js/scene/sky.js            Fondo estelar
 js/ui/                     Íconos, panel NASA, telemetría, controles y catálogo de misiones
+js/surface/                Aterrizar: sitios reales y escena de superficie caminable
+js/cosmos/                 Universo: estrellas reales (HYG), Vía Láctea, vecindario estelar, Big Bang y navegador
+assets/data/stars.json     8,920 estrellas visibles a simple vista (HYG v3.8, CC BY-SA 4.0)
 js/genesis/                Modo Génesis
 js/main.js                 Bucle de animación y arranque
 assets/                    Texturas y audios
@@ -43,6 +46,7 @@ La portada enlaza al laboratorio completo y permite abrir destinos concretos med
 - `?target=saturn`: Saturno.
 - `?target=gargantua`: agujero negro.
 - `?target=pulsar`: estrella de neutrones.
+- `?view=galaxy`, `?view=neighborhood`, `?view=origin` (Big Bang) y `?view=origin-faith`: vistas del universo.
 
 También se admiten los demás identificadores definidos en `ASTRO_TARGETS`. Si no se indica un destino o no es válido, se abre Saturno. El enlace **Inicio** del laboratorio permite regresar a la portada.
 
