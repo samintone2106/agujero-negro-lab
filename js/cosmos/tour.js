@@ -126,3 +126,5 @@ tourDom.voice?.addEventListener('click', () => {
     syncTourVoiceBtn();
 });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && tourState.active) endTour(); });
+// el volumen del narrador sigue al deslizador también a mitad de una frase
+document.getElementById('volume-slider')?.addEventListener('input', (e) => { if (tourAudio) tourAudio.volume = Math.min(1, Number(e.target.value) / 100); });

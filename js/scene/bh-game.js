@@ -15,7 +15,21 @@ const MAIL_LEVELS = [
 // Profundidad d ∈ [0, 1]: d = 0 es la estación (r = 10 r_s); d = 1 es r − r_s = 10⁻¹² r_s (allí 1 día tuyo ≈ 2,700 años).
 const MAIL_XMIN = -12;
 const mailX = (d) => Math.pow(10, Math.log10(9) + (MAIL_XMIN - Math.log10(9)) * d); // r/r_s − 1
-const mailF = (d) => { const x = mailX(d); return Math.sqrt(x / (1 + x)); };   // ritmo de tu reloj
+const mailF = (d) => { const x = mailX(d); return Math.sqrt(x / (1 + x)); };   // ritmo de tu reloj (respecto a muy lejos)
+const MAIL_F_STATION = mailF(0);                                                // la estación flota a 10 r_s: su reloj también va un poco lento
+const MAIL_UP = 0.22;                                                           // velocidad de subida (profundidad por segundo)
+// Si subes ahora mismo, ¿en qué día de la estación llegas? (integra el ascenso)
+function mailArrivalDays() {
+    // misma subida que en el juego: arranca lenta y acelera (si ya vas subiendo, sigue desde donde vas)
+    let d = mail.d, st = mail.stationDays, held = mail.dir < 0 ? mail.holdT || 0 : 0;
+    const dt = 1 / 30;
+    for (let i = 0; i < 2000 && d > 0; i++) {
+        st += dt * MAIL_SHIP_DAYS_PER_S * MAIL_F_STATION / mailF(d);
+        held += dt;
+        d -= MAIL_UP * Math.min(1, 0.3 + held * 0.9) * dt;
+    }
+    return st;
+}
 
 const mail = {
     active: false, level: 0, d: 0, dir: 0, fuel: 100, shipDays: 0, stationDays: 0,
@@ -61,11 +75,14 @@ function mailFeed(text) {
 
 /* ------------------------------ control ------------------------------ */
 function startMailGame(level = mail.level) {
+    // no se mezcla con otros modos (superficie, viaje, tour, universo)
+    if ((typeof surface !== 'undefined' && surface.active) || (typeof journey !== 'undefined' && journey.active) || (typeof voyage !== 'undefined' && voyage.active) || (typeof cosmos !== 'undefined' && cosmos.active)) return;
+    if (typeof tourState !== 'undefined' && tourState.active) endTour();
     if (typeof genesis !== 'undefined' && genesis.active) stopGenesis(true);
     if (state.currentTarget !== 'gargantua') switchTarget('gargantua');
+    if (!mail.active) mail.saved = { percent: state.descentPercent, cam: camera.position.clone(), target: controls.target.clone() };
     const L = MAIL_LEVELS[level];
-    Object.assign(mail, { active: true, level, d: 0, dir: 0, fuel: 100, shipDays: 0, stationDays: 0, result: null, lastMsgYear: -1, fall: 0 });
-    mail.savedPercent = state.descentPercent;
+    Object.assign(mail, { active: true, level, d: 0, dir: 0, holdT: 0, fuel: 100, shipDays: 0, stationDays: 0, result: null, lastMsgYear: -1, fall: 0, warnedFuel: false });
     document.body.classList.add('cf-mode');
     mailDom.hud.hidden = false;
     mailDom.end.hidden = true;
@@ -83,7 +100,8 @@ function exitMailGame() {
     document.body.classList.remove('cf-mode');
     mailDom.hud.hidden = true;
     mailDom.end.hidden = true;
-    updateRelativityTelemetry(mail.savedPercent);
+    if (mail.saved) { updateRelativityTelemetry(mail.saved.percent); camera.position.copy(mail.saved.cam); controls.target.copy(mail.saved.target); mail.saved = null; }
+    document.getElementById('gg-start')?.focus();
 }
 
 function mailFinish(result, text) {
@@ -125,15 +143,17 @@ function updateMailGame(dt) {
     if (!mail.result) {
         // mantener BAJAR o SUBIR; sin tocar nada, los motores te sostienen donde estás
         const noFuel = mail.fuel <= 0;
-        const dd = noFuel ? 0.12 : mail.dir > 0 ? 0.16 : mail.dir < 0 ? -0.22 : 0;
+        mail.holdT = mail.dir ? (mail.holdT || 0) + dt : 0;
+        const ramp = Math.min(1, 0.3 + mail.holdT * 0.9); // toques cortos = ajuste fino
+        const dd = noFuel ? 0.12 : mail.dir > 0 ? 0.16 * ramp : mail.dir < 0 ? -MAIL_UP * ramp : 0;
         mail.d = Math.min(1, Math.max(0, mail.d + dd * dt));
         const f = mailF(mail.d);
         const ship = dt * MAIL_SHIP_DAYS_PER_S;
         mail.shipDays += ship;
-        mail.stationDays += ship / f;
+        mail.stationDays += ship * MAIL_F_STATION / f;
         // flotar cerca del horizonte cuesta mucho más empuje (≈ 1/f): más combustible
         if (mail.d > 0.01) mail.fuel = Math.max(0, mail.fuel - dt * MAIL_BURN * Math.pow(1 / f, MAIL_BURN_EXP));
-        if (noFuel && mail.d > 0) mailFeed('¡Sin combustible! La nave cae…');
+        if (noFuel && mail.d > 0 && !mail.warnedFuel) { mail.warnedFuel = true; mailFeed('¡Sin combustible! La nave cae…'); }
         if (noFuel && mail.d >= 1) mailFinish('fall', 'Sin combustible no hay forma de sostenerse: caíste. Desde la estación te verían frenar y enrojecer en el borde para siempre.');
         // mensajes de la estación (llegan corridos al rojo: más graves cuanto más abajo estás)
         const y = Math.floor(mailYears(mail.stationDays));
@@ -150,7 +170,10 @@ function updateMailGame(dt) {
     const L = MAIL_LEVELS[mail.level], y = mailYears(mail.stationDays);
     mailDom.ship.textContent = mailClock(mail.shipDays);
     mailDom.station.textContent = mailClock(mail.stationDays);
-    mailDom.rate.textContent = f > 0.2 ? `1 día tuyo = ${mailFmt(1 / f, 2)} días allá` : 1 / f < 365 ? `1 día tuyo = ${mailFmt(1 / f, 0)} días allá` : `1 día tuyo = ${mailFmt(1 / f / 365.25, 1)} años allá`;
+    const arrive = mailYears(mailArrivalDays());
+    const fr = f / MAIL_F_STATION;
+    mailDom.rate.classList.toggle('is-good', mail.d > 0.02 && arrive >= L.from && arrive <= L.to); // subir ahora = entrega a tiempo
+    mailDom.rate.textContent = (mail.d > 0.02 ? `Si subes ahora llegas en el año ${mailFmt(arrive, arrive < 100 ? 1 : 0)} · ` : '') + (fr > 0.2 ? `1 día tuyo = ${mailFmt(1 / fr, 2)} días allá` : 1 / fr < 365 ? `1 día tuyo = ${mailFmt(1 / fr, 0)} días allá` : `1 día tuyo = ${mailFmt(1 / fr / 365.25, 1)} años allá`);
     mailDom.depth.textContent = x > 0.01 ? `${mailFmt(1 + x, 2)} r_s` : `horizonte + ${x.toExponential(0).replace('e', '×10^')} r_s`;
     mailDom.depthBar.style.transform = `scaleY(${mail.d.toFixed(3)})`;
     mailDom.fuel.style.transform = `scaleX(${(mail.fuel / 100).toFixed(3)})`;
@@ -179,10 +202,16 @@ function updateMailGame(dt) {
     const isUp = (k) => k === 'ArrowUp' || k.toLowerCase() === 'w';
     window.addEventListener('keydown', (e) => {
         if (!mail.active || e.target.closest('input, textarea, select')) return;
-        if (isDown(e.key)) { e.preventDefault(); go(1); }
-        if (isUp(e.key)) { e.preventDefault(); go(-1); }
-        if (e.key.toLowerCase() === 'e' || e.key === 'Enter') mailDeliver();
-        if (e.key === 'Escape') exitMailGame();
+        // con el diálogo final abierto, el teclado es de sus botones
+        if (mail.result) { if (e.key === 'Escape') { e.stopImmediatePropagation(); exitMailGame(); } return; }
+        const k = e.key;
+        let used = true;
+        if (isDown(k)) { e.preventDefault(); go(1); }
+        else if (isUp(k)) { e.preventDefault(); go(-1); }
+        else if ((k.toLowerCase() === 'e' || k === 'Enter') && !e.repeat && !e.target.closest('button')) mailDeliver();
+        else if (k === 'Escape') exitMailGame();
+        else used = false;
+        if (used) e.stopImmediatePropagation(); // que no lo reciban la superficie ni el tour
     }, true);
     window.addEventListener('keyup', (e) => { if (isDown(e.key)) stop(1); if (isUp(e.key)) stop(-1); });
     window.addEventListener('blur', () => { mail.dir = 0; });

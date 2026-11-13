@@ -687,3 +687,4 @@ body.cf-mode #mini-zoom-bar, body.cf-mode #moon-card, body.cf-mode #lens-panel, 
 .cf-stars { font-size: 30px; letter-spacing: 6px; color: #fcd34d; }
 @media (prefers-reduced-motion: reduce) { .cf-feed li { animation: none; } }
 .cf-up { background: rgba(125, 211, 252, .18); border-color: rgba(125, 211, 252, .6); color: #e0f2fe; }
+.cf-rate.is-good { color: #052e1c; background: #6ee7b7; padding: 3px 10px; border-radius: 999px; text-shadow: none; }

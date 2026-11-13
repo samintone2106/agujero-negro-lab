@@ -46,7 +46,7 @@ const passDom = { btn: document.getElementById('passport-btn'), box: document.ge
     worlds: document.getElementById('passport-worlds'), got: document.getElementById('passport-got'), ring: document.getElementById('passport-ring') };
 
 // Aviso de logro (tarjeta propia, arriba a la derecha).
-let achTimer = null;
+let achTimer = null, achHideTimer = null;
 function showAchievement(a) {
     const el = document.getElementById('ach-toast'); if (!el) return;
     document.getElementById('ach-icon').textContent = a[1];
@@ -54,7 +54,8 @@ function showAchievement(a) {
     document.getElementById('ach-how').textContent = a[3];
     el.hidden = false; el.classList.remove('is-out');
     clearTimeout(achTimer);
-    achTimer = setTimeout(() => { el.classList.add('is-out'); setTimeout(() => { el.hidden = true; }, 260); }, 4500);
+    clearTimeout(achHideTimer);
+    achTimer = setTimeout(() => { el.classList.add('is-out'); achHideTimer = setTimeout(() => { el.hidden = true; }, 260); }, 4500);
 }
 function renderPassport() {
     if (!passDom.box) return;
@@ -94,8 +95,8 @@ function setPassportOpen(open) {
 }
 passDom.btn?.addEventListener('click', () => setPassportOpen(passDom.box.hidden));
 document.getElementById('passport-close')?.addEventListener('click', () => { setPassportOpen(false); passDom.btn.focus(); });
-passDom.box?.addEventListener('click', (e) => { if (e.target === passDom.box) setPassportOpen(false); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && passDom.box && !passDom.box.hidden) setPassportOpen(false); });
+passDom.box?.addEventListener('click', (e) => { if (e.target === passDom.box) { setPassportOpen(false); passDom.btn.focus(); } });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && passDom.box && !passDom.box.hidden) { setPassportOpen(false); passDom.btn.focus(); } });
 
 /* ------------------------------ qué se vigila ------------------------------ */
 // Viaje completo sin saltar: se envuelve endVoyage (se llama por nombre global).
