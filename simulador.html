@@ -157,6 +157,10 @@
                 </label>
             </div>
 
+            <!-- ubicación en el universo: fila propia debajo de los controles (nunca encima del sonido) -->
+            <div class="basis-full h-0" aria-hidden="true"></div>
+            <nav id="breadcrumb" class="breadcrumb hidden md:flex" aria-label="Ubicación en el universo"></nav>
+
         </header>
 
         <!-- ==================== MIDDLE AREA: LEFT VERTICAL PLANET BAR + CENTER RETICLE + RIGHT NASA WIDGET ==================== -->
@@ -430,8 +434,6 @@
     </div>
 
     <!-- Migas de pan: en qué escala del universo estás -->
-    <nav id="breadcrumb" class="breadcrumb hidden md:flex" aria-label="Ubicación en el universo"></nav>
-
     <!-- UNIVERSO: ficha de lo que tocas en la galaxia o el vecindario -->
     <div id="cosmos-panel" class="fixed z-30 left-1/2 -translate-x-1/2 bottom-4 w-[min(92vw,30rem)]" role="region" aria-label="Universo" hidden>
         <div class="glass-hud rounded-2xl p-3 sm:p-4 border-indigo-300/40">
@@ -495,6 +497,20 @@
             <div id="journey-title" class="text-sm sm:text-base font-bold text-white mt-1"></div>
             <p id="journey-text" class="text-xs sm:text-sm text-slate-300 leading-snug mt-1" aria-live="polite"></p>
             <div class="mt-2.5 h-1 rounded-full bg-white/10 overflow-hidden"><div id="journey-bar" class="h-full w-full origin-left bg-amber-300" style="transform:scaleX(0)"></div></div>
+        </div>
+    </div>
+    <button id="journey-skip-big" type="button" class="skip-big" hidden>SALTAR VIAJE <span aria-hidden="true">⏭</span> <kbd>Esc</kbd></button>
+
+    <!-- Antes de aterrizar: ver el viaje o ir directo (se puede recordar) -->
+    <div id="land-choice" class="land-choice" role="dialog" aria-modal="true" aria-labelledby="land-choice-title" hidden>
+        <div class="land-choice-card glass-hud">
+            <div id="land-choice-title" class="font-mono text-[11px] tracking-widest text-emerald-300 font-bold">¿CÓMO LLEGAMOS?</div>
+            <div class="grid grid-cols-2 gap-2 mt-3">
+                <button id="land-choice-trip" type="button" class="land-opt"><span class="text-lg" aria-hidden="true">🚀</span><b>Ver el viaje</b><small>Despegue, crucero y llegada</small></button>
+                <button id="land-choice-direct" type="button" class="land-opt"><span class="text-lg" aria-hidden="true">⚡</span><b>Ir directo</b><small>Aparecer en la superficie</small></button>
+            </div>
+            <label class="flex items-center gap-2 mt-3 text-xs text-slate-300"><input id="land-choice-remember" type="checkbox" class="accent-emerald-400"> Recordar mi elección</label>
+            <button id="land-choice-cancel" type="button" class="mt-2 text-[11px] text-slate-400 hover:text-white underline">Cancelar</button>
         </div>
     </div>
 

@@ -47,6 +47,21 @@ journey.scene.add(jSun, new THREE.AmbientLight(0x404858, 0.25));
 // Tierra a escala de la escena (radio 600) y destino (se le pone la textura del astro)
 const jEarth = new THREE.Mesh(new THREE.SphereGeometry(600, 96, 64), new THREE.MeshPhongMaterial({ shininess: 20 }));
 loadTextureWithFallback([ASTRO_TARGETS.earth.textureUrl, ASTRO_TARGETS.earth.textureFallback], (t) => { jEarth.material.map = t; jEarth.material.needsUpdate = true; });
+// La plataforma (+Y) queda en Cabo Cañaveral (28.5°N, 80.6°O) y el este apunta a +X,
+// hacia donde se inclina el cohete al girar: así se lanza de verdad (aprovecha la rotación).
+(() => {
+    const onSphere = (latDeg, lonDeg) => {
+        // mismo mapeo que THREE.SphereGeometry con textura equirectangular (u = 0 en 180°O)
+        const phi = (lonDeg + 180) / 360 * Math.PI * 2, lat = THREE.MathUtils.degToRad(latDeg);
+        return new THREE.Vector3(-Math.cos(phi) * Math.cos(lat), Math.sin(lat), Math.sin(phi) * Math.cos(lat));
+    };
+    const pad = onSphere(28.5, -80.6);
+    const east = onSphere(28.5, -80.5).sub(pad).normalize();
+    const toUp = new THREE.Quaternion().setFromUnitVectors(pad, new THREE.Vector3(0, 1, 0));
+    east.applyQuaternion(toUp).setY(0).normalize();
+    const toEast = new THREE.Quaternion().setFromUnitVectors(east, new THREE.Vector3(1, 0, 0));
+    jEarth.quaternion.copy(toEast.multiply(toUp));
+})();
 const jEarthGlow = makeGlowSprite(0x6ab4ff, 1500, 0.6);
 const jDest = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 64), new THREE.MeshLambertMaterial());
 const jDestGlow = makeGlowSprite(0xffffff, 1, 0.5);
@@ -189,6 +204,7 @@ function startJourney(id, onArrive) {
     controls.enabled = false;
     document.body.classList.add('journey-mode');
     journeyDom.box.hidden = false;
+    document.getElementById('journey-skip-big').hidden = false;
     if (typeof journeyRumble === 'function') journeyRumble(true);
 }
 
@@ -197,6 +213,7 @@ function endJourney(arrived) {
     journey.active = false;
     document.body.classList.remove('journey-mode');
     journeyDom.box.hidden = true;
+    document.getElementById('journey-skip-big').hidden = true;
     if (typeof journeyRumble === 'function') journeyRumble(false);
     if (arrived && journey.onArrive) journey.onArrive();
     else controls.enabled = true;
@@ -345,9 +362,48 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && journey.
 
 /* ------------------------------ punto de entrada ------------------------------ */
 // ATERRIZAR (superficie sólida) o DESCENDER (gigantes gaseosos / rozar el Sol), con viaje antes.
-function startLanding(id = state.currentTarget) {
+// Antes de salir se pregunta si ver el viaje o ir directo (la elección se puede recordar).
+const LAND_PREF_KEY = 'eh.landMode';
+const readLandPref = () => { try { return localStorage.getItem(LAND_PREF_KEY); } catch (e) { return null; } };
+const saveLandPref = (v) => { try { localStorage.setItem(LAND_PREF_KEY, v); } catch (e) { /* almacenamiento bloqueado */ } };
+const landChoiceDom = {
+    box: document.getElementById('land-choice'),
+    trip: document.getElementById('land-choice-trip'),
+    direct: document.getElementById('land-choice-direct'),
+    remember: document.getElementById('land-choice-remember'),
+    cancel: document.getElementById('land-choice-cancel')
+};
+let landChoicePending = null, landChoiceReturn = null;
+
+function closeLandChoice() {
+    landChoiceDom.box.hidden = true;
+    landChoicePending = null;
+    if (landChoiceReturn) { landChoiceReturn.focus(); landChoiceReturn = null; }
+}
+function pickLandMode(mode) {
+    const go = landChoicePending;
+    if (landChoiceDom.remember.checked) saveLandPref(mode);
+    closeLandChoice();
+    if (go) go(mode);
+}
+
+function startLanding(id = state.currentTarget, opts = {}) {
     if (typeof clearMoonFocus === 'function' && moonFocus.mesh) clearMoonFocus();
     const arrive = () => (typeof DESCENTS !== 'undefined' && DESCENTS[id]) ? startDescent(id) : enterSurface(id);
-    if (reduceMotion.matches) { arrive(); return; }
-    startJourney(id, arrive);
+    const go = (mode) => (mode === 'direct' || reduceMotion.matches) ? arrive() : startJourney(id, arrive);
+    if (opts.mode) { go(opts.mode); return; }
+    const pref = readLandPref();
+    if (pref === 'trip' || pref === 'direct') { go(pref); return; }
+    landChoicePending = go;
+    landChoiceReturn = document.activeElement;
+    landChoiceDom.remember.checked = false;
+    landChoiceDom.box.hidden = false;
+    landChoiceDom.trip.focus();
 }
+
+landChoiceDom.trip?.addEventListener('click', () => pickLandMode('trip'));
+landChoiceDom.direct?.addEventListener('click', () => pickLandMode('direct'));
+landChoiceDom.cancel?.addEventListener('click', closeLandChoice);
+landChoiceDom.box?.addEventListener('click', (e) => { if (e.target === landChoiceDom.box) closeLandChoice(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !landChoiceDom.box.hidden) closeLandChoice(); });
+document.getElementById('journey-skip-big')?.addEventListener('click', () => { journey.t = 0.995; });

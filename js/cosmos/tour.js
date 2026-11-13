@@ -16,7 +16,7 @@ const TOUR_STEPS = [
     [6, 'Júpiter, el gigante que moldeó el Sistema Solar.', () => switchTarget('jupiter')],
     [6, 'Saturno y sus anillos de hielo, quizá más jóvenes que los dinosaurios.', () => switchTarget('saturn')],
     [6, 'Y un pequeño punto azul…', () => switchTarget('earth')],
-    [3, 'Bienvenido a casa.', () => startLanding('earth')]
+    [3, 'Bienvenido a casa.', () => startLanding('earth', { mode: 'trip' })]
 ];
 
 const tourState = { active: false, step: -1, t: 0 };
