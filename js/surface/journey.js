@@ -267,8 +267,11 @@ function updateJourney(dt) {
         journey.phaseShown = idx;
         const ph = J_PHASES[idx];
         journeyDom.phase.textContent = ph[1];
-        journeyDom.title.textContent = ph[2] || (idx === 2 ? `Rumbo a ${name}` : idx === 3 ? (journey.air ? `Entrada atmosférica en ${name}` : `Descenso propulsado sobre ${name}`) : `${name}: contacto`);
+        const sun = journey.dest === 'sun';
+        journeyDom.title.textContent = ph[2] || (idx === 2 ? `Rumbo a ${name}` : sun ? (idx === 3 ? 'Acercamiento al Sol' : 'Perihelio: el punto más cercano')
+            : idx === 3 ? (journey.air ? `Entrada atmosférica en ${name}` : `Descenso propulsado sobre ${name}`) : `${name}: contacto`);
         journeyDom.text.textContent = ph[3] || (idx === 2 ? `${dist} · viaje real: ${time} (${mission}). Aquí lo comprimimos en segundos.`
+            : sun ? (idx === 3 ? 'Nadie puede aterrizar en el Sol: no tiene superficie sólida. Solo se le pasa cerca, como la sonda Parker.' : 'A ~6 millones de km de la superficie el escudo térmico aguanta ~1,400 °C mientras la nave roza la corona.')
             : idx === 3 ? (journey.air ? 'El aire frena la nave a miles de km/h: el escudo se calienta a más de 1,000 °C y la rodea un plasma brillante.' : 'Sin aire para frenar, los retrocohetes encienden y bajan la nave poco a poco.')
             : 'Toque suave. Bienvenido.');
         if (idx >= 2) audioEngine.playClickTone(idx === 4 ? 420 : 660, 0.09);

@@ -156,11 +156,13 @@ function updateMoons(planetId, time) {
 function setMoonsVisible(on) {
     moonsState.visible = on;
     Object.values(moonSystems).forEach(s => { s.pivot.visible = on; });
+    const btn = document.getElementById('moons-btn');
+    if (btn) { btn.setAttribute('aria-pressed', String(on)); btn.classList.toggle('opacity-50', !on); }
 }
 
 document.getElementById('moons-btn')?.addEventListener('click', (e) => {
     audioEngine.playClickTone(720, 0.05);
+    // si había una luna enfocada, se suelta antes de esconderla (si no, la cámara queda pegada a la nada)
+    if (moonsState.visible && typeof moonFocus !== 'undefined' && moonFocus.mesh) clearMoonFocus();
     setMoonsVisible(!moonsState.visible);
-    e.currentTarget.setAttribute('aria-pressed', String(moonsState.visible));
-    e.currentTarget.classList.toggle('opacity-50', !moonsState.visible);
 });

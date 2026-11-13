@@ -41,6 +41,12 @@ function switchTarget(targetId) {
     if (typeof syncPulsarPanel === 'function') syncPulsarPanel();
     if (typeof syncLandButton === 'function') syncLandButton();
     if (typeof clearMoonFocus === 'function') clearMoonFocus();
+    // solo se ofrecen lunas y vista de anillos donde existen
+    const hasMoons = (typeof MOONS !== 'undefined' && (MOONS[targetId] || []).length > 0) || targetId === 'pluto';
+    const moonsBtn = document.getElementById('moons-btn');
+    if (moonsBtn) moonsBtn.hidden = !hasMoons;
+    const skimBtn = document.getElementById('skim-btn');
+    if (skimBtn) skimBtn.hidden = !['saturn', 'uranus', 'neptune'].includes(targetId);
     const surfaceNote = document.getElementById('surface-note');
     if (surfaceNote) surfaceNote.hidden = true;
 }

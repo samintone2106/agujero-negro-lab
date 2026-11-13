@@ -127,11 +127,12 @@ function renderNav() {
                     if (isCurrentMoon(m)) mb.setAttribute('aria-current', 'true');
                     if (m.target) mb.classList.add('has-view');
                     mb.addEventListener('click', () => {
-                        if (m.target) { goTarget(m.target); return; }
                         audioEngine.playClickTone(1000, 0.05);
                         if (cosmos.active || state.currentTarget !== id) switchTarget(id);
                         if (!moonsState.visible) setMoonsVisible(true);
                         requestAnimationFrame(() => { focusMoon(m.get()); closeMobileNav(); });
+                        // las lunas con vista propia: mismo acercamiento que las demás y luego se entra a su vista
+                        if (m.target) setTimeout(() => { if (moonFocus.mesh === m.get()) fadeThen(() => goTarget(m.target)); }, 1300);
                     });
                     list.appendChild(mb);
                 });

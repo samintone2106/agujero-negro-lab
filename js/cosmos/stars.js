@@ -60,19 +60,19 @@ const STAR_POINT_VS = `
     }
 `;
 const STAR_POINT_FS = `
-    uniform float uOpacity;
+    uniform float uOpacity, uHalo;
     varying vec3 vColor;
     void main() {
         vec2 q = gl_PointCoord - 0.5;
         float d = dot(q, q) * 4.0;
         if (d > 1.0) discard;
         float core = exp(-d * 5.0);
-        gl_FragColor = vec4(vColor * (0.6 + core * 0.8), (core + exp(-d * 1.5) * 0.3) * uOpacity);
+        gl_FragColor = vec4(vColor * (0.6 + core * 0.8), (core + exp(-d * 1.5) * uHalo) * uOpacity);
     }
 `;
 
 // Puntos de estrellas: en el cielo (radius) o en 3D según su distancia (scale años luz -> unidades).
-function buildStarPoints(list, { radius = null, lyScale = 1, sizeMul = 1 } = {}) {
+function buildStarPoints(list, { radius = null, lyScale = 1, sizeMul = 1, halo = 0.3, opacity = 1 } = {}) {
     const n = list.length;
     const pos = new Float32Array(n * 3), col = new Float32Array(n * 3), size = new Float32Array(n);
     const v = new THREE.Vector3();
@@ -89,7 +89,7 @@ function buildStarPoints(list, { radius = null, lyScale = 1, sizeMul = 1 } = {})
     g.setAttribute('aColor', new THREE.BufferAttribute(col, 3));
     g.setAttribute('aSize', new THREE.BufferAttribute(size, 1));
     const pts = new THREE.Points(g, new THREE.ShaderMaterial({
-        uniforms: { uOpacity: { value: 1 } }, vertexShader: STAR_POINT_VS, fragmentShader: STAR_POINT_FS,
+        uniforms: { uOpacity: { value: opacity }, uHalo: { value: halo } }, vertexShader: STAR_POINT_VS, fragmentShader: STAR_POINT_FS,
         transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false
     }));
     pts.frustumCulled = false;

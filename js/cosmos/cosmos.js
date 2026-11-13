@@ -154,7 +154,7 @@ function buildGalaxy() {
     g.setAttribute('aColor', new THREE.BufferAttribute(col, 3));
     g.setAttribute('aSize', new THREE.BufferAttribute(size, 1));
     const pts = new THREE.Points(g, new THREE.ShaderMaterial({
-        uniforms: { uOpacity: { value: 0.55 } },
+        uniforms: { uOpacity: { value: 0.55 }, uHalo: { value: 0.2 } },
         vertexShader: `
             attribute float aSize; attribute vec3 aColor; varying vec3 vColor;
             void main() { vColor = aColor; vec4 mv = modelViewMatrix * vec4(position, 1.0);
@@ -243,7 +243,8 @@ cosmos.views.neighborhood = {
             if (!cosmos.built.neighborhood) {
                 const root = new THREE.Group();
                 const near = cat.stars.filter(s => s[4] > 0 && s[4] * LY_PER_PC <= 1000);
-                root.add(buildStarPoints(near, { lyScale: 1, sizeMul: 1.3 }));
+                // halo casi nulo: miles de estrellas sumadas en el centro quemaban la imagen
+                root.add(buildStarPoints(near, { lyScale: 1, sizeMul: 0.75, halo: 0.04, opacity: 0.9 }));
                 const sun = new THREE.Object3D();
                 sun.add(makeGlowSprite(0xfff1b0, 6, 1)); sun.add(makeMoonLabel('SOL'));
                 root.add(sun);

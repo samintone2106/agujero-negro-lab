@@ -187,15 +187,15 @@ function stepPlayer(dt) {
         if (wishLen > 0.01) player.facing = Math.atan2(-plWish.x, -plWish.z);
 
         let jump = 0;
-        if (player.jumpHeld) jump = PL_V0;
+        if (player.jumpQueued) jump = player.jumpQueued; // salto cargado: más tiempo apretado = más fuerza
         // con poca gravedad, correr es ir a saltitos (como el Apolo)
         else if (run && wishLen > 0.3 && g < 2.5 && hv.length() > runV * 0.6) jump = Math.min(PL_V0, 0.55 * Math.sqrt(g) + 0.15);
         if (jump > 0) {
             player.vel.y = jump;
             player.onGround = false;
             player.air = 0; player.takeoffY = player.pos.y; player.peak = player.pos.y;
-            if (player.jumpHeld) audioEngine.playClickTone(300, 0.04);
-            player.jumpHeld = false;
+            if (player.jumpQueued) audioEngine.playClickTone(260 + (player.jumpQueued / PL_V0 - 1) * 400, 0.05);
+            player.jumpQueued = 0;
         }
     }
 
@@ -256,15 +256,20 @@ function animatePlayerModel(dt) {
         m.legs.forEach((L, i) => {
             const s = Math.sin(player.phase + i * Math.PI);
             L.thigh.rotation.x = s * amp;
-            L.shin.rotation.x = Math.max(0, -Math.cos(player.phase + i * Math.PI)) * amp * 1.2;
+            L.shin.rotation.x = -Math.max(0, -Math.cos(player.phase + i * Math.PI)) * amp * 1.2; // la rodilla dobla hacia atrás (el frente es −z)
         });
-        m.arms.forEach((A, i) => { A.upper.rotation.x = -Math.sin(player.phase + i * Math.PI) * amp * 0.8; A.fore.rotation.x = -0.25; });
+        m.arms.forEach((A, i) => { A.upper.rotation.x = -Math.sin(player.phase + i * Math.PI) * amp * 0.8; A.fore.rotation.x = 0.25; });
     } else {
         // en el aire: rodillas recogidas al subir, piernas listas al bajar
         const up = player.vel.y > 0 ? 1 : 0.4;
-        m.legs.forEach((L) => { L.thigh.rotation.x += (-0.5 * up - L.thigh.rotation.x) * Math.min(1, dt * 6); L.shin.rotation.x += (0.9 * up - L.shin.rotation.x) * Math.min(1, dt * 6); });
+        m.legs.forEach((L) => { L.thigh.rotation.x += (-0.5 * up - L.thigh.rotation.x) * Math.min(1, dt * 6); L.shin.rotation.x += (-0.9 * up - L.shin.rotation.x) * Math.min(1, dt * 6); });
         m.arms.forEach((A, i) => { A.upper.rotation.x += ((player.flapping ? Math.sin(performance.now() / 120) * 1.2 : -0.6) - A.upper.rotation.x) * Math.min(1, dt * 6); });
     }
+    // agacharse mientras se carga el salto
+    const crouch = player.onGround ? plChargeLevel() : 0;
+    if (crouch > 0) m.legs.forEach(L => { L.thigh.rotation.x = 0.9 * crouch; L.shin.rotation.x = -1.6 * crouch; });
+    m.root.position.y -= crouch * 0.28;
+    if (plDom.charge) plDom.charge.style.transform = `scaleX(${crouch.toFixed(3)})`;
     const ground = surface.site.heightFn(player.pos.x, player.pos.z);
     const h = Math.max(0, player.pos.y - ground);
     m.shadow.position.set(player.pos.x, ground + 0.03, player.pos.z);
@@ -318,7 +323,8 @@ const plDom = {
     visorData: document.getElementById('visor-data'),
     camBtn: document.getElementById('play-cam'),
     gear: document.getElementById('play-gear'),
-    settings: document.getElementById('play-settings')
+    settings: document.getElementById('play-settings'),
+    charge: document.getElementById('play-charge')
 };
 const plFmt = (v, d = 1) => v.toLocaleString('es-CO', { maximumFractionDigits: d, minimumFractionDigits: d });
 
@@ -334,7 +340,8 @@ function plHintText() {
     const h = PL_V0 * PL_V0 / (2 * g), tAir = 2 * PL_V0 / g;
     const air = tAir < 60 ? `${plFmt(tAir)} s` : `${plFmt(tAir / 60)} min`;
     const hh = h < 100 ? `${plFmt(h, h < 1 ? 2 : 1)} m` : `${plFmt(h, 0)} m`;
-    return `Un salto como en la Tierra (0.34 m) aquí sube ${hh} y dura ${air} en el aire.`;
+    const hMax = Math.pow(PL_V0 * 1.6, 2) / (2 * g);
+    return `Un salto como en la Tierra (0.34 m) aquí sube ${hh} y dura ${air} en el aire. Cargado al máximo: ${hMax < 100 ? plFmt(hMax, 1) : plFmt(hMax, 0)} m.`;
 }
 
 let plHudT = 0;
@@ -400,6 +407,18 @@ function plBreath(dt) {
     plBreathNode.bp.frequency.setTargetAtTime(ph < 0.5 ? 1100 : 700, ctx.currentTime, 0.1);
 }
 
+/* ------------------------------ salto cargado ------------------------------ */
+// Apretar y soltar: hasta 0.9 s de carga da 1.6 veces la velocidad (×2.56 de altura).
+const PL_CHARGE_MAX = 0.9, PL_CHARGE_MUL = 1.6;
+function plChargeStart() { if (player.chargeAt == null) player.chargeAt = performance.now(); }
+function plChargeLevel() { return player.chargeAt == null ? 0 : Math.min(1, (performance.now() - player.chargeAt) / 1000 / PL_CHARGE_MAX); }
+function plChargeRelease() {
+    if (player.chargeAt == null) return;
+    const k = plChargeLevel();
+    player.chargeAt = null;
+    if (player.onGround) player.jumpQueued = PL_V0 * (1 + (PL_CHARGE_MUL - 1) * k);
+}
+
 /* ------------------------------ controles ------------------------------ */
 (() => {
     // teclado: espacio salta (sin hacer clic en botones enfocados), V cambia la vista, Q propulsor
@@ -407,13 +426,13 @@ function plBreath(dt) {
         if (!surface.active || e.target.closest('input, textarea, select')) return;
         const key = e.key.toLowerCase();
         if (key === ' ' || key.startsWith('arrow')) e.preventDefault();
-        if (key === ' ' && !e.repeat) player.jumpHeld = true;
+        if (key === ' ' && !e.repeat) plChargeStart();
         if (key === 'q') player.jetHeld = true;
         if (key === 'v' && !e.repeat) setPlayerCam(player.cam === 'helmet' ? 'third' : 'helmet');
     }, true);
     window.addEventListener('keyup', (e) => {
         const key = e.key.toLowerCase();
-        if (key === ' ') player.jumpHeld = false;
+        if (key === ' ') plChargeRelease();
         if (key === 'q') player.jetHeld = false;
     });
 
@@ -438,7 +457,7 @@ function plBreath(dt) {
         b.addEventListener('pointerdown', (e) => { e.preventDefault(); on(); });
         ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, off));
     };
-    hold('play-jump', () => { player.jumpHeld = true; surface.keys.add(' '); }, () => { player.jumpHeld = false; surface.keys.delete(' '); });
+    hold('play-jump', () => { plChargeStart(); surface.keys.add(' '); }, () => { plChargeRelease(); surface.keys.delete(' '); });
     hold('play-jet', () => { player.jetHeld = true; }, () => { player.jetHeld = false; });
 
     plDom.camBtn?.addEventListener('click', () => setPlayerCam(player.cam === 'helmet' ? 'third' : 'helmet'));
