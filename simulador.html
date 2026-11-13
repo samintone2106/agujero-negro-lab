@@ -456,21 +456,32 @@
         <div class="fact-timer"><div id="fact-timer-bar"></div></div>
     </div>
 
-    <!-- PASAPORTE ESPACIAL -->
-    <div id="passport" class="land-choice" role="dialog" aria-modal="true" aria-labelledby="passport-title" hidden>
-        <div class="land-choice-card glass-hud passport-card">
-            <div class="flex items-center justify-between gap-2">
+    <!-- BITÁCORA: sellos de mundos pisados y logros (panel lateral) -->
+    <div id="passport" class="pass-wrap" hidden>
+        <aside class="pass-drawer" role="dialog" aria-modal="true" aria-labelledby="passport-title">
+            <header class="pass-head">
                 <div>
-                    <div id="passport-title" class="font-mono text-[11px] tracking-widest text-emerald-300 font-bold">PASAPORTE ESPACIAL</div>
-                    <div id="passport-count" class="text-[11px] text-slate-400 mt-0.5"></div>
+                    <div class="font-mono text-[10px] tracking-[.2em] text-emerald-300 font-bold">BITÁCORA</div>
+                    <h2 id="passport-title" class="text-lg font-bold text-white leading-tight mt-0.5">Tu pasaporte espacial</h2>
                 </div>
-                <button id="passport-close" type="button" class="genesis-ctl" aria-label="Cerrar">✕</button>
+                <button id="passport-close" type="button" class="genesis-ctl" aria-label="Cerrar bitácora">✕</button>
+            </header>
+            <div class="pass-progress">
+                <div><b id="passport-worlds">0</b><span>mundos pisados</span></div>
+                <div><b id="passport-got">0</b><span>logros</span></div>
+                <div class="pass-ring" aria-hidden="true"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5" class="pass-ring-bg"/><circle id="passport-ring" cx="18" cy="18" r="15.5" class="pass-ring-fg"/></svg></div>
             </div>
-            <div class="font-mono text-[9px] tracking-widest text-slate-400 mt-3">SELLOS · MUNDOS PISADOS</div>
-            <ul id="passport-stamps" class="pass-stamps mt-1.5"></ul>
-            <div class="font-mono text-[9px] tracking-widest text-slate-400 mt-3">LOGROS</div>
-            <ul id="passport-ach" class="pass-achs mt-1.5"></ul>
-        </div>
+            <p id="passport-count" class="sr-only"></p>
+            <h3 class="pass-sub">Logros</h3>
+            <ul id="passport-ach" class="pass-achs"></ul>
+            <h3 class="pass-sub">Sellos</h3>
+            <ul id="passport-stamps" class="pass-stamps"></ul>
+        </aside>
+    </div>
+    <!-- aviso de logro -->
+    <div id="ach-toast" class="ach-toast" role="status" aria-live="polite" hidden>
+        <span id="ach-icon" class="ach-icon" aria-hidden="true"></span>
+        <div><div class="ach-kicker">LOGRO DESBLOQUEADO</div><div id="ach-name" class="ach-name"></div><div id="ach-how" class="ach-how"></div></div>
     </div>
 
     <!-- JUEGO DEL AGUJERO NEGRO -->

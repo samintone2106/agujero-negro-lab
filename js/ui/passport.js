@@ -27,7 +27,7 @@ function unlock(id) {
     const a = ACHIEVEMENTS.find(x => x[0] === id); if (!a) return;
     passport.got[id] = new Date().toISOString().slice(0, 10);
     savePassport();
-    if (typeof showToast === 'function') showToast(`${a[1]} Logro: ${a[2]} — ${a[3]}`);
+    showAchievement(a);
     audioEngine.playClickTone(1320, 0.08);
     renderPassport();
 }
@@ -42,11 +42,29 @@ function stamp(id) {
 }
 
 /* ------------------------------ ventana ------------------------------ */
-const passDom = { btn: document.getElementById('passport-btn'), box: document.getElementById('passport'), stamps: document.getElementById('passport-stamps'), ach: document.getElementById('passport-ach'), count: document.getElementById('passport-count') };
+const passDom = { btn: document.getElementById('passport-btn'), box: document.getElementById('passport'), stamps: document.getElementById('passport-stamps'), ach: document.getElementById('passport-ach'), count: document.getElementById('passport-count'),
+    worlds: document.getElementById('passport-worlds'), got: document.getElementById('passport-got'), ring: document.getElementById('passport-ring') };
+
+// Aviso de logro (tarjeta propia, arriba a la derecha).
+let achTimer = null;
+function showAchievement(a) {
+    const el = document.getElementById('ach-toast'); if (!el) return;
+    document.getElementById('ach-icon').textContent = a[1];
+    document.getElementById('ach-name').textContent = a[2];
+    document.getElementById('ach-how').textContent = a[3];
+    el.hidden = false; el.classList.remove('is-out');
+    clearTimeout(achTimer);
+    achTimer = setTimeout(() => { el.classList.add('is-out'); setTimeout(() => { el.hidden = true; }, 260); }, 4500);
+}
 function renderPassport() {
     if (!passDom.box) return;
     const ids = Object.keys(SURFACE_SITES);
-    passDom.count.textContent = `${Object.keys(passport.stamps).length}/${ids.length} mundos · ${Object.keys(passport.got).length}/${ACHIEVEMENTS.length} logros`;
+    const nW = Object.keys(passport.stamps).length, nA = Object.keys(passport.got).length;
+    passDom.count.textContent = `${nW}/${ids.length} mundos · ${nA}/${ACHIEVEMENTS.length} logros`;
+    passDom.worlds.textContent = `${nW}/${ids.length}`;
+    passDom.got.textContent = `${nA}/${ACHIEVEMENTS.length}`;
+    const k = (nW / ids.length + nA / ACHIEVEMENTS.length) / 2;
+    passDom.ring.style.strokeDashoffset = String(97.4 * (1 - k));
     passDom.stamps.replaceChildren(...ids.map(id => {
         const li = document.createElement('li');
         const got = !!passport.stamps[id];
@@ -55,10 +73,12 @@ function renderPassport() {
         li.title = got ? `Pisado el ${passport.stamps[id]}` : 'Todavía no';
         return li;
     }));
-    passDom.ach.replaceChildren(...ACHIEVEMENTS.map(([id, icon, name, how]) => {
+    // primero los conseguidos
+    const ordered = [...ACHIEVEMENTS].sort((x, y) => (passport.got[y[0]] ? 1 : 0) - (passport.got[x[0]] ? 1 : 0));
+    passDom.ach.replaceChildren(...ordered.map(([id, icon, name, how]) => {
         const li = document.createElement('li');
         li.className = 'pass-ach' + (passport.got[id] ? ' is-got' : '');
-        const i = document.createElement('span'); i.textContent = passport.got[id] ? icon : '🔒'; i.setAttribute('aria-hidden', 'true');
+        const i = document.createElement('span'); i.textContent = icon; i.setAttribute('aria-hidden', 'true');
         const t = document.createElement('div');
         const b = document.createElement('b'); b.textContent = name;
         const s = document.createElement('small'); s.textContent = how;
