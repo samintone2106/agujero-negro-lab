@@ -486,3 +486,11 @@ body.journey-mode header, body.journey-mode nav, body.journey-mode .hud-fade, bo
 body.journey-mode #nasa-hud-widget, body.journey-mode #toggle-bottom-hud-btn, body.journey-mode #mini-zoom-bar,
 body.journey-mode .breadcrumb, body.journey-mode .hud-scanline, body.journey-mode .cockpit-frame, body.journey-mode #moon-card { display: none !important; }
 body.descent-mode #surface-hud .surface-walk, body.descent-mode #surface-hud p.font-mono { display: none !important; }
+
+#orrery-bar[hidden], #tour-caption[hidden] { display: none !important; }
+.tour-text { text-shadow: 0 2px 18px rgba(0, 0, 0, 0.9); opacity: 0; transform: translateY(6px); transition: opacity 600ms cubic-bezier(0.23, 1, 0.32, 1), transform 600ms cubic-bezier(0.23, 1, 0.32, 1); }
+.tour-text.is-on { opacity: 1; transform: none; }
+body.tour-mode header, body.tour-mode nav, body.tour-mode .hud-fade, body.tour-mode #bottom-hud-deck, body.tour-mode #nasa-hud-widget,
+body.tour-mode #toggle-bottom-hud-btn, body.tour-mode #mini-zoom-bar, body.tour-mode .breadcrumb, body.tour-mode #cosmos-panel,
+body.tour-mode #origin-card, body.tour-mode #lens-panel, body.tour-mode #pulsar-panel, body.tour-mode .hud-scanline, body.tour-mode .cockpit-frame { display: none !important; }
+@media (prefers-reduced-motion: reduce) { .tour-text { transition: none; } }

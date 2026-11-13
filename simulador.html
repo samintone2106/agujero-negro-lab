@@ -447,7 +447,24 @@
         </div>
     </div>
 
-    <!-- ORIGEN: Big Bang (ciencia) / En el principio (fe) -->
+    <!-- MAPA DEL SISTEMA SOLAR: control del tiempo -->
+    <div id="orrery-bar" class="fixed z-30 left-1/2 -translate-x-1/2 top-[7.5rem] md:top-[6.5rem] glass-hud rounded-2xl px-2 py-1.5 flex items-center gap-1" role="group" aria-label="Fecha del mapa" hidden>
+        <button type="button" class="lens-mode-btn" data-orrery="-365" aria-label="Un año atrás">−1 A</button>
+        <button type="button" class="lens-mode-btn" data-orrery="-30" aria-label="Un mes atrás">−1 M</button>
+        <span id="orrery-date" class="px-2 font-mono text-[11px] font-bold text-amber-100 min-w-[10rem] text-center tabular-nums"></span>
+        <button type="button" class="lens-mode-btn" data-orrery="30" aria-label="Un mes adelante">+1 M</button>
+        <button type="button" class="lens-mode-btn" data-orrery="365" aria-label="Un año adelante">+1 A</button>
+        <button type="button" class="lens-mode-btn" data-orrery="play" aria-label="Reproducir o pausar el tiempo">▶</button>
+        <button type="button" class="lens-mode-btn" data-orrery="today">HOY</button>
+    </div>
+
+    <!-- TOUR: subtítulos -->
+    <div id="tour-caption" class="fixed inset-x-0 bottom-10 z-50 flex flex-col items-center gap-3 px-4 pointer-events-none" hidden>
+        <p id="tour-text" class="tour-text max-w-2xl text-center text-lg sm:text-2xl font-semibold text-white"></p>
+        <button id="tour-stop" type="button" class="genesis-ctl pointer-events-auto">TERMINAR TOUR</button>
+    </div>
+
+    <!-- ORIGEN: Big Bang -->
     <div class="fixed inset-x-0 bottom-4 z-40 flex justify-center px-3 sm:px-4 pointer-events-none">
         <div id="origin-card" class="genesis-card glass-hud rounded-2xl border border-amber-200/40 w-full max-w-xl p-3 sm:p-4 pointer-events-auto" role="region" aria-label="Origen del universo" hidden>
             <div class="flex items-center justify-between gap-2 mb-2">
@@ -862,6 +879,9 @@
     <script src="js/cosmos/stars.js"></script>
     <script src="js/cosmos/cosmos.js"></script>
     <script src="js/cosmos/bigbang.js"></script>
+    <script src="js/cosmos/orrery.js"></script>
+    <script src="js/cosmos/compare.js"></script>
+    <script src="js/cosmos/tour.js"></script>
     <script src="js/surface/descent.js"></script>
     <script src="js/surface/journey.js"></script>
     <script src="js/cosmos/nav.js"></script>

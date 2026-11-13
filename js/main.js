@@ -5,6 +5,7 @@ function animate() {
     const frameDt = Math.min(0.1, clock.getDelta());
     const elapsedTime = clock.elapsedTime;
     sharedUniforms.uTime.value = elapsedTime;
+    updateTour(frameDt);
 
     // escenas aparte: universo (galaxia, vecindario, origen) y superficie
     if (cosmos.active) {
