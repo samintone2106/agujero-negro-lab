@@ -58,6 +58,7 @@ function exitCosmos(targetId = state.currentTarget) {
     if (!cosmos.active) return;
     const view = cosmos.views[cosmos.mode];
     if (view.stop) view.stop();
+    cosmos.scene.clear();
     cosmos.active = false;
     cosmos.mode = null;
     cosmos.controls.enabled = false;
@@ -216,11 +217,14 @@ cosmos.views.galaxy = {
         cosmos.controls.maxDistance = 2600;
         cosmosInfo('ESCALA: 100,000 AÑOS LUZ', 'La Vía Láctea',
             'Una galaxia espiral barrada con 100,000–400,000 millones de estrellas. Toca un punto azul para saber qué es; el amarillo es el Sol.',
-            [['IR AL SOL', () => { cosmos.controls.target.copy(GAL_SUN); cosmos.camera.position.copy(GAL_SUN).add(new THREE.Vector3(-60, 70, 90)); }]]);
+            [['IR AL SOL', () => {
+                const sun = cosmos.built.galaxy.markers[0].obj.getWorldPosition(new THREE.Vector3());
+                cosmos.controls.target.copy(sun); cosmos.camera.position.copy(sun).add(new THREE.Vector3(-60, 70, 90));
+            }]]);
     },
     update(dt) {
         // la galaxia gira en sentido horario vista desde el norte (muy acelerado)
-        cosmos.built.galaxy.gal.rotation.y -= dt * 0.01;
+        cosmos.built.galaxy.root.rotation.y -= dt * 0.01; // los marcadores giran con sus brazos
         // las etiquetas cercanas al Sol solo aparecen al acercarse (si no, se enciman)
         cosmos.built.galaxy.markers.forEach(m => {
             m.label.visible = m.always || cosmos.camera.position.distanceTo(m.obj.position) < 260;
@@ -234,6 +238,7 @@ cosmos.views.galaxy = {
 cosmos.views.neighborhood = {
     start() {
         const go = (cat) => {
+            if (!cosmos.active || cosmos.mode !== 'neighborhood') return; // se cambió de vista mientras cargaba
             if (!cosmos.built.neighborhood) {
                 const root = new THREE.Group();
                 const near = cat.stars.filter(s => s[4] > 0 && s[4] * LY_PER_PC <= 1000);

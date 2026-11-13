@@ -179,6 +179,7 @@ function originUpdate(dt, time) {
     if (!origin.paused) origin.elapsed += dt * 1000;
     const p = Math.min(1, origin.elapsed / origin.cfg.duration);
     const u = originParticles.material.uniforms;
+    time = origin.elapsed / 1000; // reloj propio: PAUSA congela todo
     u.uTime.value = time;
     const cam = cosmos.camera;
     let flash = 0, sunK = 0, camDist, camH;

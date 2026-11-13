@@ -108,15 +108,18 @@ function updateBreadcrumb() {
 // Mantener menú y migas al día cuando cambia el astro o la luna enfocada.
 const _switchTarget = switchTarget;
 switchTarget = function (id) {
-    if (cosmos.active) { cosmos.active = false; } // salir del universo si se elige un astro
-    _switchTarget(id);
-    if (!cosmos.active) {
+    if (cosmos.active) {
+        // salir del universo si se elige un astro
+        const view = cosmos.views[cosmos.mode];
+        if (view && view.stop) view.stop();
+        cosmos.scene.clear();
+        cosmos.active = false;
+        cosmos.mode = null;
         cosmos.controls.enabled = false; controls.enabled = true;
         document.body.classList.remove('cosmos-mode'); delete document.body.dataset.cosmos;
         cosmosDom.panel.hidden = true;
-        ['origin', 'origin-faith'].forEach(m => { if (cosmos.mode === m) originStop(); });
-        cosmos.mode = null;
     }
+    _switchTarget(id);
     syncNav();
     updateBreadcrumb();
     // en la tira horizontal del móvil, llevar a la vista el astro elegido
