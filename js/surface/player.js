@@ -416,7 +416,8 @@ function plChargeRelease() {
     if (player.chargeAt == null) return;
     const k = plChargeLevel();
     player.chargeAt = null;
-    if (surface.active && player.onGround) player.jumpQueued = PL_V0 * (1 + (PL_CHARGE_MUL - 1) * k);
+    // con la física nueva el salto entra a un búfer (vale aunque toques el suelo un instante después)
+    if (surface.active && (player.onGround || (window.surfaceGame && surfaceGame.active))) player.jumpQueued = PL_V0 * (1 + (PL_CHARGE_MUL - 1) * k);
 }
 
 /* ------------------------------ controles ------------------------------ */
@@ -431,7 +432,7 @@ function plChargeRelease() {
         if (key === 'v' && !e.repeat) setPlayerCam(player.cam === 'helmet' ? 'third' : 'helmet');
     }, true);
     // si la ventana pierde el foco no llega el keyup: se cancela la carga
-    window.addEventListener('blur', () => { player.chargeAt = null; player.jetHeld = false; });
+    window.addEventListener('blur', () => { player.chargeAt = null; player.jetHeld = false; player.jumpQueued = 0; player.joy.x = player.joy.y = 0; const k = document.getElementById('play-joy-knob'); if (k) k.style.transform = ''; });
     window.addEventListener('keyup', (e) => {
         const key = e.key.toLowerCase();
         if (key === ' ') plChargeRelease();
@@ -452,7 +453,7 @@ function plChargeRelease() {
         joy.addEventListener('pointerdown', (e) => { e.preventDefault(); id = e.pointerId; joy.setPointerCapture(id); move(e); });
         joy.addEventListener('pointermove', (e) => { if (e.pointerId === id) move(e); });
         const end = () => { id = null; player.joy.x = player.joy.y = 0; knob.style.transform = ''; };
-        ['pointerup', 'pointercancel'].forEach(ev => joy.addEventListener(ev, end));
+        ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => joy.addEventListener(ev, end));
     }
     const hold = (elId, on, off) => {
         const b = document.getElementById(elId); if (!b) return;
@@ -462,6 +463,9 @@ function plChargeRelease() {
     hold('play-jump', () => { plChargeStart(); surface.keys.add(' '); }, () => { plChargeRelease(); surface.keys.delete(' '); });
     hold('play-jet', () => { player.jetHeld = true; }, () => { player.jetHeld = false; });
 
+    // datos científicos plegados (la acción primero; la ciencia, a un toque)
+    const dataBtn = document.getElementById('play-data-btn'), dataBox = document.getElementById('play-data');
+    dataBtn?.addEventListener('click', () => { dataBox.hidden = !dataBox.hidden; dataBtn.setAttribute('aria-expanded', String(!dataBox.hidden)); dataBtn.textContent = dataBox.hidden ? 'DATOS ▾' : 'DATOS ▴'; });
     plDom.camBtn?.addEventListener('click', () => setPlayerCam(player.cam === 'helmet' ? 'third' : 'helmet'));
     plDom.gear?.addEventListener('click', () => {
         const open = plDom.settings.hidden;

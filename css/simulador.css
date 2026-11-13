@@ -412,6 +412,12 @@ body.surface-mode:not(.descent-mode) .play-hud { display: block; }
 .play-btn:active { transform: scale(0.95); }
 .play-btn:focus-visible, .play-joy:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
+.play-compass { font: 600 11px 'JetBrains Mono', monospace; color: #e9d5ff; display: inline-flex; align-items: center; gap: 6px; }
+.play-compass b { display: inline-block; color: #c4b5fd; font-size: 14px; transition: transform .2s cubic-bezier(0.23, 1, 0.32, 1); }
+#play-compass[hidden], #play-data[hidden] { display: none !important; }
+.play-mission.is-pop { animation: missionPop .45s cubic-bezier(0.23, 1, 0.32, 1); }
+@keyframes missionPop { 0% { transform: scale(1); } 35% { transform: scale(1.25); background: #fde68a; } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .play-mission.is-pop { animation: none; } .play-compass b { transition: none; } }
 .play-mission { font: 700 10px 'JetBrains Mono', monospace; letter-spacing: .12em; color: #0b0f14; background: #c4b5fd; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
 #play-mission[hidden], #play-prompt[hidden], #play-skip[hidden] { display: none !important; }
 .play-prompt { position: fixed; z-index: 32; left: 50%; bottom: 36%; transform: translateX(-50%); padding: 8px 14px; border-radius: 12px;

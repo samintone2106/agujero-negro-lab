@@ -677,6 +677,11 @@
             </div>
         </div>
         <div class="flex items-center justify-between gap-2 mt-1"><p id="play-weight" class="text-[11px] text-white"></p><span id="play-mission" class="play-mission" hidden></span></div>
+        <div class="flex items-center justify-between gap-2 mt-1.5">
+            <span id="play-compass" class="play-compass" hidden></span>
+            <button id="play-data-btn" type="button" class="genesis-ctl" aria-expanded="false" aria-controls="play-data">DATOS ▾</button>
+        </div>
+        <div id="play-data" hidden>
         <dl class="grid grid-cols-5 gap-1.5 mt-1.5 font-mono text-[9px]">
             <div><dt class="text-slate-400">ALTURA</dt><dd id="play-alt" class="text-white font-bold">0 m</dd></div>
             <div><dt class="text-slate-400">EN EL AIRE</dt><dd id="play-air" class="text-white font-bold">—</dd></div>
@@ -685,6 +690,7 @@
             <div><dt class="text-slate-400">VIENTO</dt><dd id="play-wind" class="text-white font-bold">—</dd></div>
         </dl>
         <p id="play-hint" class="text-[10px] text-slate-300 mt-1.5 leading-snug"></p>
+        </div>
         <div class="mt-1.5 flex items-center gap-2 font-mono text-[9px] text-slate-400">FUERZA<div class="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden"><div id="play-charge" class="h-full w-full origin-left bg-emerald-300" style="transform:scaleX(0)"></div></div><span>mantén Espacio</span></div>
         <div id="play-settings" class="play-settings" hidden>
             <fieldset>
@@ -695,7 +701,7 @@
             <fieldset>
                 <legend>Astronauta</legend>
                 <label><input type="radio" name="play-skin" value="rana"> Rana</label>
-                <label><input type="radio" name="play-skin" value="conejo"> Conejo</label>
+                <label><input type="radio" name="play-skin" value="abeja"> Abeja</label>
                 <label><input type="radio" name="play-skin" value="flamenco"> Flamenco</label>
             </fieldset>
             <fieldset>

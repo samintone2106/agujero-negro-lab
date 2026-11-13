@@ -7,7 +7,7 @@
 import RAPIER from '@dimforge/rapier3d-compat';
 
 const THREE = window.THREE;
-const MODELS = { rana: 'assets/models/astro-rana.glb', conejo: 'assets/models/astro-conejo.glb', flamenco: 'assets/models/astro-flamenco.glb' };
+const MODELS = { rana: 'assets/models/astro-rana.glb', abeja: 'assets/models/astro-abeja.glb', flamenco: 'assets/models/astro-flamenco.glb' };
 const ROCKET_URL = 'assets/models/cohete.glb';
 const ROCKET_H = 11;          // m de alto del cohete
 const ASTRO_H = 1.75;         // m de alto del astronauta
@@ -49,6 +49,7 @@ async function buildAstronaut() {
             o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false;
             // un poco de luz propia: sin cielo que ilumine, de espaldas al Sol el traje se vería negro
             o.material = o.material.clone();
+            o.material.userData.owned = true;
             if (o.material.map) { o.material.emissiveMap = o.material.map; o.material.emissive = new THREE.Color(0.32, 0.32, 0.34); }
         }
     });
@@ -126,6 +127,9 @@ async function buildShip() {
     flame.add(core, outer, cone);
     flame.position.y = 0.3;
     group.add(flame);
+    // lo creado aquí (no lo del modelo en caché) se marca para liberarlo al salir
+    [hatch, glow, ramp, cone].forEach(m => { m.geometry.userData.owned = true; m.material.userData.owned = true; });
+    [core, outer].forEach(m => { m.material.userData.owned = true; });
     const rampAngle = Math.atan2(hatchY - 0.95, 3.2);
     return { group, hatchPivot, rampPivot, rampAngle, glow, flame, core, outer, cone, R, hatchY, rampLen };
 }
@@ -226,7 +230,32 @@ function buildProps(world, built, id) {
 
 /* ------------------------------ entrar / salir ------------------------------ */
 const sunOffset = new THREE.Vector3();
+let session = 0;   // cada entrada tiene un número: si sales mientras carga, la carga vieja se descarta
+
+// Libera lo que se creó para esta visita (lo compartido del caché de modelos se conserva).
+function disposeOwned(obj, { keepShared = false } = {}) {
+    obj.traverse(o => {
+        if (!o.isMesh && !o.isPoints && !o.isSprite) return;
+        // los Sprite comparten una geometría interna de Three: nunca se libera
+        if (o.geometry && !o.isSprite && (!keepShared || o.geometry.userData.owned)) o.geometry.dispose();
+        const mats = Array.isArray(o.material) ? o.material : [o.material];
+        mats.forEach(m => { if (m && (m.userData.owned || !keepShared)) m.dispose(); });
+    });
+}
+
 async function enter(id, opts = {}) {
+    const my = ++session;
+    try {
+        // primero se carga todo lo pesado; si mientras tanto saliste, no se toca la escena
+        const [a, ship] = await Promise.all([buildAstronaut(), buildShip()]);
+        if (my !== session || !surface.active) { a.mixer.stopAllAction(); disposeOwned(a.wrap, { keepShared: true }); disposeOwned(ship.group, { keepShared: true }); return; }
+        build(id, opts, a, ship);
+    } catch (e) {
+        console.warn('Superficie: no se pudo preparar la física/modelos, se usa el modo simple', e);
+    }
+}
+
+function build(id, opts, a, ship) {
     const built = surface.site;
     const ph = PHYS[id] || { g: 1.62 };
     game.id = id;
@@ -246,17 +275,19 @@ async function enter(id, opts = {}) {
     game.kcc.setApplyImpulsesToDynamicBodies(true);
     game.kcc.setCharacterMass(PL_BODY + (ph.suit === false ? 0 : PL_SUIT));
     // modelo
-    const a = await buildAstronaut();
     game.astro = a.wrap; game.mixer = a.mixer; game.actions = a.actions; game.current = null;
     surface.scene.add(game.astro);
     if (plModel) { plModel.root.visible = false; plModel.root.userData.hidden = true; }
-    // cohete
-    const ship = await buildShip();
+    // cohete (sólido) y rampa (sólida, se puede caminar por ella)
     game.ship = ship;
     ship.group.position.set(sx, built.heightFn(sx, sz), sz);
     ship.group.rotation.y = 0;
     surface.scene.add(ship.group);
-    world.createCollider(RAPIER.ColliderDesc.cylinder(ROCKET_H / 2, ship.R).setTranslation(sx, ship.group.position.y + ROCKET_H / 2, sz));
+    const gy = ship.group.position.y;
+    world.createCollider(RAPIER.ColliderDesc.cylinder(ROCKET_H / 2, ship.R).setTranslation(sx, gy + ROCKET_H / 2, sz));
+    const rampMid = new THREE.Vector3(0, ship.hatchY - 0.95, ship.R + 0.1).add(new THREE.Vector3(0, -Math.sin(ship.rampAngle), Math.cos(ship.rampAngle)).multiplyScalar(ship.rampLen / 2));
+    const rq = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), ship.rampAngle);
+    game.rampCol = world.createCollider(RAPIER.ColliderDesc.cuboid(0.6, 0.04, ship.rampLen / 2).setTranslation(sx + rampMid.x, gy + rampMid.y, sz + rampMid.z).setRotation({ x: rq.x, y: rq.y, z: rq.z, w: rq.w }));
     game.dust = buildDust(new THREE.Color(...built.site.ground[1]));
     surface.scene.add(game.dust.pts);
     // muestras y rocas
@@ -264,44 +295,55 @@ async function enter(id, opts = {}) {
     game.samples.forEach(s => surface.scene.add(s.g));
     game.props = buildProps(world, built, id);
     game.props.forEach(p => surface.scene.add(p.mesh));
+    // luz de relleno suave (sin ella, de espaldas al Sol todo se pierde en negro)
+    game.fill = new THREE.HemisphereLight(0xc8d4ff, 0x2a2622, built.site.sky.stars ? 0.45 : 0.25);
+    surface.scene.add(game.fill);
     // sombras del Sol que siguen al jugador
     game.sun = built.root.children.find(o => o.isDirectionalLight);
     if (game.sun) {
         sunOffset.copy(game.sun.position).normalize().multiplyScalar(80);
         game.sun.castShadow = true;
-        const s = game.sun.shadow;
-        s.mapSize.set(2048, 2048);
-        Object.assign(s.camera, { left: -28, right: 28, top: 28, bottom: -28, near: 1, far: 220 });
-        s.camera.updateProjectionMatrix();
-        s.bias = -0.0006; s.normalBias = 0.03;
+        const sh = game.sun.shadow;
+        sh.mapSize.set(2048, 2048);
+        Object.assign(sh.camera, { left: -28, right: 28, top: 28, bottom: -28, near: 1, far: 220 });
+        sh.camera.updateProjectionMatrix();
+        sh.bias = -0.0006; sh.normalBias = 0.03;
         surface.scene.add(game.sun.target);
     }
     built.root.traverse(o => { if (o.isMesh && o.geometry && o.geometry.type === 'PlaneGeometry' && o.geometry.parameters.width === SURF_NEAR) o.receiveShadow = true; if (o.isInstancedMesh) { o.castShadow = true; o.receiveShadow = true; } });
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     // estado
-    Object.assign(player, { onGround: true, best: 0, lastAir: 0, air: 0 });
+    Object.assign(player, { onGround: true, best: 0, lastAir: 0, air: 0, jumped: false, jumpQueued: 0, chargeAt: null });
     player.pos.copy(start); player.vel.set(0, 0, 0);
     player.facing = 0;
     surface.yaw = Math.PI * 0.15; surface.pitch = 0.1;
     game.active = true;
-    game.t = 0;
+    game.t = 0; game.coyote = 0; game.buffer = 0;
     setMission();
     if (opts.landing) startLanding();
     else { setShipOpen(1); game.phase = 'play'; game.astro.visible = true; }
 }
 
 function exit() {
+    session++;            // invalida cualquier carga en curso
     game.active = false;
     game.phase = 'off';
     if (game.world) { game.world.free(); game.world = null; }
-    [game.astro, game.ship && game.ship.group, game.dust && game.dust.pts].forEach(o => o && surface.scene.remove(o));
-    game.samples.forEach(s => surface.scene.remove(s.g));
-    game.props.forEach(p => surface.scene.remove(p.mesh));
+    if (game.mixer) { game.mixer.stopAllAction(); game.mixer.uncacheRoot(game.mixer.getRoot()); game.mixer = null; }
+    if (game.astro) { surface.scene.remove(game.astro); disposeOwned(game.astro, { keepShared: true }); game.astro = null; }
+    if (game.ship) { surface.scene.remove(game.ship.group); disposeOwned(game.ship.group, { keepShared: true }); game.ship = null; }
+    if (game.dust) { surface.scene.remove(game.dust.pts); disposeOwned(game.dust.pts); game.dust = null; }
+    if (game.fill) { surface.scene.remove(game.fill); game.fill = null; }
+    game.samples.forEach(s => { surface.scene.remove(s.g); disposeOwned(s.g); });
+    game.props.forEach(p => { surface.scene.remove(p.mesh); disposeOwned(p.mesh); });
     game.samples = []; game.props = [];
     renderer.shadowMap.enabled = false;
     hidePrompt();
+    showSkip(false);
     const box = document.getElementById('play-mission'); if (box) box.hidden = true;
+    const cmp = document.getElementById('play-compass'); if (cmp) cmp.hidden = true;
+    bursts.splice(0).forEach(b => { surface.scene.remove(b.sp); b.sp.material.dispose(); });
 }
 
 /* ------------------------------ cinemáticas ------------------------------ */
@@ -313,8 +355,10 @@ function setShipOpen(k) {
 }
 function setFlame(k) {
     const s = game.ship;
-    s.core.material.opacity = k; s.outer.material.opacity = k * 0.7; s.cone.material.opacity = k * 0.55;
-    s.cone.scale.set(1, 0.6 + k * 0.6 + Math.random() * 0.15 * k, 1);
+    const f = 0.85 + Math.random() * 0.3; // parpadeo del motor
+    s.core.material.opacity = k * f; s.outer.material.opacity = k * 0.7 * (1.1 - f * 0.2); s.cone.material.opacity = k * 0.55 * f;
+    s.core.scale.setScalar(3.5 * (0.8 + 0.4 * f)); s.outer.scale.setScalar(8 * (0.9 + 0.25 * Math.random()));
+    s.cone.scale.set(0.9 + 0.2 * f, 0.6 + k * 0.7 * f, 0.9 + 0.2 * f);
 }
 function startLanding() {
     game.phase = 'landing'; game.t = 0;
@@ -328,7 +372,7 @@ function startTakeoff() {
     showSkip(true);
 }
 
-const LAND_T = 8, OPEN_T = 1.6, WALK_T = 2.6, BOARD_T = 1.6, LIFT_T = 4.5;
+const LAND_T = 8, OPEN_T = 1.6, WALK_T = 2.6, BOARD_T = 2.6, LIFT_T = 4.5;
 const camTmp = new THREE.Vector3(), look = new THREE.Vector3();
 function cinematic(dt) {
     const s = game.ship, base = s.group.position, cam = surface.camera;
@@ -376,13 +420,20 @@ function cinematic(dt) {
         cam.lookAt(look);
         if (k >= 1) toPlay(bottom);
     } else if (game.phase === 'board') {
-        // camina hasta la rampa y entra
+        // sube por la rampa (del pie a la puerta) y entra
         const k = Math.min(1, game.t / BOARD_T);
+        const foot = new THREE.Vector3(base.x, surface.site.heightFn(base.x, base.z + s.R + 3.6), base.z + s.R + 3.6);
         const door = new THREE.Vector3(base.x, gy + s.hatchY - 0.9, base.z + s.R + 0.3);
-        player.pos.lerp(door, 1 - Math.pow(1 - k, 2));
+        if (game.t <= dt) game.boardFrom = player.pos.clone();
+        const toFoot = Math.min(1, k * 2), up = Math.max(0, k * 2 - 1);
+        if (up <= 0) player.pos.lerpVectors(game.boardFrom, foot, toFoot); else player.pos.lerpVectors(foot, door, up);
         game.astro.position.copy(player.pos);
         game.astro.rotation.y = 0;
         play('Walk', 0.2, 1);
+        camTmp.set(base.x + 7, gy + 3, base.z + s.R + 10);
+        cam.position.lerp(camTmp, 0.05);
+        look.copy(player.pos).add(new THREE.Vector3(0, 1.1, 0));
+        cam.lookAt(look);
         if (k >= 1) { game.astro.visible = false; game.phase = 'lift'; game.t = 0; audioEngine.playClickTone(140, 0.12); }
     } else if (game.phase === 'lift') {
         const k = Math.min(1, game.t / LIFT_T);
@@ -444,6 +495,13 @@ function stepBody(dt) {
     player.wind.add(player.gust);
     const { walk, run: runV } = plWalkSpeeds(g);
     const target = wl * (run ? runV : walk);
+    // margen al borde (coyote) y búfer: el salto vale si apretaste un instante antes de tocar el suelo
+    game.coyote = player.onGround ? 0.12 : Math.max(0, game.coyote - dt);
+    if (player.jumpQueued) { game.bufferV = player.jumpQueued; game.buffer = 0.15; player.jumpQueued = 0; }
+    else game.buffer = Math.max(0, game.buffer - dt);
+    const canJump = (player.onGround || game.coyote > 0) && !player.jumped;
+    const queued = canJump && game.buffer > 0 ? game.bufferV : 0;
+    if (queued && !player.onGround) { player.onGround = true; player.vel.y = 0; } // salto dentro del margen del borde
     if (player.onGround) {
         const acc = Math.max(0.25, Math.min(14, 0.9 * g + 0.3));
         const hx = player.vel.x, hz = player.vel.z;
@@ -451,13 +509,13 @@ function stepBody(dt) {
         if (dl > 0) { const s = Math.min(1, acc * dt / dl); player.vel.x += dx * s; player.vel.z += dz * s; }
         if (wl > 0.01) player.facing = Math.atan2(-wish.x, -wish.z);
         let jump = 0;
-        if (player.jumpQueued) jump = player.jumpQueued;
+        if (queued) jump = queued;
         else if (run && wl > 0.3 && g < 2.5 && Math.hypot(player.vel.x, player.vel.z) > runV * 0.6) jump = Math.min(PL_V0, 0.55 * Math.sqrt(g) + 0.15);
         if (jump > 0) {
             player.vel.y = jump; player.onGround = false; player.jumped = true;
             player.air = 0; player.takeoffY = player.pos.y; player.peak = player.pos.y;
-            if (player.jumpQueued) { audioEngine.playClickTone(260 + (player.jumpQueued / PL_V0 - 1) * 400, 0.05); play('Jump', 0.08); }
-            player.jumpQueued = 0;
+            if (queued) { audioEngine.playClickTone(260 + (queued / PL_V0 - 1) * 400, 0.05); play('Jump', 0.08); }
+            game.buffer = 0; game.bufferV = 0; game.coyote = 0;
         }
     }
     let ax = 0, ay = -g, az = 0;
@@ -480,8 +538,9 @@ function stepBody(dt) {
     const cur = game.body.translation();
     const next = { x: cur.x + m.x, y: cur.y + m.y, z: cur.z + m.z };
     // si chocó, se pierde la velocidad en esa dirección (no se "pega" a las paredes)
-    if (Math.abs(m.x - want.x) > 1e-4) player.vel.x = m.x / dt;
-    if (Math.abs(m.z - want.z) > 1e-4) player.vel.z = m.z / dt;
+    // solo si de verdad chocó (avanzó mucho menos de lo pedido): en una rampa el avance se recorta un poco y no debe frenar
+    const wantH = Math.hypot(want.x, want.z), gotH = Math.hypot(m.x, m.z);
+    if (wantH > 1e-4 && gotH < wantH * 0.6) { player.vel.x = m.x / dt; player.vel.z = m.z / dt; }
     if (m.y > want.y + 1e-4 && player.vel.y < 0) player.vel.y = 0;      // apoyado
     if (m.y < want.y - 1e-4 && player.vel.y > 0) player.vel.y = 0;      // techo
     const lim = HF_SIZE * 0.45;
@@ -532,6 +591,41 @@ function setMission() {
     box.hidden = false;
     box.textContent = `MUESTRAS ${game.got}/5`;
 }
+// Brújula hacia la muestra más cercana (flecha relativa a hacia dónde mira la cámara).
+let compassT = 0;
+function updateCompass(ns) {
+    const el = document.getElementById('play-compass'); if (!el) return;
+    if (!ns || game.got >= 5) { el.hidden = true; return; }
+    if ((compassT = (compassT + 1) % 6)) return;
+    const p = ns.s.g.position;
+    const ang = Math.atan2(-(p.x - player.pos.x), -(p.z - player.pos.z)) - surface.yaw; // 0 = al frente
+    el.hidden = false;
+    el.innerHTML = '';
+    const arrow = document.createElement('b'); arrow.textContent = '▲'; arrow.style.transform = `rotate(${(-ang * 180 / Math.PI).toFixed(0)}deg)`;
+    el.append(arrow, document.createTextNode(`muestra a ${Math.round(ns.d)} m`));
+}
+// Destello al recoger: chispas que salen y se apagan.
+const bursts = [];
+function burst(at, color) {
+    for (let i = 0; i < 18; i++) {
+        const sp = makeGlowSprite(color, 0.6, 1);
+        sp.material.userData.owned = true;
+        sp.position.copy(at);
+        const v = new THREE.Vector3(Math.random() - 0.5, Math.random() * 0.8 + 0.3, Math.random() - 0.5).normalize().multiplyScalar(2 + Math.random() * 3);
+        surface.scene.add(sp);
+        bursts.push({ sp, v, life: 1 });
+    }
+}
+function updateBursts(dt) {
+    for (let i = bursts.length - 1; i >= 0; i--) {
+        const b = bursts[i];
+        b.life -= dt * 1.4;
+        b.v.y -= player.phys.g * dt * 0.5;
+        b.sp.position.addScaledVector(b.v, dt);
+        b.sp.material.opacity = Math.max(0, b.life);
+        if (b.life <= 0) { surface.scene.remove(b.sp); b.sp.material.dispose(); bursts.splice(i, 1); }
+    }
+}
 function showPrompt(text) {
     const el = document.getElementById('play-prompt'); if (!el) return;
     if (game.prompt === text) return;
@@ -544,7 +638,8 @@ function interact() {
     if (!game.active || game.phase !== 'play') return;
     const s = nearestSample();
     if (s && s.d < 2.6) {
-        s.s.got = true; surface.scene.remove(s.s.g); game.got++;
+        s.s.got = true; burst(s.s.g.position, sampleColor(game.id)); surface.scene.remove(s.s.g); disposeOwned(s.s.g); game.got++;
+        const box = missionDom(); if (box) { box.classList.remove('is-pop'); void box.offsetWidth; box.classList.add('is-pop'); }
         audioEngine.playClickTone(1200 + game.got * 120, 0.08);
         setMission();
         if (typeof showToast === 'function') showToast(game.got >= 5 ? '¡Misión completa! Recogiste las 5 muestras. Vuelve al cohete (E) cuando quieras.' : `Muestra ${game.got}/5 recogida.`);
@@ -574,8 +669,11 @@ function update(dt, time) {
     const n = Math.max(1, Math.ceil(dt / (1 / 60)));
     for (let i = 0; i < n; i++) { game.world.timestep = dt / n; stepBody(dt / n); game.world.step(); }
     syncProps();
+    const b = game.ship.group.position;
+    game.dust.update(dt, 0, { x: b.x, y: surface.site.heightFn(b.x, b.z), z: b.z }, player.phys.g, !!surface.site.site.fog); // el polvo que quedó termina de caer
     animate(dt);
     placePlayerCamera();
+    cameraCollide();
     updateVisor(dt);
     updatePlayHud(false);
     plBreath(dt);
@@ -583,9 +681,27 @@ function update(dt, time) {
     // muestras: giran y avisan cuando estás cerca
     game.samples.forEach((s, i) => { if (!s.got) { s.gem.rotation.y = time * 1.5 + i; s.gem.position.y = Math.sin(time * 2 + i) * 0.12; } });
     const ns = nearestSample();
+    updateCompass(ns);
+    updateBursts(dt);
     if (ns && ns.d < 2.6) showPrompt('E · recoger muestra');
     else if (shipDist() < 5) showPrompt('E · subir al cohete y despegar');
     else hidePrompt();
+}
+// La cámara no atraviesa el cohete ni las rocas: rayo desde la cabeza hacia la cámara.
+const camRayO = new THREE.Vector3(), camRayD = new THREE.Vector3();
+function cameraCollide() {
+    if (player.cam !== 'third') return;
+    const cam = surface.camera;
+    camRayO.copy(player.pos); camRayO.y += 1.4;
+    camRayD.copy(cam.position).sub(camRayO);
+    const len = camRayD.length(); if (len < 0.01) return;
+    camRayD.multiplyScalar(1 / len);
+    const ray = new RAPIER.Ray(camRayO, camRayD);
+    const hit = game.world.castRay(ray, len, true, undefined, undefined, game.col, game.body);
+    if (hit) {
+        const t = Math.max(0.6, (hit.timeOfImpact ?? hit.toi) - 0.3);
+        cam.position.copy(camRayO).addScaledVector(camRayD, t);
+    }
 }
 function syncProps() {
     game.props.forEach(p => { const t = p.body.translation(), r = p.body.rotation(); p.mesh.position.set(t.x, t.y, t.z); p.mesh.quaternion.set(r.x, r.y, r.z, r.w); });
@@ -608,14 +724,18 @@ document.querySelectorAll('input[name="play-skin"]').forEach(r => r.addEventList
     if (!MODELS[r.value]) return;
     game.skin = r.value;
     try { localStorage.setItem('eh.skin', r.value); } catch (e) { /* sin almacenamiento */ }
-    getModel(MODELS[r.value]).then(async () => {
-        if (!game.active) return;
-        const keep = game.astro;
-        const a = await buildAstronaut();
-        surface.scene.remove(keep);
+    const my = session, want = r.value;
+    buildAstronaut().then(a => {
+        // si saliste, cambiaste otra vez o la escena cambió mientras cargaba, se descarta
+        if (my !== session || !game.active || game.skin !== want) { a.mixer.stopAllAction(); disposeOwned(a.wrap, { keepShared: true }); return; }
+        const old = game.astro;
+        a.wrap.position.copy(old.position); a.wrap.rotation.copy(old.rotation); a.wrap.visible = old.visible;
+        surface.scene.remove(old);
+        game.mixer.stopAllAction(); game.mixer.uncacheRoot(game.mixer.getRoot());
+        disposeOwned(old, { keepShared: true });
         game.astro = a.wrap; game.mixer = a.mixer; game.actions = a.actions; game.current = null;
         surface.scene.add(game.astro);
-    });
+    }).catch(() => { /* se queda el astronauta actual */ });
 }));
 
 // API para los scripts clásicos (js/surface/surface.js)
@@ -624,6 +744,17 @@ window.surfaceGame = {
     get active() { return game.active; },
     get phase() { return game.phase; },
     get skin() { return game.skin; },
-    enter, exit, update, skip: skipCinematic, takeoff: () => { if (game.active && game.phase === 'play') startTakeoff(); },
+    enter, exit, update, skip: skipCinematic,
+    takeoff: () => {
+        if (!game.active || game.phase !== 'play') return;
+        if (shipDist() < 5) { startTakeoff(); return; }
+        // lejos del cohete: se "vuelve" de un salto al pie de la rampa
+        fadeThen(() => {
+            const s = game.ship, b = s.group.position, z = b.z + s.R + 3.6, y = surface.site.heightFn(b.x, z);
+            game.body.setTranslation({ x: b.x, y: y + CAP_HALF + CAP_R + 0.05, z }, true);
+            player.pos.set(b.x, y, z);
+            startTakeoff();
+        });
+    },
     debug: game, RAPIER
 };

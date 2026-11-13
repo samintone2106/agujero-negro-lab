@@ -427,7 +427,7 @@ function exitSurface() {
         controls.enabled = true;
         document.body.classList.remove('surface-mode');
         surfaceDom.hud.hidden = true;
-        if (window.surfaceGame && surfaceGame.active) surfaceGame.exit();
+        if (window.surfaceGame) surfaceGame.exit(); // también cancela una carga en curso
         syncPlayerCam();
     });
 }
@@ -452,15 +452,19 @@ function updateSurface(dt, time) {
 
 /* ------------------------------ controles ------------------------------ */
 (() => {
+    // un solo dedo gira la cámara (el del joystick no cuenta): se sigue por pointerId
     let drag = null;
     const el = renderer.domElement;
-    el.addEventListener('pointerdown', (e) => { if (surface.active) drag = { x: e.clientX, y: e.clientY }; });
-    window.addEventListener('pointerup', () => { drag = null; });
+    el.addEventListener('pointerdown', (e) => { if (surface.active && !drag) drag = { id: e.pointerId, x: e.clientX, y: e.clientY }; });
+    const endDrag = (e) => { if (!e || !drag || e.pointerId === drag.id) drag = null; };
+    window.addEventListener('pointerup', endDrag);
+    window.addEventListener('pointercancel', endDrag);
+    window.addEventListener('blur', () => { drag = null; });
     window.addEventListener('pointermove', (e) => {
-        if (!surface.active || !drag) return;
+        if (!surface.active || !drag || e.pointerId !== drag.id) return;
         surface.yaw += (e.clientX - drag.x) * 0.004;
         surface.pitch = Math.max(-1.2, Math.min(1.2, surface.pitch + (e.clientY - drag.y) * 0.004));
-        drag = { x: e.clientX, y: e.clientY };
+        drag = { id: drag.id, x: e.clientX, y: e.clientY };
     });
     window.addEventListener('keydown', (e) => {
         if (!surface.active || e.target.closest('input, textarea, select')) return;
