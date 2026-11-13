@@ -376,3 +376,6 @@ body.genesis-mode .genesis-letterbox > div { transform: none; }
     .mission-card { animation: none; }
     .mission-thumb img { transition: none; }
 }
+
+/* atributo hidden por encima de las clases de display (flex/grid) */
+#genesis-proof[hidden], #lens-panel[hidden], #pulsar-panel[hidden], #moon-card[hidden], #surface-note[hidden] { display: none !important; }

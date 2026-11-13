@@ -89,7 +89,8 @@ function makeLavaMaterial() {
                 float n = fbm3(p + vec3(0.0, uTime * 0.04, 0.0));
                 float flow = fbm3(p * 2.0 - vec3(uTime * 0.09, 0.0, uTime * 0.05));
                 float crack = 1.0 - smoothstep(0.0, 0.07, abs(snoise(p * 3.2 + flow * 0.4)));
-                vec3 lava = mix(vec3(1.4, 0.28, 0.03), vec3(2.2, 1.35, 0.45), smoothstep(-0.2, 0.6, flow));
+                // lava basáltica: ~1,200 °C se ve rojo-naranja, no blanca
+                vec3 lava = mix(vec3(0.95, 0.16, 0.02), vec3(1.55, 0.62, 0.12), smoothstep(-0.2, 0.6, flow));
                 float diffuse = max(0.06, dot(vNormalW, uLight));
                 vec3 crust = vec3(0.11, 0.085, 0.07) * (0.7 + n * 0.6) * diffuse * 1.6;
                 vec3 ocean = vec3(0.02, 0.09, 0.22) * (0.5 + diffuse * 1.4) + pow(max(0.0, dot(reflect(-uLight, vNormalW), vViewDir)), 24.0) * 0.6;

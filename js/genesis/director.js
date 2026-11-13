@@ -110,7 +110,7 @@ function startGenesis(targetId) {
     lavaShell.scale.setScalar(R * 1.012);
     coreMesh.scale.setScalar(0.0001);
     hazeShell.scale.setScalar(R * 1.07);
-    const hazeColor = { titan: 0xff9a3a, venus: 0xffd27a, europa: 0xbfe6ff, pluto: 0xd8e4ff }[targetId] || 0xbfe6ff;
+    const hazeColor = { titan: 0xff9a3a, venus: 0xffd27a, europa: 0xbfe6ff, pluto: 0xd8e4ff, mars: 0x9cc4ff }[targetId] || 0xbfe6ff;
     hazeShell.material.uniforms.uColor.value.set(hazeColor);
     lavaShell.material.uniforms.uOcean.value = 0;
     supergiant.scale.setScalar(R * 5.5);
@@ -135,6 +135,7 @@ function startGenesis(targetId) {
         debrisGeo.attributes.position.needsUpdate = true;
     }
     if (hasFx('bombard')) scheduleMeteors(R, 0.68, 0.8);
+    startGenesisScript(targetId, R);
     if (targetId === 'io') ioPlumes.visible = false;
     // las guías en alambre (esfera de fotones, ergosfera) brillan de más con el bloom
     genesis.guides = group.children.filter(c => c.material && c.material.wireframe && c.visible);
@@ -167,6 +168,7 @@ function stopGenesis(silent = false) {
     if (!genesis.active) return;
     genesis.active = false;
     genesisSound.stop(silent);
+    stopGenesisScript(genesis.target);
     setGenesisScale(1);
     const group = targetGroups[genesis.target];
     if (group) group.rotation.z = genesis.baseRotZ || 0;
@@ -217,7 +219,7 @@ function toggleGenesisPause() {
 /* ------------------------------ cámara ------------------------------ */
 const genesisCamTmp = new THREE.Vector3();
 function updateGenesisCamera(prog, dt) {
-    const shots = GENESIS_SHOTS[genesis.typeKey];
+    const shots = GENESIS_SHOTS_BY_TARGET[genesis.target] || GENESIS_SHOTS[genesis.typeKey];
     const f = prog * GENESIS_PHASES;
     const i = Math.min(GENESIS_PHASES - 1, Math.floor(f));
     const j = Math.min(GENESIS_PHASES - 1, i + 1);
@@ -296,7 +298,7 @@ function updateGenesis() {
             genesisSound.cue('shock');
             genesis.shake = 0.6;
         });
-        once('ignite-sound', 0.47, prog, () => genesisSound.cue('ignite'));
+        once('ignite-sound', type.flashAt - 0.08, prog, () => genesisSound.cue('ignite'));
         once('ignite', type.flashAt, prog, () => {
             fireShock(new THREE.Vector3(), R * 12, 0xffe2a0, 2600);
             genesis.shake = 1;
@@ -353,6 +355,13 @@ function updateGenesis() {
         flash = Math.max(flash, pulse(0.475, 0.02, prog));
         if (hasFx('spinup')) accretionDisk.rotation.z = time * (0.2 + smooth01(0.5, 0.95, prog) * 2.5);
     }
+
+    // evento propio del astro (puede cambiar cuándo crece, el destello y las lunas)
+    const ov = { flash, grow: null, particleAlpha: 1, hideMoons: false, hazeMul: 1 };
+    updateGenesisScript(genesis.target, prog, time, dt, R, ov);
+    flash = ov.flash;
+    if (ov.grow !== null) grow = ov.grow;
+    genesis.hideMoons = ov.hideMoons;
 
     // flash del tipo (ignición, supernova, semilla del agujero negro)
     if (type.flashAt !== undefined) flash = Math.max(flash, pulse(type.flashAt, typeKey === 'nova' ? 0.05 : 0.03, prog));
@@ -426,7 +435,7 @@ function updateGenesis() {
     if (hasFx('frost') || hasFx('haze')) {
         const h = smooth01(0.68, 0.84, prog) * (1 - smooth01(0.9, 1, prog));
         hazeShell.visible = h > 0.01;
-        hazeShell.material.uniforms.uOpacity.value = h * (hasFx('haze') ? 0.9 : 0.55);
+        hazeShell.material.uniforms.uOpacity.value = h * (hasFx('haze') ? 0.9 : 0.55) * ov.hazeMul;
         hazeShell.material.uniforms.uTime.value = time;
     }
     // chorros bipolares de la protoestrella o del agujero negro
@@ -448,7 +457,7 @@ function updateGenesis() {
     const pxPerUnit = renderer.domElement.height / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2));
     setGenesisParticleUniforms({
         uTime: time, uClump: clump, uP: collapse, uExpand: expand,
-        uHeat: heat, uAlpha: alpha * (typeKey === 'nova' ? smooth01(type.flashAt - 0.01, type.flashAt + 0.01, prog) : 1)
+        uHeat: heat, uAlpha: alpha * ov.particleAlpha * (typeKey === 'nova' ? smooth01(type.flashAt - 0.01, type.flashAt + 0.01, prog) : 1)
             // en los gigantes gaseosos la envoltura de partículas se disuelve cuando aparece el planeta
             * (typeKey === 'gas' ? 1 - smooth01(0.7, 0.82, prog) * 0.95 : 1),
         uPx: pxPerUnit

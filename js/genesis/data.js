@@ -7,7 +7,7 @@
 const GENESIS_TYPES = {
     rocky: { mode: 0, gas: [0xc98a52, 0xffe0b0], dust: 0x3a2618, grow: [0.36, 0.6], nebula: [0x5a3a2a, 0x2a1a30], bloom: 0.9 },
     gas:   { mode: 4, gas: [0x9fd8ff, 0xffd59e], dust: 0x2a2a3a, grow: [0.46, 0.78], nebula: [0x24324a, 0x3a2a40], bloom: 0.8, bloomThreshold: 0.88 },
-    star:  { mode: 1, gas: [0xff6a2a, 0xffe7a3], dust: 0x2a1410, grow: [0.5, 0.66], flashAt: 0.55, nebula: [0x8a2a4a, 0x2a3a7a], bloom: 1.4 },
+    star:  { mode: 1, gas: [0xff6a2a, 0xffe7a3], dust: 0x2a1410, grow: [0.5, 0.66], flashAt: 0.78, nebula: [0x8a2a4a, 0x2a3a7a], bloom: 1.4 },
     nova:  { mode: 2, gas: [0x7df9ff, 0xff4fa3], dust: 0x301020, grow: [0.6, 0.82], flashAt: 0.36, nebula: [0x2a4a7a, 0x6a1a4a], bloom: 1.6 },
     hole:  { mode: 3, gas: [0xffa040, 0x9fe8ff], dust: 0x201008, grow: [0.5, 0.84], flashAt: 0.12, nebula: [0x4a2a1a, 0x1a2a4a], bloom: 0.45, bloomThreshold: 0.92 }
 };
@@ -21,19 +21,26 @@ const GENESIS_SHOTS = {
     hole:  [[14, 1.1, 0.06], [10, 1.3, 0.12], [9, 1.25, 0.16], [6.5, 1.38, 0.2], [5, 1.3, 0.16], [6, 1.25, 0.08]]
 };
 
+// Encuadres propios de algunos astros (sustituyen a los del tipo).
+const GENESIS_SHOTS_BY_TARGET = {
+    moon: [[18, 1.05, 0.02], [17, 1.15, 0.03], [13, 1.2, 0.05], [5, 1.1, 0.12], [4.2, 1.0, 0.08], [12, 1.15, 0.04]],
+    neptune: [[13, 0.6, 0.08], [8, 1.3, 0.14], [5.2, 1.1, 0.2], [7, 1.2, 0.08], [9, 1.05, 0.06], [6, 0.95, 0.06]],
+    jupiter: [[13, 0.6, 0.08], [8, 1.3, 0.14], [5.2, 1.1, 0.2], [6, 1.05, 0.12], [7.5, 0.95, 0.08], [6, 0.9, 0.06]]
+};
+
 // Cada astro: tipo, efectos (fx), reloj cósmico por fase y 6 fases [título, texto].
 // Eventos: { impact: { at, size, dir, debris } } con `at` en progreso 0..1 de toda la secuencia.
 const GENESIS = {
     sun: {
         type: 'star', fx: ['jets', 'nebula'],
-        clock: ['Hace 4,600 Ma', '+10 mil años', '+50 mil años', '+100 mil años', '+10 Ma', 'Hoy'],
+        clock: ['Hace 4,568 Ma', '+10 mil años', '+100 mil años', '+1 Ma', '+50 Ma', 'Hoy'],
         steps: [
-            ['Una nube molecular fría', 'Una nube de gas y polvo a -260 °C, de varios años luz, flota en un brazo de la Vía Láctea.'],
-            ['La onda de una supernova', 'La onda de choque de una estrella que explotó cerca comprime la nube y la gravedad empieza a ganar.'],
-            ['Colapso y disco', 'Al caer gira más rápido y se aplana en un disco. El centro se calienta: nace una protoestrella que lanza chorros por sus polos.'],
-            ['Ignición', 'El núcleo llega a ~15 millones de °C: el hidrógeno se fusiona en helio y la luz frena el colapso.'],
-            ['Viento solar', 'El viento de la joven estrella barre el gas sobrante del disco. Lo que queda serán los planetas.'],
-            ['Nace el Sol', 'Una estrella G2V con el 99.86 % de la masa del Sistema Solar. Le quedan ~5,000 millones de años de combustible.']
+            ['Un núcleo de nube molecular', 'Una región densa de una nube de gas y polvo a -260 °C, en un cúmulo con miles de estrellas hermanas.'],
+            ['¿Una supernova cercana?', 'Isótopos de vida corta (aluminio-26) en los meteoritos sugieren que una estrella cercana explotó y ayudó a comprimir la nube.'],
+            ['Colapso: la protoestrella', 'En ~100 mil años el núcleo cae sobre sí mismo, gira más rápido y se aplana en un disco. En el centro, una protoestrella caliente.'],
+            ['Fase T Tauri', 'La estrella aún no fusiona hidrógeno: brilla por contracción y lanza chorros y un viento fuerte que empieza a vaciar el disco (3–10 Ma).'],
+            ['Ignición', 'Unos 50 millones de años después el núcleo llega a ~15 millones de °C: empieza a fusionar hidrógeno en helio. Nace el Sol de verdad.'],
+            ['El Sol de hoy', 'Una estrella G2V con el 99.86 % de la masa del Sistema Solar. Le quedan ~5,000 millones de años de hidrógeno.']
         ]
     },
     mercury: {
@@ -57,7 +64,7 @@ const GENESIS = {
             ['Choque de embriones', 'Embriones del tamaño de la Luna colisionan durante decenas de millones de años.'],
             ['Océano de magma', 'El planeta queda cubierto de lava; el hierro se hunde y forma su núcleo.'],
             ['Invernadero desbocado', 'Los volcanes liberan CO₂ y, sin océanos que lo absorban, el calor queda atrapado.'],
-            ['El infierno gemelo', 'Hoy su superficie soporta 92 bar y 465 °C bajo nubes de ácido sulfúrico.']
+            ['Repavimentado por la lava', 'Hace 300–700 Ma erupciones enormes cubrieron casi todo el planeta: por eso tiene tan pocos cráteres viejos (Magellan). Hoy: 92 bar y 465 °C.']
         ]
     },
     earth: {
@@ -68,32 +75,32 @@ const GENESIS = {
             ['Planetesimales', 'Se pegan en cuerpos de kilómetros que chocan y crecen sin parar.'],
             ['Una Tierra fundida', 'Los impactos la mantienen derretida: el hierro se hunde al núcleo y la roca ligera forma el manto.'],
             ['El impacto de Theia', 'Un planeta del tamaño de Marte choca con la Tierra. Los escombros que quedan en órbita formarán la Luna.'],
-            ['Bombardeo y océanos', 'La corteza se enfría; el vapor volcánico y el hielo de cometas y asteroides se condensan en océanos.'],
+            ['Nace la Luna y llegan los océanos', 'Los escombros forman la Luna, que empieza a alejarse. El vapor volcánico y el agua de asteroides se condensan en océanos.'],
             ['Un mundo azul', 'Con agua líquida, atmósfera y campo magnético, la Tierra está lista para la vida.']
         ]
     },
     moon: {
-        type: 'rocky', fx: ['molten', 'bombard', { impact: { at: 0.14, size: 0.9, dir: [1, 0.15, 0.5], debris: true } }],
-        clock: ['Hace 4,510 Ma', '+1 hora', '+1 día', '+100 años', '+100 Ma', 'Hoy'],
+        type: 'rocky', fx: ['molten', 'bombard'],
+        clock: ['Hace ~4,510 Ma', '+1 hora', '+1 a 100 años', '+10 Ma', '+600 Ma', 'Hoy'],
         steps: [
-            ['Theia golpea la Tierra', 'Un protoplaneta del tamaño de Marte impacta a la joven Tierra en un ángulo oblicuo.'],
-            ['Un anillo de roca vaporizada', 'Una nube de roca fundida y vapor queda girando alrededor de la Tierra.'],
-            ['La Luna se agrega', 'Los escombros se juntan muy rápido, quizá en menos de un siglo.'],
-            ['Océano de magma', 'La Luna nace fundida; los minerales ligeros flotan y forman la corteza clara de las tierras altas.'],
-            ['Gran bombardeo', 'Enormes impactos excavan cuencas que la lava rellena: los mares oscuros que vemos.'],
-            ['La Luna de hoy', 'Fría y sin aire, conserva intacto el registro de 4,500 millones de años de impactos.']
+            ['Theia se acerca', 'Un protoplaneta del tamaño de Marte va directo hacia la joven Tierra, que aún está fundida.'],
+            ['El impacto gigante', 'Golpea de lado. La energía funde y vaporiza roca: un anillo incandescente queda girando alrededor de la TIERRA.'],
+            ['La Luna se junta en el anillo', 'Los escombros se aglutinan en un solo cuerpo en tiempo récord: de horas a pocos siglos según las simulaciones.'],
+            ['Océano de magma', 'La Luna nace fundida. Los cristales ligeros (anortosita) flotan y forman la corteza clara de las tierras altas.'],
+            ['Cuencas y mares', 'Grandes impactos excavan cuencas que la lava rellena entre 3,900 y 3,100 Ma: los "mares" oscuros que vemos.'],
+            ['Se aleja de nosotros', 'Hoy está a 384,400 km y se aleja 3.8 cm por año (medido con los espejos que dejó el Apolo).']
         ]
     },
     mars: {
-        type: 'rocky', fx: ['molten', 'bombard', { impact: { at: 0.5, size: 0.25, dir: [-0.6, 0.6, 0.6] } }],
+        type: 'rocky', fx: ['molten', 'bombard', 'haze', { impact: { at: 0.5, size: 0.32, dir: [0.15, 1, 0.4], debris: true } }],
         clock: ['Hace 4,600 Ma', '+500 mil años', '+2 Ma', '+4 Ma', '+500 Ma', 'Hoy'],
         steps: [
             ['Un disco empobrecido', 'Júpiter migra hacia dentro y luego hacia fuera, y deja sin material la región de Marte.'],
             ['Crecimiento veloz', 'Marte se forma en solo 2 a 4 millones de años: un embrión planetario que nunca creció más.'],
             ['Un mundo pequeño', 'Termina con apenas el 11 % de la masa de la Tierra.'],
-            ['Un impacto gigante', 'Un golpe enorme pudo crear la diferencia entre su hemisferio norte bajo y el sur alto.'],
-            ['Ríos y luego el silencio', 'Tuvo agua líquida, pero su núcleo se enfrió, perdió el campo magnético y el viento solar le arrancó el aire.'],
-            ['El planeta rojo', 'Un desierto frío con cauces fósiles como los del cráter Jezero.']
+            ['El impacto Borealis', 'Un objeto de ~2,000 km golpea el norte (hipótesis): por eso el hemisferio norte es varios km más bajo y más liso que el sur.'],
+            ['Fobos, Deimos y agua', 'Los escombros en órbita forman dos lunitas (hipótesis que pondrá a prueba la misión MMX de Japón). Hay ríos y lagos.'],
+            ['Sin escudo, sin aire', 'El núcleo se enfría y se apaga el campo magnético: el viento solar le arranca la atmósfera (MAVEN). Queda el desierto rojo.']
         ]
     },
     jupiter: {
@@ -104,7 +111,7 @@ const GENESIS = {
             ['Guijarros de hielo', 'Guijarros de hielo y roca caen en espiral hacia una semilla que crece rapidísimo.'],
             ['Un núcleo gigante', 'En ~1 millón de años el núcleo llega a unas 10 masas terrestres.'],
             ['Acreción desbocada', 'Su gravedad traga hidrógeno y helio del disco cada vez más rápido.'],
-            ['Abre un hueco en el disco', 'Tan masivo, Júpiter limpia su órbita y frena el crecimiento de Marte y del cinturón de asteroides.'],
+            ['Su propio disco y sus lunas', 'Alrededor de Júpiter queda un disco de gas y polvo: ahí nacen Ío, Europa, Ganímedes y Calisto, como un sistema solar en miniatura.'],
             ['El primer planeta', '318 masas terrestres: el planeta que moldeó todo el Sistema Solar.']
         ]
     },
@@ -140,7 +147,7 @@ const GENESIS = {
             ['Núcleo de hielo', 'Agua, amoníaco y metano helados forman un gran núcleo.'],
             ['Envoltura delgada', 'Como Urano, solo captura una capa modesta de hidrógeno y helio.'],
             ['Migra hacia afuera', 'Las interacciones con los otros gigantes lo empujan a las afueras del Sistema Solar.'],
-            ['Captura a Tritón', 'Atrapa a Tritón, un objeto del cinturón de Kuiper, en una órbita al revés.'],
+            ['Captura a Tritón', 'Tritón llega en pareja con otro objeto del cinturón de Kuiper: el compañero sale despedido y Tritón queda atrapado en una órbita al revés.'],
             ['El planeta de los vientos', 'Hoy tiene los vientos más rápidos conocidos: más de 2,000 km/h.']
         ]
     },
@@ -200,7 +207,7 @@ const GENESIS = {
             ['Un núcleo de hierro', 'En su centro se acumula hierro, que ya no libera energía al fusionarse.'],
             ['Colapso y rebote', 'El núcleo colapsa en menos de un segundo, rebota y la estrella explota en supernova.'],
             ['Brilla más que la galaxia', 'Durante semanas la explosión brilla como miles de millones de soles.'],
-            ['Materia de neutrones', 'En el centro queda 1.4 masas solares comprimidas en una esfera de 20 km.'],
+            ['Materia de neutrones', 'Quedan 1.4 masas solares en una esfera de 20 km, lanzada como una bala porque la explosión no fue simétrica.'],
             ['Un faro cósmico', 'El púlsar de Vela gira 11 veces por segundo y sus haces de radio barren el espacio.']
         ]
     },

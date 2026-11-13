@@ -135,8 +135,10 @@ function texturizeMoons(sys) {
 function updateMoons(planetId, time) {
     const sys = moonSystems[planetId];
     if (!sys) return;
-    sys.pivot.visible = moonsState.visible;
-    if (!moonsState.visible) return;
+    // durante el Génesis de algunos planetas las lunas se están formando: se ocultan las reales
+    const forming = typeof genesis !== 'undefined' && genesis.active && genesis.hideMoons;
+    sys.pivot.visible = moonsState.visible && !forming;
+    if (!sys.pivot.visible) return;
     texturizeMoons(sys);
     sys.moons.forEach(m => {
         const a = m.phase + time * m.omega;
