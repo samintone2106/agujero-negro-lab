@@ -418,7 +418,7 @@ function startLanding(id = state.currentTarget, opts = {}) {
     if (typeof clearMoonFocus === 'function' && moonFocus.mesh) clearMoonFocus();
     // al llegar: descenso (gaseosos), o salir por la esclusa con el traje y pisar la superficie
     const arrive = (skipAll) => (typeof DESCENTS !== 'undefined' && DESCENTS[id]) ? startDescent(id)
-        : skipAll ? enterSurface(id) : startEgress(id, () => enterSurface(id));
+        : enterSurface(id, { landing: !skipAll }); // el cohete se posa en la superficie y bajas por la rampa
     const go = (mode) => (mode === 'direct' || reduceMotion.matches) ? arrive(true) : startJourney(id, arrive);
     if (opts.mode) { go(opts.mode); return; }
     const pref = readLandPref();

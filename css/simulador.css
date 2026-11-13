@@ -412,6 +412,10 @@ body.surface-mode:not(.descent-mode) .play-hud { display: block; }
 .play-btn:active { transform: scale(0.95); }
 .play-btn:focus-visible, .play-joy:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
+.play-mission { font: 700 10px 'JetBrains Mono', monospace; letter-spacing: .12em; color: #0b0f14; background: #c4b5fd; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+#play-mission[hidden], #play-prompt[hidden], #play-skip[hidden] { display: none !important; }
+.play-prompt { position: fixed; z-index: 32; left: 50%; bottom: 36%; transform: translateX(-50%); padding: 8px 14px; border-radius: 12px;
+    font: 700 12px 'JetBrains Mono', monospace; letter-spacing: .08em; color: #0b0f14; background: #fcd34d; box-shadow: 0 6px 24px rgba(0,0,0,.4); pointer-events: none; }
 .play-toast { position: fixed; z-index: 32; left: 50%; top: max(16px, env(safe-area-inset-top)); width: min(calc(100vw - 32px), 30rem);
     padding: 10px 14px; border-radius: 14px; font-size: 13px; line-height: 1.4; color: #fff7ed;
     background: rgba(40, 22, 8, .82); border: 1px solid rgba(251, 191, 36, .45); backdrop-filter: blur(8px);

@@ -13,6 +13,9 @@ const surface = {
 };
 
 const SURF_NEAR = 700, SURF_FAR = 14000;
+// Objetos sólidos del sitio (rocas, árboles, naves) para la física: los llena buildSite.
+let SURF_COLLIDERS = null;
+function surfCollide(c) { if (SURF_COLLIDERS) SURF_COLLIDERS.push(c); }
 
 function surfRng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 
@@ -201,6 +204,7 @@ function buildRocks(site, heightFn, seed) {
         p.set(Math.cos(a) * r, 0, Math.sin(a) * r);
         const size = 0.04 + Math.pow(rnd(), 4) * (site.pebbles ? 0.25 : 1.6);
         p.y = heightFn(p.x, p.z) + size * 0.2;
+        if (size > 0.25) surfCollide({ t: 'ball', x: p.x, y: p.y, z: p.z, r: size * 0.7 });
         q.setFromEuler(new THREE.Euler(rnd() * 3, rnd() * 3, rnd() * 3));
         s.set(size, size, size);
         mesh.setMatrixAt(i, m.compose(p, q, s));
@@ -320,6 +324,7 @@ function buildSite(id) {
     const site = SURFACE_SITES[id];
     const seed = [...id].reduce((a, c) => a + c.charCodeAt(0), 0) * 7 + 13;
     const heightFn = makeHeightFn(site, seed);
+    SURF_COLLIDERS = [];
     const root = new THREE.Group();
     const near = buildTerrainMesh(SURF_NEAR, 400, heightFn, site, false); // ~1.75 m por polígono
     const far = buildTerrainMesh(SURF_FAR, 256, heightFn, site, true);
@@ -348,7 +353,8 @@ function buildSite(id) {
     // vida y detalle propios de cada mundo (árboles, rover, módulo lunar, lluvia...): js/surface/biomes.js
     const biome = buildBiome(id, site, heightFn, seed, devils);
     if (biome) root.add(biome.group);
-    return (surface.built[id] = { root, heightFn, devils, site, biome });
+    const colliders = SURF_COLLIDERS; SURF_COLLIDERS = null;
+    return (surface.built[id] = { root, heightFn, devils, site, biome, colliders });
 }
 
 /* ------------------------------ entrar / salir ------------------------------ */
@@ -382,7 +388,7 @@ function fadeThen(fn) {
     }, 320);
 }
 
-function enterSurface(id = state.currentTarget) {
+function enterSurface(id = state.currentTarget, opts = {}) {
     if (!canLand(id)) return;
     if (typeof genesis !== 'undefined' && genesis.active) stopGenesis(true);
     fadeThen(() => {
@@ -408,6 +414,8 @@ function enterSurface(id = state.currentTarget) {
         surfaceDom.fact.textContent = s.facts[0];
         surfaceDom.hud.hidden = false;
         resetPlayer(id);
+        // física real, astronauta animado y cohete (src/surface/game.js) si ya cargó
+        if (window.surfaceGame && surfaceGame.ready) surfaceGame.enter(id, opts);
         audioEngine.playClickTone(520, 0.08);
     });
 }
@@ -419,6 +427,7 @@ function exitSurface() {
         controls.enabled = true;
         document.body.classList.remove('surface-mode');
         surfaceDom.hud.hidden = true;
+        if (window.surfaceGame && surfaceGame.active) surfaceGame.exit();
         syncPlayerCam();
     });
 }
@@ -428,8 +437,9 @@ function updateSurface(dt, time) {
     const cam = surface.camera;
     const size = renderer.getSize(new THREE.Vector2());
     if (cam.aspect !== size.x / size.y) { cam.aspect = size.x / size.y; cam.updateProjectionMatrix(); }
-    // caminar, correr, saltar y la cámara: js/surface/player.js
-    updatePlayer(dt);
+    // caminar, correr, saltar y la cámara: src/surface/game.js (o js/surface/player.js mientras carga)
+    if (window.surfaceGame && surfaceGame.active) surfaceGame.update(dt, time);
+    else updatePlayer(dt);
 
     if (surface.site.biome) surface.site.biome.update(dt, time);
     const dv = surface.site.devils;
@@ -461,7 +471,12 @@ function updateSurface(dt, time) {
     window.addEventListener('blur', () => surface.keys.clear());
 
     surfaceDom.btn?.addEventListener('click', () => startLanding());
-    document.getElementById('surface-exit')?.addEventListener('click', () => { if (surface.active) exitSurface(); });
+    // SUBIR: volver al cohete y despegar (si hay cohete), si no, salir directo
+    document.getElementById('surface-exit')?.addEventListener('click', () => {
+        if (!surface.active) return;
+        if (window.surfaceGame && surfaceGame.active && surfaceGame.phase === 'play') surfaceGame.takeoff();
+        else exitSurface();
+    });
     document.getElementById('surface-next-fact')?.addEventListener('click', () => {
         const facts = SURFACE_SITES[surface.id].facts;
         surface.factIdx = (surface.factIdx + 1) % facts.length;

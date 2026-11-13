@@ -23,7 +23,7 @@ function bioMerge(geos) {
 }
 
 // Coloca N instancias sobre el terreno, lejos del punto de llegada.
-function bioScatter(mesh, n, heightFn, rnd, rMin, rMax, scaleFn, avoid) {
+function bioScatter(mesh, n, heightFn, rnd, rMin, rMax, scaleFn, avoid, collide) {
     const m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), p = new THREE.Vector3();
     let placed = 0, tries = 0;
     while (placed < n && tries++ < n * 6) {
@@ -35,6 +35,7 @@ function bioScatter(mesh, n, heightFn, rnd, rMin, rMax, scaleFn, avoid) {
         const k = scaleFn(rnd);
         s.set(k, k * (0.85 + rnd() * 0.3), k);
         mesh.setMatrixAt(placed++, m.compose(p, q, s));
+        if (collide) surfCollide({ t: 'cyl', x: p.x, y: p.y + collide.h * s.y / 2, z: p.z, r: collide.r * k, h: collide.h * s.y });
     }
     mesh.count = placed;
     mesh.instanceMatrix.needsUpdate = true;
@@ -93,9 +94,12 @@ function bioFootprints(group, heightFn) {
 }
 
 /* ------------------------------ naves y objetos reales ------------------------------ */
-function bioPlace(obj, heightFn, x, z, rotY = 0) {
+function bioPlace(obj, heightFn, x, z, rotY = 0, solid = null) {
     obj.position.set(x, heightFn(x, z), z);
     obj.rotation.y = rotY;
+    // solid: [radio, alto] del cilindro que lo hace sólido
+    if (solid) surfCollide({ t: 'cyl', x, y: obj.position.y + solid[1] / 2, z, r: solid[0], h: solid[1] });
+    obj.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
     return obj;
 }
 const bioMat = (color, opts = {}) => new THREE.MeshStandardMaterial(Object.assign({ color, roughness: 0.6, metalness: 0.1 }, opts));
@@ -219,14 +223,14 @@ function bioEarth(group, heightFn, rnd) {
     const palms = new THREE.InstancedMesh(trunkGeo, bioSway(new THREE.MeshStandardMaterial({ color: 0x7a5c3e, roughness: 0.95 }), 0.002), 160);
     const crowns = new THREE.InstancedMesh(bioMerge(leaves), bioSway(new THREE.MeshStandardMaterial({ color: 0x2f7d32, roughness: 0.8, side: THREE.DoubleSide }), 0.003), 160);
     const rp = surfRng(77);
-    bioScatter(palms, 160, heightFn, rp, 9, 260, r => 0.8 + r() * 0.5, coast);
+    bioScatter(palms, 160, heightFn, rp, 9, 260, r => 0.8 + r() * 0.5, coast, { r: 0.22, h: 7 });
     bioScatter(crowns, 160, heightFn, surfRng(77), 9, 260, r => 0.8 + r() * 0.5, coast);
     // árboles de copa ancha más lejos
     const tTrunk = new THREE.CylinderGeometry(0.18, 0.3, 4, 7); tTrunk.translate(0, 2, 0);
     const tCrown = new THREE.IcosahedronGeometry(2.6, 1); tCrown.translate(0, 5.2, 0); tCrown.scale(1, 0.8, 1);
     const trees = new THREE.InstancedMesh(tTrunk, new THREE.MeshStandardMaterial({ color: 0x5a4330, roughness: 1 }), 500);
     const treeTops = new THREE.InstancedMesh(tCrown, bioSway(new THREE.MeshStandardMaterial({ color: 0x3f7a2c, roughness: 0.9, flatShading: true }), 0.0015), 500);
-    bioScatter(trees, 500, heightFn, surfRng(91), 60, 330, r => 0.7 + r() * 0.9, coast);
+    bioScatter(trees, 500, heightFn, surfRng(91), 60, 330, r => 0.7 + r() * 0.9, coast, { r: 0.32, h: 4 });
     bioScatter(treeTops, 500, heightFn, surfRng(91), 60, 330, r => 0.7 + r() * 0.9, coast);
     // pasto: hojas finas que se mecen
     const blade = new THREE.BufferGeometry();
@@ -271,7 +275,7 @@ function bioEarth(group, heightFn, rnd) {
 }
 
 function bioMars(group, heightFn, rnd, devils) {
-    group.add(bioPlace(bioRover(), heightFn, 16, -14, 0.6));
+    group.add(bioPlace(bioRover(), heightFn, 16, -14, 0.6, [1.7, 1.8]));
     // polvo fino suspendido que arrastra el viento
     const dust = bioWeather(1800, 60, 0xd8a77a, 0.06, 0.55, (p, j, dt) => {
         p[j] += player.wind.x * dt * 0.6; p[j + 2] += player.wind.z * dt * 0.6;
@@ -317,12 +321,12 @@ function bioMars(group, heightFn, rnd, devils) {
 }
 
 function bioMoon(group, heightFn) {
-    group.add(bioPlace(bioApollo(), heightFn, 18, -22, 0.4));
+    group.add(bioPlace(bioApollo(), heightFn, 18, -22, 0.4, [2.6, 2.8]));
     return bioFootprints(group, heightFn);
 }
 
 function bioVenus(group, heightFn) {
-    group.add(bioPlace(bioVenera(), heightFn, 12, -18, 0.8));
+    group.add(bioPlace(bioVenera(), heightFn, 12, -18, 0.8, [1.3, 2.2]));
     // destellos: posibles rayos dentro de las nubes (detectados por radio, todavía en debate)
     const flash = new THREE.HemisphereLight(0xffe2b0, 0x000000, 0);
     group.add(flash);
@@ -336,7 +340,7 @@ function bioVenus(group, heightFn) {
 }
 
 function bioTitan(group, heightFn) {
-    group.add(bioPlace(bioHuygens(), heightFn, 9, -11, 0));
+    group.add(bioPlace(bioHuygens(), heightFn, 9, -11, 0, [0.7, 0.7]));
     // lluvia de metano: gotas grandes que caen lento (~1.6 m/s), como en cámara lenta
     const rain = bioWeather(3200, 50, 0xf0d2a8, 0.22, 0.75, (p, j, dt) => { p[j + 1] -= 1.6 * dt; p[j] += 0.3 * dt; });
     group.add(rain.pts);

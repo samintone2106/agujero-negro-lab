@@ -45,7 +45,7 @@
     <script src="https://unpkg.com/lucide@1.72.0/dist/umd/lucide.min.js"></script>
 
     <!-- Three.js 0.160 (módulo) expuesto como window.THREE para los scripts de js/ -->
-    <script type="module" src="/src/three-global.js"></script>
+    <script type="module" src="/src/main.js"></script>
     <link rel="icon" type="image/png" href="icons/icon-192.png">
     <link rel="apple-touch-icon" href="icons/icon-192.png">
 
@@ -654,7 +654,7 @@
                 <p id="surface-fact" class="flex-1 text-[11px] sm:text-xs leading-snug text-amber-100" aria-live="polite"></p>
                 <button id="surface-next-fact" type="button" class="shrink-0 min-h-[30px] px-2 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 font-mono text-[9px] font-bold text-slate-200">OTRO DATO</button>
             </div>
-            <p class="hidden sm:block mt-2 font-mono text-[9px] text-slate-500">Arrastra para mirar · W A S D camina · Shift corre · Espacio salta · Q propulsor · V cámara · Esc sube</p>
+            <p class="hidden sm:block mt-2 font-mono text-[9px] text-slate-500">Arrastra para mirar · W A S D camina · Shift corre · mantén Espacio para saltar · E usar · Q propulsor · V cámara</p>
         </div>
         <!-- táctil: joystick para caminar y botones de saltar / propulsor -->
         <div class="play-touch pointer-events-auto">
@@ -662,6 +662,7 @@
             <div class="flex flex-col gap-2">
                 <button id="play-jump" type="button" class="play-btn play-btn-main" aria-label="Saltar">SALTAR</button>
                 <button id="play-jet" type="button" class="play-btn" aria-label="Propulsor hacia abajo">PROPULSOR ↓</button>
+                <button id="play-use" type="button" class="play-btn" aria-label="Usar: recoger o subir al cohete">USAR (E)</button>
             </div>
         </div>
     </div>
@@ -675,7 +676,7 @@
                 <button id="play-gear" type="button" class="genesis-ctl" aria-expanded="false" aria-controls="play-settings" aria-label="Ajustes">⚙</button>
             </div>
         </div>
-        <p id="play-weight" class="text-[11px] text-white mt-1"></p>
+        <div class="flex items-center justify-between gap-2 mt-1"><p id="play-weight" class="text-[11px] text-white"></p><span id="play-mission" class="play-mission" hidden></span></div>
         <dl class="grid grid-cols-5 gap-1.5 mt-1.5 font-mono text-[9px]">
             <div><dt class="text-slate-400">ALTURA</dt><dd id="play-alt" class="text-white font-bold">0 m</dd></div>
             <div><dt class="text-slate-400">EN EL AIRE</dt><dd id="play-air" class="text-white font-bold">—</dd></div>
@@ -692,6 +693,12 @@
                 <label><input type="radio" name="play-cam-mode" value="helmet"> Dentro del casco</label>
             </fieldset>
             <fieldset>
+                <legend>Astronauta</legend>
+                <label><input type="radio" name="play-skin" value="rana"> Rana</label>
+                <label><input type="radio" name="play-skin" value="conejo"> Conejo</label>
+                <label><input type="radio" name="play-skin" value="flamenco"> Flamenco</label>
+            </fieldset>
+            <fieldset>
                 <legend>Al aterrizar</legend>
                 <label><input type="radio" name="play-land-mode" value="ask"> Preguntar</label>
                 <label><input type="radio" name="play-land-mode" value="trip"> Ver el viaje</label>
@@ -701,6 +708,8 @@
     </div>
 
     <div id="play-toast" class="play-toast" role="status" aria-live="polite" hidden></div>
+    <div id="play-prompt" class="play-prompt" role="status" aria-live="polite" hidden></div>
+    <button id="play-skip" type="button" class="skip-big" hidden>SALTAR <span aria-hidden="true">⏭</span></button>
 
     <!-- VISOR DEL CASCO (vista desde adentro) -->
     <div id="visor" class="visor" aria-hidden="true" hidden>

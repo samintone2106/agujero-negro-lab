@@ -470,6 +470,7 @@ function plChargeRelease() {
         if (open) {
             let pref = null; try { pref = localStorage.getItem('eh.landMode'); } catch (e) { /* sin almacenamiento */ }
             document.querySelectorAll('input[name="play-land-mode"]').forEach(r => { r.checked = r.value === (pref || 'ask'); });
+            document.querySelectorAll('input[name="play-skin"]').forEach(r => { r.checked = !!window.surfaceGame && r.value === surfaceGame.skin; });
             syncPlayerCam();
         }
     });

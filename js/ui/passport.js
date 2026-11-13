@@ -8,6 +8,7 @@ const ACHIEVEMENTS = [
     ['encelado25', '🚀', 'Casi en órbita', 'Salta más de 25 m en Encélado.'],
     ['fobos100', '🪐', 'Sin peso', 'Sube más de 100 m de un salto en Fobos.'],
     ['torbellino', '🌪️', 'Cazador de torbellinos', 'Deja que te alcance un torbellino en Marte.'],
+    ['muestras', '💎', 'Geólogo espacial', 'Recoge las 5 muestras de un mundo.'],
     ['viaje', '🧭', 'Navegante', 'Completa un viaje con la ruta real sin saltarlo.'],
     ['gg_win', '🕳️', 'Rozaste el abismo', 'Escapa de Gargantúa tras bajar de 3 r_s.'],
     ['gg_lose', '⏳', 'Congelado en el tiempo', 'Cruza el horizonte de Gargantúa.'],
