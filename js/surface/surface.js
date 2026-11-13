@@ -8,7 +8,7 @@ const surface = {
     active: false, site: null, id: null,
     scene: new THREE.Scene(),
     camera: new THREE.PerspectiveCamera(68, 1, 0.05, 90000),
-    yaw: 0, pitch: 0.05, pos: new THREE.Vector3(), keys: new Set(), walk: 0,
+    yaw: 0, pitch: 0.05, keys: new Set(),
     built: {}
 };
 
@@ -379,7 +379,7 @@ function enterSurface(id = state.currentTarget) {
         const site = built.site;
         surface.scene.fog = site.fog ? new THREE.FogExp2(site.sky.horizon, site.fog) : null;
         surface.active = true; surface.id = id; surface.site = built;
-        surface.pos.set(0, 0, 0); surface.yaw = Math.PI * 0.8; surface.pitch = 0.04;
+        surface.yaw = Math.PI * 0.8; surface.pitch = 0.04;
         controls.enabled = false;
         document.body.classList.add('surface-mode');
         const s = SURFACE_SITES[id];
@@ -394,6 +394,7 @@ function enterSurface(id = state.currentTarget) {
         surface.factIdx = 0;
         surfaceDom.fact.textContent = s.facts[0];
         surfaceDom.hud.hidden = false;
+        resetPlayer(id);
         audioEngine.playClickTone(520, 0.08);
     });
 }
@@ -405,31 +406,17 @@ function exitSurface() {
         controls.enabled = true;
         document.body.classList.remove('surface-mode');
         surfaceDom.hud.hidden = true;
+        syncPlayerCam();
     });
 }
 
 /* ------------------------------ por cuadro ------------------------------ */
-const surfFwd = new THREE.Vector3(), surfRight = new THREE.Vector3();
 function updateSurface(dt, time) {
     const cam = surface.camera;
     const size = renderer.getSize(new THREE.Vector2());
     if (cam.aspect !== size.x / size.y) { cam.aspect = size.x / size.y; cam.updateProjectionMatrix(); }
-    const k = surface.keys;
-    const run = k.has('shift') ? 6 : 1;
-    let mf = (k.has('w') || k.has('arrowup') ? 1 : 0) - (k.has('s') || k.has('arrowdown') ? 1 : 0) + surface.walk;
-    let mr = (k.has('d') ? 1 : 0) - (k.has('a') ? 1 : 0);
-    if (k.has('arrowleft')) surface.yaw += dt * 1.4;
-    if (k.has('arrowright')) surface.yaw -= dt * 1.4;
-    surfFwd.set(-Math.sin(surface.yaw), 0, -Math.cos(surface.yaw));
-    surfRight.set(-surfFwd.z, 0, surfFwd.x);
-    surface.pos.addScaledVector(surfFwd, mf * 7 * run * dt).addScaledVector(surfRight, mr * 7 * run * dt);
-    // no salirse del terreno detallado
-    const lim = SURF_NEAR * 0.45;
-    surface.pos.x = Math.max(-lim, Math.min(lim, surface.pos.x));
-    surface.pos.z = Math.max(-lim, Math.min(lim, surface.pos.z));
-    const ground = surface.site.heightFn(surface.pos.x, surface.pos.z);
-    cam.position.set(surface.pos.x, ground + 1.7, surface.pos.z);
-    cam.rotation.set(surface.pitch, surface.yaw, 0, 'YXZ');
+    // caminar, correr, saltar y la cámara: js/surface/player.js
+    updatePlayer(dt);
 
     const dv = surface.site.devils;
     if (dv) dv.children.forEach(d => {
@@ -466,13 +453,5 @@ function updateSurface(dt, time) {
         surface.factIdx = (surface.factIdx + 1) % facts.length;
         surfaceDom.fact.textContent = facts[surface.factIdx];
     });
-    // caminar en pantallas táctiles: mantener presionado
-    const hold = (id, v) => {
-        const b = document.getElementById(id);
-        if (!b) return;
-        b.addEventListener('pointerdown', (e) => { e.preventDefault(); surface.walk = v; });
-        ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, () => { surface.walk = 0; }));
-    };
-    hold('surface-walk-fwd', 1);
-    hold('surface-walk-back', -1);
+    // joystick y botones táctiles: js/surface/player.js
 })();

@@ -531,12 +531,57 @@
                 <p id="surface-fact" class="flex-1 text-[11px] sm:text-xs leading-snug text-amber-100" aria-live="polite"></p>
                 <button id="surface-next-fact" type="button" class="shrink-0 min-h-[30px] px-2 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 font-mono text-[9px] font-bold text-slate-200">OTRO DATO</button>
             </div>
-            <p class="hidden sm:block mt-2 font-mono text-[9px] text-slate-500">Arrastra para mirar · W A S D o flechas para caminar · Shift corre · Esc sube</p>
+            <p class="hidden sm:block mt-2 font-mono text-[9px] text-slate-500">Arrastra para mirar · W A S D camina · Shift corre · Espacio salta · Q propulsor · V cámara · Esc sube</p>
         </div>
-        <div class="flex sm:flex-col gap-2 justify-center pointer-events-auto">
-            <button id="surface-walk-fwd" type="button" class="surface-walk" aria-label="Caminar hacia adelante">▲</button>
-            <button id="surface-walk-back" type="button" class="surface-walk" aria-label="Caminar hacia atrás">▼</button>
+        <!-- táctil: joystick para caminar y botones de saltar / propulsor -->
+        <div class="play-touch pointer-events-auto">
+            <div id="play-joy" class="play-joy" aria-label="Caminar (joystick)" role="application"><div id="play-joy-knob" class="play-joy-knob"></div></div>
+            <div class="flex flex-col gap-2">
+                <button id="play-jump" type="button" class="play-btn play-btn-main" aria-label="Saltar">SALTAR</button>
+                <button id="play-jet" type="button" class="play-btn" aria-label="Propulsor hacia abajo">PROPULSOR ↓</button>
+            </div>
         </div>
+    </div>
+
+    <!-- JUGAR: medidas del salto, viento y ajustes -->
+    <div id="play-hud" class="play-hud glass-hud" role="region" aria-label="Datos del salto">
+        <div class="flex items-center justify-between gap-2">
+            <span class="font-mono text-[9px] font-bold tracking-widest text-emerald-300">GRAVEDAD EN VIVO</span>
+            <div class="flex gap-1">
+                <button id="play-cam" type="button" class="genesis-ctl">VISTA: 3ª PERSONA</button>
+                <button id="play-gear" type="button" class="genesis-ctl" aria-expanded="false" aria-controls="play-settings" aria-label="Ajustes">⚙</button>
+            </div>
+        </div>
+        <p id="play-weight" class="text-[11px] text-white mt-1"></p>
+        <dl class="grid grid-cols-5 gap-1.5 mt-1.5 font-mono text-[9px]">
+            <div><dt class="text-slate-400">ALTURA</dt><dd id="play-alt" class="text-white font-bold">0 m</dd></div>
+            <div><dt class="text-slate-400">EN EL AIRE</dt><dd id="play-air" class="text-white font-bold">—</dd></div>
+            <div><dt class="text-slate-400">RÉCORD</dt><dd id="play-best" class="text-amber-200 font-bold">—</dd></div>
+            <div><dt class="text-slate-400">VELOC.</dt><dd id="play-speed" class="text-white font-bold">0 m/s</dd></div>
+            <div><dt class="text-slate-400">VIENTO</dt><dd id="play-wind" class="text-white font-bold">—</dd></div>
+        </dl>
+        <p id="play-hint" class="text-[10px] text-slate-300 mt-1.5 leading-snug"></p>
+        <div id="play-settings" class="play-settings" hidden>
+            <fieldset>
+                <legend>Cámara</legend>
+                <label><input type="radio" name="play-cam-mode" value="third"> Tercera persona</label>
+                <label><input type="radio" name="play-cam-mode" value="helmet"> Dentro del casco</label>
+            </fieldset>
+            <fieldset>
+                <legend>Al aterrizar</legend>
+                <label><input type="radio" name="play-land-mode" value="ask"> Preguntar</label>
+                <label><input type="radio" name="play-land-mode" value="trip"> Ver el viaje</label>
+                <label><input type="radio" name="play-land-mode" value="direct"> Ir directo</label>
+            </fieldset>
+        </div>
+    </div>
+
+    <!-- VISOR DEL CASCO (vista desde adentro) -->
+    <div id="visor" class="visor" aria-hidden="true" hidden>
+        <div class="visor-glass"></div>
+        <div class="visor-fog"></div>
+        <div class="visor-frame"></div>
+        <div id="visor-data" class="visor-data"></div>
     </div>
 
     <!-- PÚLSAR VELA: datos reales, pulsos y glitch -->
@@ -884,6 +929,7 @@
     <script src="js/ui/moon-focus.js"></script>
     <script src="js/surface/sites.js"></script>
     <script src="js/surface/surface.js"></script>
+    <script src="js/surface/player.js"></script>
     <script src="js/audio/genesis-sound.js"></script>
     <script src="js/genesis/data.js"></script>
     <script src="js/genesis/particles.js"></script>

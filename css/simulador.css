@@ -381,21 +381,50 @@ body.genesis-mode .genesis-letterbox > div { transform: none; }
 #genesis-proof[hidden], #lens-panel[hidden], #pulsar-panel[hidden], #moon-card[hidden], #surface-note[hidden] { display: none !important; }
 
 /* Superficie */
-body.surface-mode .glass-hud:not(#surface-hud .glass-hud),
+body.surface-mode .glass-hud:not(#surface-hud .glass-hud):not(#play-hud),
 body.surface-mode .hud-fade { opacity: 0 !important; pointer-events: none !important; }
-#surface-hud[hidden], #land-btn[hidden] { display: none !important; }
+#surface-hud[hidden], #land-btn[hidden], #visor[hidden], #play-settings[hidden] { display: none !important; }
 .surface-fade {
     position: fixed; inset: 0; z-index: 60; background: #000; opacity: 0; pointer-events: none;
     transition: opacity 300ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 .surface-fade.is-on { opacity: 1; }
-.surface-walk {
-    width: 52px; height: 52px; border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(5, 5, 14, 0.6);
-    color: #e2e8f0; font-size: 18px; backdrop-filter: blur(10px); touch-action: none;
-}
-.surface-walk:active { background: rgba(16, 185, 129, 0.25); transform: scale(0.96); }
-@media (pointer: fine) { .surface-walk { display: none; } }
+/* Jugar: HUD del salto, joystick, botones y ajustes */
+.play-hud { display: none; position: fixed; z-index: 31; top: max(12px, env(safe-area-inset-top)); left: 12px;
+    width: min(calc(100vw - 24px), 25rem); border-radius: 16px; padding: 10px 12px; border-color: rgba(110, 231, 183, .3); }
+body.surface-mode:not(.descent-mode) .play-hud { display: block; }
+.play-settings { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, .1); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.play-settings fieldset { display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: #e2e8f0; }
+.play-settings legend { font: 700 9px 'JetBrains Mono', monospace; letter-spacing: .14em; color: #94a3b8; margin-bottom: 2px; text-transform: uppercase; }
+.play-settings label { display: flex; align-items: center; gap: 6px; min-height: 26px; cursor: pointer; }
+.play-settings input { accent-color: #6ee7b7; }
+.play-touch { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+@media (pointer: fine) { .play-touch { display: none; } }
+.play-joy { position: relative; width: 112px; height: 112px; border-radius: 999px; touch-action: none;
+    background: rgba(5, 5, 14, .55); border: 1px solid rgba(255, 255, 255, .18); backdrop-filter: blur(8px); }
+.play-joy-knob { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 999px;
+    background: rgba(110, 231, 183, .35); border: 1px solid rgba(110, 231, 183, .7); pointer-events: none; }
+.play-btn { min-width: 96px; min-height: 44px; padding: 0 12px; border-radius: 14px; touch-action: none;
+    font: 700 11px 'JetBrains Mono', monospace; letter-spacing: .1em; color: #e2e8f0;
+    background: rgba(5, 5, 14, .6); border: 1px solid rgba(255, 255, 255, .18); backdrop-filter: blur(8px);
+    transition: transform .12s cubic-bezier(0.23, 1, 0.32, 1), background .12s; }
+.play-btn-main { min-height: 64px; color: #0b0f14; background: #6ee7b7; border-color: #6ee7b7; }
+.play-btn:active { transform: scale(0.95); }
+.play-btn:focus-visible, .play-joy:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+/* Visor del casco: borde del vidrio, reflejo, vaho y datos proyectados */
+.visor { position: fixed; inset: 0; z-index: 25; pointer-events: none; --fog: 0; }
+.visor-glass { position: absolute; inset: 0; background:
+    radial-gradient(ellipse 60% 45% at 30% 18%, rgba(255, 255, 255, .09), transparent 60%),
+    linear-gradient(180deg, rgba(255, 210, 120, .06), transparent 30%, transparent 70%, rgba(120, 180, 255, .05)); }
+.visor-fog { position: absolute; inset: 0; opacity: var(--fog);
+    background: radial-gradient(ellipse 55% 30% at 50% 100%, rgba(230, 240, 255, .55), transparent 70%); }
+.visor-frame { position: absolute; inset: -4%; border-radius: 48% / 42%;
+    box-shadow: 0 0 0 100vmax #05070a, inset 0 0 60px 30px rgba(0, 0, 0, .85), inset 0 0 6px 2px rgba(255, 255, 255, .15); }
+.visor-data { position: absolute; right: 9%; top: 14%; width: min(16rem, 40vw); text-align: right; line-height: 1.7;
+    white-space: pre-line; font: 600 11px/1.7 'JetBrains Mono', monospace; letter-spacing: .08em; color: rgba(134, 239, 172, .85); text-shadow: 0 0 6px rgba(74, 222, 128, .6); }
+@media (max-width: 640px) { .visor-data { top: 24%; right: 8%; font-size: 9px; } }
+@media (prefers-reduced-motion: reduce) { .play-btn { transition: none; } }
 @media (prefers-reduced-motion: reduce) { .surface-fade { transition: none; } }
 
 .breadcrumb {
@@ -510,7 +539,7 @@ body.surface-mode .hud-scanline, body.cosmos-mode .hud-scanline, body.surface-mo
 body.journey-mode header, body.journey-mode nav, body.journey-mode .hud-fade, body.journey-mode #bottom-hud-deck,
 body.journey-mode #nasa-hud-widget, body.journey-mode #toggle-bottom-hud-btn, body.journey-mode #mini-zoom-bar,
 body.journey-mode .breadcrumb, body.journey-mode .hud-scanline, body.journey-mode .cockpit-frame, body.journey-mode #moon-card { display: none !important; }
-body.descent-mode #surface-hud .surface-walk, body.descent-mode #surface-hud p.font-mono { display: none !important; }
+body.descent-mode #surface-hud .play-touch, body.descent-mode #surface-hud p.font-mono { display: none !important; }
 
 #orrery-bar[hidden], #tour-caption[hidden] { display: none !important; }
 .tour-text { text-shadow: 0 2px 18px rgba(0, 0, 0, 0.9); opacity: 0; transform: translateY(6px); transition: opacity 600ms cubic-bezier(0.23, 1, 0.32, 1), transform 600ms cubic-bezier(0.23, 1, 0.32, 1); }
