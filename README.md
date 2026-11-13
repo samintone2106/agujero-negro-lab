@@ -55,4 +55,11 @@ También se admiten los demás identificadores definidos en `ASTRO_TARGETS`. Si 
 
 La portada utiliza HTML, CSS y una ilustración SVG propia, sin JavaScript ni recursos externos. Incluye estilos adaptables, navegación con teclado y respeto por la preferencia de movimiento reducido.
 
-El simulador usa dependencias externas: Tailwind CSS, Lucide, Three.js r128, fuentes, texturas y archivos de la NASA. Requiere conexión a Internet y un navegador con WebGL. Las representaciones visuales son ilustrativas.
+El simulador usa Vite, Three.js 0.160 y la física Rapier (`npm install`, `npm run dev` para probarlo y `npm run build` para publicarlo). También usa Tailwind CSS, Lucide, fuentes, texturas y archivos de la NASA. Se puede instalar como app (PWA) y funciona sin conexión después de la primera visita. Requiere un navegador con WebGL. Las representaciones visuales son ilustrativas.
+
+## Créditos
+
+- Astronautas (rana, abeja y flamenco): Quaternius, dominio público (CC0), vía poly.pizza.
+- Cohete: hat_my_guy, dominio público (CC0), vía poly.pizza.
+- Narración del tour: voz neuronal es-CO (Gonzalo) de Microsoft, generada con `edge-tts`.
+- Estrellas: catálogo HYG v3.8 (David Nash), CC BY-SA 4.0.

@@ -43,7 +43,26 @@ function pickTourVoice() {
 }
 if (hasSpeech) { tourVoice = pickTourVoice(); speechSynthesis.addEventListener?.('voiceschanged', () => { tourVoice = pickTourVoice(); }); }
 
-function narrate(text) {
+// Narración grabada con voz neuronal (es-CO, assets/audio/tour/paso-N.mp3); si falla, la voz del navegador.
+let tourAudio = null;
+function stopNarration() {
+    if (tourAudio) { tourAudio.onended = tourAudio.onerror = null; tourAudio.pause(); tourAudio = null; }
+    if (hasSpeech) speechSynthesis.cancel();
+    tourState.speaking = false;
+}
+function narrate(text, step) {
+    stopNarration();
+    if (!tourState.voiceOn || !text) return;
+    const a = new Audio(`assets/audio/tour/paso-${step}.mp3`);
+    const vol = document.getElementById('volume-slider');
+    a.volume = vol ? Math.min(1, Number(vol.value) / 100) : 0.9;
+    tourAudio = a;
+    tourState.speaking = true;
+    a.onended = () => { if (tourAudio === a) { tourState.speaking = false; tourAudio = null; } };
+    a.onerror = () => { if (tourAudio === a) { tourAudio = null; speakFallback(text); } };
+    a.play().catch(() => { if (tourAudio === a) { tourAudio = null; speakFallback(text); } });
+}
+function speakFallback(text) {
     if (!hasSpeech || !tourState.voiceOn || !text) { tourState.speaking = false; return; }
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
@@ -57,7 +76,7 @@ function narrate(text) {
 }
 function syncTourVoiceBtn() {
     if (!tourDom.voice) return;
-    tourDom.voice.hidden = !hasSpeech;
+    tourDom.voice.hidden = false;
     tourDom.voice.textContent = tourState.voiceOn ? '🔊 NARRADOR' : '🔇 NARRADOR';
     tourDom.voice.setAttribute('aria-pressed', String(tourState.voiceOn));
 }
@@ -78,14 +97,13 @@ function nextTourStep() {
     if (!s) { endTour(); return; }
     tourDom.text.classList.remove('is-on');
     requestAnimationFrame(() => { tourDom.text.textContent = s[1]; tourDom.text.classList.add('is-on'); });
-    narrate(s[4]);
+    narrate(s[4], tourState.step);
     if (s[2]) s[2]();
 }
 function endTour() {
     if (!tourState.active) return;
     tourState.active = false;
-    tourState.speaking = false;
-    if (hasSpeech) speechSynthesis.cancel();
+    stopNarration();
     tourDom.box.hidden = true;
     document.body.classList.remove('tour-mode');
     genesisSound.stop();
@@ -104,7 +122,7 @@ document.getElementById('tour-stop')?.addEventListener('click', () => { endTour(
 tourDom.voice?.addEventListener('click', () => {
     tourState.voiceOn = !tourState.voiceOn;
     try { localStorage.setItem('eh.tourVoice', tourState.voiceOn ? '1' : '0'); } catch (e) { /* sin almacenamiento */ }
-    if (!tourState.voiceOn && hasSpeech) { speechSynthesis.cancel(); tourState.speaking = false; }
+    if (!tourState.voiceOn) stopNarration();
     syncTourVoiceBtn();
 });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && tourState.active) endTour(); });
