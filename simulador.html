@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#010103">
+    <title>Event Horizon - Laboratorio Comparativo de Gravedad Relativista & Telemetría NASA</title>
+    
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN & Custom Configuration -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        void: {
+                            DEFAULT: '#010103',
+                            light: '#05050e',
+                            lighter: '#0a0a1a'
+                        },
+                        singularity: {
+                            cyan: '#00f0ff',
+                            amber: '#ffaa00',
+                            crimson: '#ff0055',
+                            violet: '#b026ff',
+                            emerald: '#10b981'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@1.72.0/dist/umd/lucide.min.js"></script>
+
+    <!-- Three.js r128 & OrbitControls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- Postproceso del Génesis (bloom) -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+
+    <link rel="stylesheet" href="css/simulador.css">
+</head>
+<body class="relative w-full h-[100dvh] overflow-hidden bg-void font-sans antialiased select-none">
+
+    <!-- 1. BACKGROUND LAYER: Three.js 3D Canvas -->
+    <div id="canvas-container" class="absolute inset-0 w-full h-full z-0 cursor-grab active:cursor-grabbing"></div>
+
+    <!-- 2. ALARM OVERLAY LAYER: Infrared Emergency Flash -->
+    <div id="alarm-overlay" class="absolute inset-0 bg-gradient-to-b from-singularity-crimson/40 via-transparent to-singularity-crimson/50 pointer-events-none z-10 opacity-0 transition-opacity duration-300"></div>
+
+    <!-- CRT Scanline & Cockpit Vignette Overlays -->
+    <div class="absolute inset-0 hud-scanline z-10"></div>
+    <div class="absolute inset-0 cockpit-frame z-10"></div>
+
+    <!-- 3. COCKPIT HUD (Full Screen Overlay) -->
+    <div class="hud-shell relative z-20 flex flex-col justify-between w-full overflow-y-auto overflow-x-hidden pointer-events-none gap-2">
+
+        <!-- ==================== TOP BAR: FLIGHT INSTRUMENTS ==================== -->
+        <header class="flex flex-wrap items-center justify-between w-full gap-2 pointer-events-auto shrink-0">
+            
+            <!-- Left: Ship Status, System Integrity & Schwarzschild Radius Badge -->
+            <div id="status-panel" class="glass-hud rounded-xl px-2.5 py-1.5 flex items-center gap-2.5 transition-all duration-300">
+                <div class="flex items-center gap-2">
+                    <span class="relative flex h-2.5 w-2.5">
+                        <span id="status-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-singularity-cyan opacity-75"></span>
+                        <span id="status-dot" class="relative inline-flex rounded-full h-2.5 w-2.5 bg-singularity-cyan"></span>
+                    </span>
+                    <div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[9px] font-mono uppercase tracking-widest text-slate-400">SONDA KERR-IX</span>
+                            <span id="rs-real-badge" class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-singularity-cyan/15 text-singularity-cyan border border-singularity-cyan/30">
+                                r_s = 0.85 metros
+                            </span>
+                        </div>
+                        <div id="system-badge" class="text-[11px] font-mono font-bold text-singularity-cyan glow-cyan tracking-wide">
+                            SISTEMAS NOMINALES
+                        </div>
+                    </div>
+                </div>
+
+                <div class="h-6 w-[1px] bg-singularity-cyan/20 hidden md:block"></div>
+
+                <div class="hidden md:flex items-center gap-3 text-xs font-mono">
+                    <div>
+                        <span class="text-slate-400 block text-[8px]">PAISAJE ACÚSTICO</span>
+                        <span id="soundscape-readout" class="text-singularity-cyan font-semibold text-[10px]">CORO ANILLOS CASSINI</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center: Gyroscope & Pitch/Yaw Indicator in Spanish -->
+            <div class="hidden 2xl:flex items-center gap-2 glass-hud rounded-xl px-3 py-1.5 font-mono text-[10px] text-slate-300">
+                <i data-lucide="compass" class="w-3.5 h-3.5 text-singularity-cyan"></i>
+                <span>GIROSCOPIO DE CABINA:</span>
+                <span id="gyro-value" class="text-singularity-cyan font-bold">0.0° CABECEO / 0.0° GUIÑADA</span>
+            </div>
+
+            <!-- Right Controls: NASA Live API, Ring Skim Camera, Warp Boost & Web Audio -->
+            <div class="flex items-center gap-1.5 flex-wrap">
+                <a href="index.html" class="glass-hud rounded-xl p-2 sm:px-2.5 sm:py-1.5 text-singularity-cyan text-[10px] sm:text-xs font-mono hover:text-white focus:outline focus:outline-2" aria-label="Volver a la página de inicio">← <span class="hidden sm:inline">INICIO</span></a>
+                <button id="nasa-live-btn" type="button" aria-label="Fotos NASA" class="planet-only glass-hud hover:border-singularity-emerald/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5 group border-singularity-emerald/40" title="Abrir Galería Oficial de Misiones NASA en Tiempo Real">
+                    <span class="w-2 h-2 rounded-full bg-singularity-emerald animate-ping"></span>
+                    <i data-lucide="satellite" class="w-3.5 h-3.5 text-singularity-emerald"></i>
+                    <span class="hidden 2xl:inline font-mono text-[10px] sm:text-xs font-bold text-singularity-emerald tracking-wider">FOTOS NASA</span>
+                </button>
+
+                <button id="skim-btn" type="button" aria-label="Vista anillos" class="planet-only glass-hud hover:border-singularity-cyan/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5 group" title="Vuelo rasante sobre los anillos de hielo 3D">
+                    <i data-lucide="disc" class="w-3.5 h-3.5 text-singularity-cyan group-hover:rotate-45 transition-transform"></i>
+                    <span id="skim-label" class="hidden 2xl:inline font-mono text-[10px] sm:text-xs font-bold text-singularity-cyan tracking-wider">VISTA ANILLOS</span>
+                </button>
+
+                <button id="warp-btn" type="button" aria-label="Impulso" class="planet-only glass-hud hover:border-singularity-amber/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5 group">
+                    <i data-lucide="zap" class="w-3.5 h-3.5 text-singularity-amber group-hover:scale-110 transition-transform"></i>
+                    <span class="hidden 2xl:inline font-mono text-[10px] sm:text-xs font-bold text-singularity-amber glow-amber tracking-wider">IMPULSO</span>
+                </button>
+
+                <button id="moons-btn" type="button" aria-label="Mostrar u ocultar lunas" aria-pressed="true" class="planet-only glass-hud hover:border-sky-300/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5 group">
+                    <i data-lucide="orbit" class="w-3.5 h-3.5 text-sky-300 group-hover:rotate-45 transition-transform"></i>
+                    <span class="hidden xl:inline font-mono text-[10px] sm:text-xs font-bold text-sky-300 tracking-wider">LUNAS</span>
+                </button>
+
+                <button id="land-btn" type="button" aria-label="Aterrizar en la superficie" class="planet-only glass-hud hover:border-singularity-emerald/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5 group border-singularity-emerald/50" hidden>
+                    <i data-lucide="chevrons-down" class="w-3.5 h-3.5 text-emerald-300 group-hover:translate-y-0.5 transition-transform"></i>
+                    <span class="hidden sm:inline font-mono text-[10px] sm:text-xs font-bold text-emerald-300 tracking-wider">ATERRIZAR</span>
+                </button>
+
+                <button id="genesis-btn" type="button" aria-label="Génesis: cómo se formó este astro" class="planet-only glass-hud hover:border-singularity-violet/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5 group border-singularity-violet/50">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-purple-300 group-hover:scale-110 transition-transform"></i>
+                    <span class="hidden sm:inline font-mono text-[10px] sm:text-xs font-bold text-purple-300 tracking-wider">GÉNESIS</span>
+                </button>
+
+                <button id="audio-btn" type="button" aria-label="Activar o desactivar sonido" aria-pressed="false" class="glass-hud hover:border-singularity-cyan/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5">
+                    <i id="audio-icon" data-lucide="volume-x" class="w-3.5 h-3.5 text-slate-400"></i>
+                    <span id="audio-label" class="hidden 2xl:inline font-mono text-[10px] sm:text-xs font-semibold text-slate-300">SONIDO: APAGADO</span>
+                </button>
+                <label class="glass-hud rounded-xl px-2.5 py-1.5 hidden lg:flex items-center gap-1.5" title="Volumen">
+                    <span class="sr-only">Volumen</span>
+                    <i data-lucide="volume-1" class="w-3.5 h-3.5 text-slate-400" aria-hidden="true"></i>
+                    <input id="volume-slider" type="range" min="0" max="100" value="90" class="w-20 accent-[#00f0ff]" aria-label="Volumen">
+                </label>
+            </div>
+
+        </header>
+
+        <!-- ==================== MIDDLE AREA: LEFT VERTICAL PLANET BAR + CENTER RETICLE + RIGHT NASA WIDGET ==================== -->
+        <div class="relative flex-1 min-h-0 flex flex-col md:flex-row items-stretch md:items-center justify-between w-full gap-2 my-0.5 pointer-events-none">
+
+            <!-- LEFT VERTICAL SIDEBAR: 12 Celestial Bodies Selector -->
+            <nav aria-label="Selector de astros y escalas del universo" class="nav-shell glass-hud rounded-2xl pointer-events-auto shrink-0 border border-singularity-cyan/30 shadow-2xl"></nav>
+
+            <!-- CENTER: AIMING RETICLE CROSSHAIR + CLOSE-UP REAL NASA PHOTO OVERLAY -->
+            <div class="hud-fade relative flex-1 flex flex-col items-center justify-center pointer-events-none">
+                <div id="reticle-outer" class="w-28 h-28 sm:w-44 sm:h-44 rounded-full border border-dashed border-singularity-cyan/20 flex items-center justify-center animate-spin-slow transition-transform duration-500">
+                    <div class="w-16 h-16 sm:w-28 sm:h-28 rounded-full border border-singularity-cyan/15 border-t-singularity-cyan/50 border-b-singularity-amber/50 animate-spin-reverse"></div>
+                </div>
+
+                <div class="absolute flex items-center justify-center">
+                    <div class="w-1.5 h-1.5 rounded-full bg-singularity-cyan/80 shadow-[0_0_10px_#00f0ff]"></div>
+                    <div class="absolute w-5 h-[1px] bg-singularity-cyan/35 -left-7"></div>
+                    <div class="absolute w-5 h-[1px] bg-singularity-cyan/35 -right-7"></div>
+                    <div class="absolute h-5 w-[1px] bg-singularity-cyan/35 -top-7"></div>
+                    <div class="absolute h-5 w-[1px] bg-singularity-cyan/35 -bottom-7"></div>
+                </div>
+
+                <!-- Real NASA Surface Recon Popup when approaching close (>75% zoom) -->
+                <div id="closeup-real-card" class="hidden pointer-events-auto mt-1 glass-hud rounded-xl p-1.5 border border-singularity-emerald/60 shadow-2xl max-w-xs transition-all duration-300">
+                    <div class="flex items-center justify-between gap-2 text-[8px] font-mono text-singularity-emerald mb-0.5">
+                        <span class="flex items-center gap-1 font-bold"><span class="w-1.5 h-1.5 rounded-full bg-singularity-emerald animate-ping"></span> CERO DISTANCIA: IMAGEN REAL NASA</span>
+                        <button id="expand-closeup-btn" class="underline hover:text-white">AMPLIAR</button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <img id="closeup-real-img" src="https://placehold.co/300x200/05050e/00f0ff?text=NASA" alt="Superficie Real NASA" class="w-12 h-9 rounded object-cover border border-white/15 shrink-0">
+                        <div class="text-[9px] leading-tight">
+                            <div id="closeup-real-title" class="font-bold text-white line-clamp-1">Fotografía Real de Misión</div>
+                            <div class="text-slate-400 text-[8px]">Vista telescópica real a corta distancia</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-1.5 text-center font-mono">
+                    <span id="target-lock-text" class="inline-block max-w-[88vw] truncate align-middle text-[8px] sm:text-[9px] tracking-[0.12em] uppercase text-singularity-cyan/90 bg-void/80 px-2 py-0.5 rounded border border-singularity-cyan/25 shadow-lg">
+                        OBJETIVO: SATURNO (95.16 M⊕)
+                    </span>
+                </div>
+            </div>
+
+            <!-- RIGHT: FLOATING NASA LIVE TELEMETRY WIDGET -->
+            <aside id="nasa-hud-widget" class="hidden md:flex flex-col glass-hud rounded-2xl p-2.5 w-60 lg:w-64 border border-singularity-emerald/40 pointer-events-auto max-h-full overflow-y-auto no-scrollbar transition-all duration-300 shadow-2xl shrink-0">
+                <div class="flex items-center justify-between border-b border-white/10 pb-1 mb-1.5">
+                    <div class="flex items-center gap-1.5">
+                        <span id="nasa-api-dot" class="w-2 h-2 rounded-full bg-singularity-emerald animate-pulse"></span>
+                        <span id="nasa-api-status" class="font-mono text-[9px] font-bold text-singularity-emerald tracking-wider">API NASA: EN LÍNEA</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span id="nasa-tex-badge" class="font-mono text-[8px] px-1 py-0.5 rounded bg-singularity-cyan/15 text-singularity-cyan border border-singularity-cyan/30">TEXTURA REAL</span>
+                        <button id="toggle-nasa-widget" class="text-slate-400 hover:text-white p-0.5" title="Minimizar/Expandir Telemetría NASA">
+                            <i data-lucide="chevron-up" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="nasa-widget-body" class="space-y-1.5">
+                    <div class="relative h-24 w-full rounded-xl overflow-hidden bg-void-light border border-white/10 group cursor-pointer" id="nasa-widget-thumb-box">
+                        <img id="nasa-widget-img" src="https://placehold.co/600x400/05050e/00f0ff?text=Cargando+NASA..." alt="Telemetría Oficial NASA" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-void via-transparent to-transparent"></div>
+                        <div class="absolute bottom-1 left-1.5 right-1.5 flex items-center justify-between text-[8px] font-mono">
+                            <span id="nasa-widget-center" class="px-1.5 py-0.5 rounded bg-void/80 text-singularity-amber border border-singularity-amber/40">NASA / JPL</span>
+                            <span id="nasa-widget-date" class="text-slate-300 bg-void/80 px-1.5 py-0.5 rounded">Misión Real</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 id="nasa-widget-title" class="text-[11px] font-bold text-white truncate">Consultando archivo NASA...</h4>
+                        <p id="nasa-widget-desc" class="text-[9px] text-slate-400 line-clamp-2 mt-0.5">Imágenes reales de misiones espaciales para el astro seleccionado.</p>
+                    </div>
+                    <button id="open-nasa-modal-from-widget" class="w-full py-1 px-2 rounded-lg bg-singularity-emerald/15 hover:bg-singularity-emerald/25 border border-singularity-emerald/40 text-singularity-emerald font-mono text-[9px] font-bold flex items-center justify-center gap-1 transition-colors">
+                        <i data-lucide="external-link" class="w-3 h-3"></i>
+                        <span>VER IMÁGENES REALES NASA</span>
+                    </button>
+                    <button type="button" data-open-missions class="mt-1.5 w-full py-1 px-2 rounded-lg bg-singularity-amber/10 hover:bg-singularity-amber/20 border border-singularity-amber/40 text-singularity-amber font-mono text-[9px] font-bold flex items-center justify-center gap-1 transition-colors">
+                        <i data-lucide="rocket" class="w-3 h-3"></i>
+                        <span>CATÁLOGO DE MISIONES</span>
+                    </button>
+                </div>
+            </aside>
+
+        </div>
+
+        <!-- ==================== BOTTOM BAR: ULTRA-COMPACT & COLLAPSIBLE CONTROL DECK ==================== -->
+        <div class="w-full pointer-events-auto shrink-0 flex flex-col gap-1">
+            <!-- Quick Collapse / View Clear Toggle Bar -->
+            <div class="flex items-center justify-between gap-2 px-1">
+                <button id="toggle-bottom-hud-btn" type="button" aria-expanded="true" aria-controls="bottom-hud-deck" class="shrink-0 glass-hud hover:border-singularity-cyan px-2.5 py-1 sm:py-0.5 rounded-t-lg font-mono text-[9px] font-bold text-singularity-cyan flex items-center gap-1.5 transition-all shadow-md">
+                    <i id="toggle-bottom-hud-icon" data-lucide="chevron-down" class="w-3 h-3"></i>
+                    <span id="toggle-bottom-hud-label" class="hidden sm:inline">MINIMIZAR PANEL INFERIOR (VISTA DESPEJADA)</span><span id="toggle-bottom-hud-short" class="sm:hidden">OCULTAR PANEL</span>
+                </button>
+
+                <!-- Always-Accessible Mini Zoom Slider when Bottom HUD is collapsed -->
+                <div id="mini-zoom-bar" class="hidden items-center gap-2 glass-hud px-3 py-0.5 rounded-full border border-singularity-cyan/40 flex-1 min-w-0 max-w-xs sm:max-w-sm">
+                    <span class="font-mono text-[9px] text-singularity-cyan shrink-0">ZOOM:</span>
+                    <input id="mini-descent-slider" type="range" aria-label="Zoom rápido" min="0" max="100" step="0.1" value="0" class="hud-slider">
+                    <span id="mini-descent-percentage" class="font-mono text-[9px] font-bold text-white shrink-0">0%</span>
+                </div>
+            </div>
+
+            <footer id="bottom-hud-deck" class="grid grid-cols-1 lg:grid-cols-12 gap-1.5 items-stretch w-full max-h-[46dvh] overflow-y-auto no-scrollbar lg:max-h-none lg:overflow-visible transition-all duration-300">
+
+                <!-- Left Column (4 cols): Compact Relativistic & Planetary Telemetry -->
+                <div id="telemetry-panel" class="order-3 lg:order-none lg:col-span-4 glass-hud rounded-xl p-2 transition-all duration-300 flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-1 border-b border-singularity-cyan/20 pb-0.5">
+                        <div class="flex items-center gap-1">
+                            <i data-lucide="activity" class="w-3 h-3 text-singularity-cyan"></i>
+                            <h2 id="telemetry-title" class="font-mono text-[10px] uppercase tracking-wider text-singularity-cyan font-bold">Telemetría Relativista</h2>
+                        </div>
+                        <span id="comparison-pill" class="font-mono text-[8px] px-1.5 py-0.5 rounded bg-singularity-crimson/20 text-singularity-crimson border border-singularity-crimson/40">
+                            ANILLOS DE HIELO (1.06 G)
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-4 gap-1 font-mono">
+                        <div class="bg-void-light/75 border border-white/10 rounded-lg p-1">
+                            <div class="text-[8px] text-slate-400 flex justify-between">
+                                <span>DIST.</span>
+                                <span id="unit-dist-label" class="text-singularity-cyan">R_sat</span>
+                            </div>
+                            <div id="metric-rs" class="text-[11px] font-bold text-white glow-cyan truncate">
+                                15.00 <span class="text-[8px] font-normal text-slate-400">r_s</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-void-light/75 border border-white/10 rounded-lg p-1">
+                            <div class="text-[8px] text-slate-400 flex justify-between">
+                                <span>TIEMPO</span>
+                                <span class="text-singularity-amber">γ</span>
+                            </div>
+                            <div id="metric-gamma" class="text-[11px] font-bold text-singularity-amber glow-amber truncate">
+                                1.074 <span class="text-[8px] font-normal text-slate-400">x</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-void-light/75 border border-white/10 rounded-lg p-1">
+                            <div class="text-[8px] text-slate-400 flex justify-between">
+                                <span>ROJO</span>
+                                <span class="text-singularity-crimson">z</span>
+                            </div>
+                            <div id="metric-redshift" class="text-[11px] font-bold text-rose-400 truncate">
+                                0.074 <span class="text-[8px] font-normal text-slate-400">z</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-void-light/75 border border-white/10 rounded-lg p-1">
+                            <div class="text-[8px] text-slate-400 flex justify-between">
+                                <span id="gravity-metric-label">GRAV.</span>
+                                <span class="text-singularity-violet">G</span>
+                            </div>
+                            <div id="metric-tidal" class="text-[11px] font-bold text-purple-300 truncate">
+                                1.06 <span class="text-[8px] font-normal text-slate-400">G</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-1 flex items-center justify-between gap-2">
+                        <div id="vs-gargantua-box" class="flex-1 px-1.5 py-0.5 rounded bg-void/80 border border-white/10 font-mono text-[8px] text-slate-300 flex items-center justify-between">
+                            <span>DESFASE TIERRA:</span>
+                            <span id="time-offset-readout" class="text-singularity-cyan font-bold">+0.20 seg por año</span>
+                        </div>
+                        <span id="doppler-status" class="font-mono text-[8px] text-singularity-cyan shrink-0">450 nm</span>
+                    </div>
+
+                    <div class="mt-1">
+                        <div class="relative h-1 w-full rounded-full bg-gradient-to-r from-singularity-cyan via-singularity-amber to-singularity-crimson">
+                            <div id="doppler-marker" class="w-2 h-2 bg-white rounded-sm shadow-[0_0_8px_#fff] -mt-0.5 transition-all duration-150" style="margin-left: 2%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Center Column (5 cols): Compact Main Descent Control & Narrative Card -->
+                <div id="story-card" class="order-1 lg:order-none lg:col-span-5 glass-hud rounded-xl p-2 sm:p-2.5 flex flex-col justify-between transition-all duration-300">
+                    <div>
+                        <div class="flex items-center justify-between gap-2">
+                            <span id="zone-badge" class="px-1.5 py-0.5 text-[8px] font-mono font-bold uppercase tracking-wider rounded bg-singularity-cyan/20 text-singularity-cyan border border-singularity-cyan/40">
+                                ZONA 01 // ÓRBITA ESTABLE
+                            </span>
+                            <span id="velocity-readout" class="font-mono text-[10px] text-slate-300">
+                                v = 18.2 km/s
+                            </span>
+                        </div>
+                        <div class="flex items-baseline justify-between gap-2 mt-0.5">
+                            <h3 id="story-title" class="text-[11px] sm:text-xs font-bold text-white tracking-tight truncate">
+                                Aproximación al Objetivo Astrofísico
+                            </h3>
+                        </div>
+                        <p id="story-desc" class="text-[10px] text-slate-300 leading-tight mt-0.5 line-clamp-2 lg:line-clamp-1">
+                            Desliza el propulsor de acercamiento para observar la estructura real y cómo responde el espacio-tiempo.
+                        </p>
+                    </div>
+
+                    <div class="mt-1.5 pt-1 border-t border-white/10">
+                        <div class="flex justify-between items-center text-[9px] font-mono mb-0.5">
+                            <span class="text-slate-300 flex items-center gap-1">
+                                <i data-lucide="gauge" class="w-3 h-3 text-singularity-cyan"></i>
+                                <span id="slider-title-text">PROPULSOR DE ACERCAMIENTO (ZOOM)</span>
+                            </span>
+                            <span id="descent-percentage" class="text-singularity-cyan font-bold">0%</span>
+                        </div>
+
+                        <input id="descent-slider" type="range" min="0" max="100" step="0.1" value="0" class="hud-slider" aria-label="Control de descenso hacia el objetivo">
+
+                        <div class="grid grid-cols-4 text-[8px] font-mono text-slate-400 mt-0.5">
+                            <button type="button" data-milestone="0" class="milestone-btn py-1 lg:py-0 text-left hover:text-singularity-cyan transition-colors leading-tight">
+                                <span id="m1-val" class="font-bold text-singularity-cyan">15 r_s</span> · <span id="m1-lbl">Lejos</span>
+                            </button>
+                            <button type="button" data-milestone="48" class="milestone-btn py-1 lg:py-0 text-center hover:text-singularity-amber transition-colors leading-tight">
+                                <span id="m2-val" class="font-bold text-singularity-amber">6 r_s</span> · <span id="m2-lbl">Media</span>
+                            </button>
+                            <button type="button" data-milestone="78" class="milestone-btn py-1 lg:py-0 text-center hover:text-rose-400 transition-colors leading-tight">
+                                <span id="m3-val" class="font-bold text-rose-400">2.2 r_s</span> · <span id="m3-lbl">Cerca</span>
+                            </button>
+                            <button type="button" data-milestone="100" class="milestone-btn py-1 lg:py-0 text-right hover:text-singularity-crimson transition-colors leading-tight">
+                                <span id="m4-val" class="font-bold text-singularity-crimson">1.05 r_s</span> · <span id="m4-lbl">Borde</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column (3 cols): Compact Interactive Module Launchers -->
+                <div class="order-2 lg:order-none lg:col-span-3 grid grid-cols-3 lg:grid-cols-1 gap-1">
+                    <button id="open-spaghetti-btn" class="glass-hud hover:border-singularity-amber/80 active:scale-[0.98] transition-all duration-200 rounded-xl px-2 py-1 text-left group flex items-center justify-between">
+                        <div class="flex items-center gap-1.5 min-w-0">
+                            <i data-lucide="maximize-2" class="w-3.5 h-3.5 text-singularity-amber shrink-0 group-hover:scale-110 transition-transform"></i>
+                            <div class="min-w-0">
+                                <div class="font-mono text-[9px] text-slate-400">GRAVEDAD HUMANA</div>
+                                <div class="font-mono text-[10px] font-bold text-white truncate">Espaguetificación</div>
+                            </div>
+                        </div>
+                        <i data-lucide="chevron-right" class="w-3 h-3 text-slate-400 shrink-0"></i>
+                    </button>
+
+                    <button id="open-laser-btn" class="glass-hud hover:border-singularity-cyan/80 active:scale-[0.98] transition-all duration-200 rounded-xl px-2 py-1 text-left group flex items-center justify-between">
+                        <div class="flex items-center gap-1.5 min-w-0">
+                            <i data-lucide="radio" class="w-3.5 h-3.5 text-singularity-cyan shrink-0 group-hover:scale-110 transition-transform"></i>
+                            <div class="min-w-0">
+                                <div class="font-mono text-[9px] text-slate-400">ONDAS DE LUZ</div>
+                                <div class="font-mono text-[10px] font-bold text-white truncate">Transmitir Láser</div>
+                            </div>
+                        </div>
+                        <i data-lucide="chevron-right" class="w-3 h-3 text-slate-400 shrink-0"></i>
+                    </button>
+
+                    <button id="open-nasa-btn" class="glass-hud hover:border-singularity-emerald/80 active:scale-[0.98] transition-all duration-200 rounded-xl px-2 py-1 text-left group flex items-center justify-between">
+                        <div class="flex items-center gap-1.5 min-w-0">
+                            <i data-lucide="image" class="w-3.5 h-3.5 text-singularity-emerald shrink-0 group-hover:scale-110 transition-transform"></i>
+                            <div class="min-w-0">
+                                <div class="font-mono text-[9px] text-slate-400">FOTOS REALES NASA</div>
+                                <div class="font-mono text-[10px] font-bold text-white truncate">Galería Misiones</div>
+                            </div>
+                        </div>
+                        <i data-lucide="chevron-right" class="w-3 h-3 text-slate-400 shrink-0"></i>
+                    </button>
+                </div>
+            </footer>
+        </div>
+
+    </div>
+
+    <!-- GARGANTÚA: selector de vista de la lente gravitacional -->
+    <div id="lens-panel" class="hud-fade fixed left-1/2 -translate-x-1/2 top-[10rem] md:top-[6.25rem] z-20 w-[min(92vw,26rem)] pointer-events-none" hidden>
+        <div class="glass-hud rounded-2xl border-singularity-crimson/40 p-2 sm:p-2.5 pointer-events-auto">
+            <div class="flex items-center justify-between gap-2">
+                <span class="font-mono text-[9px] sm:text-[10px] font-bold tracking-widest text-rose-300 shrink-0">VISTA</span>
+                <div id="lens-modes" class="flex flex-wrap justify-end gap-1" role="group" aria-label="Modo de vista del agujero negro"></div>
+            </div>
+            <p id="lens-note" class="hidden sm:block mt-1.5 text-[10px] sm:text-[11px] leading-snug text-slate-300" aria-live="polite"></p>
+        </div>
+    </div>
+
+    <!-- Migas de pan: en qué escala del universo estás -->
+    <nav id="breadcrumb" class="breadcrumb hidden md:flex" aria-label="Ubicación en el universo"></nav>
+
+    <!-- UNIVERSO: ficha de lo que tocas en la galaxia o el vecindario -->
+    <div id="cosmos-panel" class="fixed z-30 left-1/2 -translate-x-1/2 bottom-4 w-[min(92vw,30rem)]" role="region" aria-label="Universo" hidden>
+        <div class="glass-hud rounded-2xl p-3 sm:p-4 border-indigo-300/40">
+            <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                    <div id="cosmos-kicker" class="font-mono text-[9px] font-bold tracking-widest text-indigo-200"></div>
+                    <h3 id="cosmos-title" class="text-base font-bold text-white leading-tight"></h3>
+                </div>
+                <button id="cosmos-close" type="button" aria-label="Cerrar ficha" class="shrink-0 text-slate-400 hover:text-white p-2 -m-1 rounded-lg">✕</button>
+            </div>
+            <p id="cosmos-text" class="mt-1.5 text-[11px] sm:text-xs leading-snug text-slate-300"></p>
+            <div id="cosmos-actions" class="mt-2 flex flex-wrap gap-1.5"></div>
+        </div>
+    </div>
+
+    <!-- MAPA DEL SISTEMA SOLAR: control del tiempo -->
+    <div id="orrery-bar" class="fixed z-30 left-1/2 -translate-x-1/2 top-[7.5rem] md:top-[6.5rem] glass-hud rounded-2xl px-2 py-1.5 flex items-center gap-1" role="group" aria-label="Fecha del mapa" hidden>
+        <button type="button" class="lens-mode-btn" data-orrery="-365" aria-label="Un año atrás">−1 A</button>
+        <button type="button" class="lens-mode-btn" data-orrery="-30" aria-label="Un mes atrás">−1 M</button>
+        <span id="orrery-date" class="px-2 font-mono text-[11px] font-bold text-amber-100 min-w-[10rem] text-center tabular-nums"></span>
+        <button type="button" class="lens-mode-btn" data-orrery="30" aria-label="Un mes adelante">+1 M</button>
+        <button type="button" class="lens-mode-btn" data-orrery="365" aria-label="Un año adelante">+1 A</button>
+        <button type="button" class="lens-mode-btn" data-orrery="play" aria-label="Reproducir o pausar el tiempo">▶</button>
+        <button type="button" class="lens-mode-btn" data-orrery="today">HOY</button>
+    </div>
+
+    <!-- TOUR: subtítulos -->
+    <div id="tour-caption" class="fixed inset-x-0 bottom-10 z-50 flex flex-col items-center gap-3 px-4 pointer-events-none" hidden>
+        <p id="tour-text" class="tour-text max-w-2xl text-center text-lg sm:text-2xl font-semibold text-white"></p>
+        <button id="tour-stop" type="button" class="genesis-ctl pointer-events-auto">TERMINAR TOUR</button>
+    </div>
+
+    <!-- ORIGEN: Big Bang -->
+    <div class="fixed inset-x-0 bottom-4 z-40 flex justify-center px-3 sm:px-4 pointer-events-none">
+        <div id="origin-card" class="genesis-card glass-hud rounded-2xl border border-amber-200/40 w-full max-w-xl p-3 sm:p-4 pointer-events-auto" role="region" aria-label="Origen del universo" hidden>
+            <div class="flex items-center justify-between gap-2 mb-2">
+                <span id="origin-kicker" class="font-mono text-[10px] font-bold tracking-widest text-amber-200 uppercase truncate"></span>
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <button id="origin-pause" type="button" class="genesis-ctl">PAUSA</button>
+                    <button id="origin-skip" type="button" class="genesis-ctl hidden sm:inline-block">AL FINAL</button>
+                    <button id="origin-exit" type="button" class="genesis-ctl">SALIR</button>
+                </div>
+            </div>
+            <div aria-live="polite">
+                <div id="origin-clock" class="genesis-clock font-mono text-base sm:text-xl font-bold text-singularity-amber"></div>
+                <div id="origin-title" class="text-sm sm:text-base font-bold text-white mt-1"></div>
+                <p id="origin-text" class="text-xs sm:text-sm text-slate-300 leading-snug mt-1"></p>
+            </div>
+            <button id="origin-end" type="button" class="mt-2 w-full min-h-[36px] rounded-xl border border-amber-300/60 bg-amber-300/10 hover:bg-amber-300/20 font-mono text-[11px] font-bold text-amber-100" hidden></button>
+            <div id="origin-segs" class="genesis-segs mt-3" aria-hidden="true"></div>
+        </div>
+    </div>
+
+    <!-- VIAJE: cinemática de despegue, crucero y llegada -->
+    <div id="journey-hud" class="fixed inset-x-0 top-4 z-40 flex justify-center px-3 pointer-events-none" role="region" aria-label="Viaje" hidden>
+        <div class="glass-hud rounded-2xl p-3 sm:p-4 w-full max-w-lg pointer-events-auto border-amber-200/40">
+            <div class="flex items-center justify-between gap-2">
+                <span id="journey-phase" class="font-mono text-[10px] font-bold tracking-widest text-amber-200"></span>
+                <button id="journey-skip" type="button" class="genesis-ctl">SALTAR</button>
+            </div>
+            <div id="journey-title" class="text-sm sm:text-base font-bold text-white mt-1"></div>
+            <p id="journey-text" class="text-xs sm:text-sm text-slate-300 leading-snug mt-1" aria-live="polite"></p>
+            <div class="mt-2.5 h-1 rounded-full bg-white/10 overflow-hidden"><div id="journey-bar" class="h-full w-full origin-left bg-amber-300" style="transform:scaleX(0)"></div></div>
+        </div>
+    </div>
+
+    <!-- SUPERFICIE: datos del sitio y controles para caminar -->
+    <div id="surface-fade" class="surface-fade" aria-hidden="true"></div>
+    <div id="surface-hud" class="fixed inset-x-0 bottom-0 z-30 p-3 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-2 pointer-events-none" role="region" aria-label="Superficie" hidden>
+        <div class="glass-hud rounded-2xl p-3 sm:p-4 w-full sm:max-w-md pointer-events-auto border-singularity-emerald/40">
+            <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                    <div class="font-mono text-[9px] font-bold tracking-widest text-emerald-300">ESTÁS EN</div>
+                    <h3 id="surface-title" class="text-sm sm:text-base font-bold text-white leading-tight"></h3>
+                    <p id="surface-note-text" class="text-[11px] text-slate-300 mt-0.5"></p>
+                </div>
+                <button id="surface-exit" type="button" class="shrink-0 min-h-[32px] px-2.5 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 font-mono text-[10px] font-bold text-slate-100">↑ SUBIR</button>
+            </div>
+            <dl id="surface-data" class="grid grid-cols-3 gap-2 mt-2 font-mono text-[9px] sm:text-[10px]"></dl>
+            <div class="mt-2 flex items-start gap-2">
+                <p id="surface-fact" class="flex-1 text-[11px] sm:text-xs leading-snug text-amber-100" aria-live="polite"></p>
+                <button id="surface-next-fact" type="button" class="shrink-0 min-h-[30px] px-2 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 font-mono text-[9px] font-bold text-slate-200">OTRO DATO</button>
+            </div>
+            <p class="hidden sm:block mt-2 font-mono text-[9px] text-slate-500">Arrastra para mirar · W A S D o flechas para caminar · Shift corre · Esc sube</p>
+        </div>
+        <div class="flex sm:flex-col gap-2 justify-center pointer-events-auto">
+            <button id="surface-walk-fwd" type="button" class="surface-walk" aria-label="Caminar hacia adelante">▲</button>
+            <button id="surface-walk-back" type="button" class="surface-walk" aria-label="Caminar hacia atrás">▼</button>
+        </div>
+    </div>
+
+    <!-- PÚLSAR VELA: datos reales, pulsos y glitch -->
+    <div id="pulsar-panel" class="hud-fade fixed left-1/2 -translate-x-1/2 top-[10rem] md:top-[6.25rem] z-20 w-[min(92vw,27rem)]" role="region" aria-label="Púlsar de Vela" hidden>
+        <div class="glass-hud rounded-2xl p-2.5 sm:p-3">
+            <div class="flex items-center justify-between gap-2">
+                <span class="font-mono text-[9px] sm:text-[10px] font-bold tracking-widest text-singularity-cyan">PULSOS RECIBIDOS EN LA TIERRA</span>
+                <div class="flex gap-1">
+                    <button id="pulsar-speed" type="button" class="lens-mode-btn" aria-pressed="false"></button>
+                    <button id="pulsar-glitch" type="button" class="lens-mode-btn">GLITCH</button>
+                </div>
+            </div>
+            <canvas id="pulse-graph" width="400" height="56" class="mt-2 w-full h-12 rounded-lg bg-black/40" aria-hidden="true"></canvas>
+            <dl class="mt-2 grid grid-cols-3 sm:grid-cols-4 gap-x-2 gap-y-1.5 font-mono text-[9px]">
+                <div><dt class="text-slate-400">PERIODO</dt><dd class="text-white font-bold">89.3 ms</dd></div>
+                <div><dt class="text-slate-400">GIRO</dt><dd class="text-white font-bold">11.19 /s</dd></div>
+                <div><dt class="text-slate-400">MASA</dt><dd class="text-white font-bold">~1.4 M☉</dd></div>
+                <div><dt class="text-slate-400">DIÁMETRO</dt><dd class="text-white font-bold">~20 km</dd></div>
+                <div><dt class="text-slate-400">CAMPO B</dt><dd class="text-white font-bold">3.4×10¹² G</dd></div>
+                <div><dt class="text-slate-400">FRENADO</dt><dd class="text-white font-bold">1.25×10⁻¹³ s/s</dd></div>
+                <div><dt class="text-slate-400">DISTANCIA</dt><dd class="text-white font-bold">~950 a. luz</dd></div>
+                <div><dt class="text-slate-400">EDAD</dt><dd class="text-white font-bold">~11,000 años</dd></div>
+            </dl>
+            <p id="pulsar-note" class="hidden lg:block mt-2 text-[10px] leading-snug text-slate-300">Flecha verde: la Tierra. Línea blanca: eje de giro. El haz sigue el eje magnético, inclinado ~70°: cada vez que nos barre llega un pulso. Naranja: líneas de campo abiertas que cruzan el cilindro de luz (amarillo).</p>
+        </div>
+    </div>
+
+    <!-- Nota científica de lo que se ve en la superficie -->
+    <p id="surface-note" class="hud-fade fixed z-20 left-1/2 -translate-x-1/2 bottom-[13.5rem] md:bottom-[11rem] w-[min(92vw,30rem)] glass-hud rounded-xl px-3 py-2 text-[10px] sm:text-[11px] leading-snug text-amber-100 border-singularity-amber/40 pointer-events-none" hidden></p>
+
+    <!-- Ficha de la luna enfocada -->
+    <div id="moon-card" class="hud-fade fixed z-20 left-1/2 -translate-x-1/2 top-[10rem] md:top-[6.25rem] w-[min(92vw,24rem)]" role="region" aria-label="Luna enfocada" hidden>
+        <div class="glass-hud rounded-2xl p-3 border-sky-300/40">
+            <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                    <div id="moon-card-planet" class="font-mono text-[9px] font-bold tracking-widest text-sky-300"></div>
+                    <h3 id="moon-card-name" class="text-base font-bold text-white leading-tight"></h3>
+                </div>
+                <button id="moon-card-back" type="button" class="shrink-0 min-h-[30px] px-2 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 font-mono text-[9px] font-bold text-slate-200"></button>
+            </div>
+            <dl class="grid grid-cols-3 gap-2 mt-2 font-mono text-[9px]">
+                <div><dt class="text-slate-400">RADIO</dt><dd id="moon-card-km" class="text-white text-[11px] font-bold"></dd></div>
+                <div><dt class="text-slate-400">ÓRBITA</dt><dd id="moon-card-period" class="text-white text-[11px] font-bold"></dd></div>
+                <div class="min-w-0"><dt class="text-slate-400">DESCUBIERTA</dt><dd id="moon-card-found" class="text-white text-[10px] leading-tight"></dd></div>
+            </dl>
+            <p id="moon-card-fact" class="mt-2 text-[11px] leading-snug text-slate-300"></p>
+            <button id="moon-card-land" type="button" class="mt-2 w-full min-h-[34px] rounded-xl border border-emerald-300/50 bg-emerald-300/10 hover:bg-emerald-300/20 font-mono text-[10px] font-bold text-emerald-200" hidden>ATERRIZAR AQUÍ ↓</button>
+        </div>
+    </div>
+
+    <!-- GENESIS: cinematic formation timeline -->
+    <div class="genesis-letterbox" aria-hidden="true"><div></div><div></div></div>
+    <div class="fixed inset-x-0 bottom-[calc(var(--genesis-bar)+10px)] z-30 flex justify-center px-3 sm:px-4 pointer-events-none">
+        <div id="genesis-card" class="genesis-card glass-hud rounded-2xl border border-singularity-violet/50 w-full max-w-xl p-3 sm:p-4" role="region" aria-label="Génesis" hidden>
+            <div class="flex items-center justify-between gap-2 mb-2">
+                <span id="genesis-kicker" class="font-mono text-[10px] font-bold tracking-widest text-purple-300 uppercase truncate">GÉNESIS</span>
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <button id="genesis-sound" type="button" class="genesis-ctl" aria-pressed="false">SONIDO</button>
+                    <button id="genesis-pause" type="button" class="genesis-ctl" aria-pressed="false" aria-keyshortcuts="Space">PAUSA</button>
+                    <button id="genesis-tour" type="button" class="genesis-ctl hidden sm:inline-block" aria-pressed="false" title="Ver todos los Génesis seguidos">MARATÓN</button>
+                    <button id="genesis-skip" type="button" class="genesis-ctl" aria-keyshortcuts="Escape">SALTAR</button>
+                </div>
+            </div>
+            <div id="genesis-step" class="genesis-step" aria-live="polite">
+                <div class="flex items-baseline justify-between gap-3">
+                    <div id="genesis-clock" class="genesis-clock font-mono text-base sm:text-xl font-bold text-singularity-amber"></div>
+                    <div id="genesis-phase" class="font-mono text-[10px] text-slate-400 tracking-widest shrink-0"></div>
+                </div>
+                <div id="genesis-title" class="text-sm sm:text-base font-bold text-white mt-1"></div>
+                <p id="genesis-text" class="text-xs sm:text-sm text-slate-300 leading-snug mt-1"></p>
+            </div>
+            <div id="genesis-proof" class="genesis-proof mt-2.5 flex items-start gap-2" hidden>
+                <span class="font-mono text-[9px] font-bold tracking-widest text-singularity-emerald shrink-0 pt-0.5">DATO REAL</span>
+                <p class="text-[11px] leading-snug text-slate-300 min-w-0"><span id="genesis-proof-text"></span> <button id="genesis-proof-btn" type="button" class="pointer-events-auto underline decoration-dotted underline-offset-2 text-singularity-amber hover:text-white font-mono text-[10px]"></button></p>
+            </div>
+            <div id="genesis-segs" class="genesis-segs mt-3" aria-hidden="true"></div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 4. MODAL POPUPS (Glassmorphic)                                            -->
+    <!-- ========================================================================= -->
+
+    <!-- MODAL 1: Spaghettification & Planetary Gravity Simulator -->
+    <div id="modal-spaghetti" role="dialog" aria-modal="true" class="fixed inset-0 z-50 hidden items-center justify-center p-3 bg-void/80 backdrop-blur-md">
+        <div class="glass-hud rounded-2xl max-w-xl w-full p-4 sm:p-5 border border-singularity-amber/40 shadow-2xl space-y-3 max-h-[92dvh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-white/10 pb-2">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="maximize-2" class="w-4 h-4 text-singularity-amber"></i>
+                    <div>
+                        <h3 class="font-mono text-xs sm:text-sm font-bold text-white uppercase">Simulador Biodinámico: Gravedad Planetaria vs. Espaguetificación</h3>
+                        <p id="spaghetti-Astro-subtitle" class="font-mono text-[9px] text-singularity-cyan">SELECCIONA CUALQUIERA DE LOS 16 ASTROS PARA COMPARAR SU EFECTO EN EL CUERPO HUMANO</p>
+                    </div>
+                </div>
+                <button type="button" data-close-modal="modal-spaghetti" aria-label="Cerrar" class="shrink-0 text-slate-400 hover:text-white p-2 -m-1 rounded-lg">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- Selector of all 12 Celestial Bodies inside the Gravity Simulator -->
+            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1">
+                <button type="button" data-spaghetti-preset="pluto" class="spaghetti-preset-btn px-1.5 py-1 rounded bg-white/5 hover:bg-white/10 font-mono text-[9px] text-slate-300 border border-white/10 truncate">Plutón (0.06G)</button>
+                <button type="button" data-spaghetti-preset="europa" class="spaghetti-preset-btn px-1.5 py-1 rounded bg-white/5 hover:bg-white/10 font-mono text-[9px] text-slate-300 border border-white/10 truncate">Europa (0.13G)</button>
+                <button type="button" data-spaghetti-preset="titan" class="spaghetti-preset-btn px-1.5 py-1 rounded bg-white/5 hover:bg-white/10 font-mono text-[9px] text-slate-300 border border-white/10 truncate">Titán (0.14G)</button>
+                <button type="button" data-spaghetti-preset="moon" class="spaghetti-preset-btn px-1.5 py-1 rounded bg-white/5 hover:bg-white/10 font-mono text-[9px] text-slate-300 border border-white/10 truncate">Luna (0.16G)</button>
+                <button type="button" data-spaghetti-preset="io" class="spaghetti-preset-btn px-1.5 py-1 rounded bg-white/5 hover:bg-white/10 font-mono text-[9px] text-slate-300 border border-white/10 truncate">Ío (0.18G)</button>
+                <button type="button" data-spaghetti-preset="mercury" class="spaghetti-preset-btn px-1.5 py-1 rounded bg-white/5 hover:bg-white/10 font-mono text-[9px] text-slate-300 border border-white/10 truncate">Mercurio (0.38G)</button>
+                <button type="button" data-spaghetti-preset="mars" class="spaghetti-preset-btn px-1.5 py-1 rounded bg-white/5 hover:bg-white/10 font-mono text-[9px] text-slate-300 border border-white/10 truncate">Marte (0.38G)</button>
+                <button type="button" data-spaghetti-preset="uranus" class="spaghetti-preset-btn px-1.5 py-1 rounded bg-white/5 hover:bg-white/10 font-mono text-[9px] text-slate-300 border border-white/10 truncate">Urano (0.89G)</button>
+                <button type="button" data-spaghetti-preset="venus" class="spaghetti-preset-btn px-1.5 py-1 rounded bg-white/5 hover:bg-white/10 font-mono text-[9px] text-slate-300 border border-white/10 truncate">Venus (0.90G)</button>
+                <button type="button" data-spaghetti-preset="earth" class="spaghetti-preset-btn px-1.5 py-1 rounded bg-white/5 hover:bg-white/10 font-mono text-[9px] text-slate-300 border border-white/10 truncate">Tierra (1.00G)</button>
+                <button type="button" data-spaghetti-preset="saturn" class="spaghetti-preset-btn px-1.5 py-1 rounded bg-white/5 hover:bg-white/10 font-mono text-[9px] text-slate-300 border border-white/10 truncate">Saturno (1.06G)</button>
+                <button type="button" data-spaghetti-preset="neptune" class="spaghetti-preset-btn px-1.5 py-1 rounded bg-white/5 hover:bg-white/10 font-mono text-[9px] text-slate-300 border border-white/10 truncate">Neptuno (1.14G)</button>
+                <button type="button" data-spaghetti-preset="jupiter" class="spaghetti-preset-btn px-1.5 py-1 rounded bg-white/5 hover:bg-white/10 font-mono text-[9px] text-slate-300 border border-white/10 truncate">Júpiter (2.53G)</button>
+                <button type="button" data-spaghetti-preset="sun" class="spaghetti-preset-btn px-1.5 py-1 rounded bg-white/5 hover:bg-white/10 font-mono text-[9px] text-amber-300 border border-amber-400/30 truncate">Sol (27.9G)</button>
+                <button type="button" data-spaghetti-preset="pulsar" class="spaghetti-preset-btn px-1.5 py-1 rounded bg-white/5 hover:bg-white/10 font-mono text-[9px] text-singularity-cyan border border-singularity-cyan/30 truncate">Púlsar (ΔG)</button>
+                <button type="button" data-spaghetti-preset="gargantua" class="spaghetti-preset-btn px-1.5 py-1 rounded bg-singularity-crimson/20 font-mono text-[9px] text-singularity-crimson border border-singularity-crimson/40 truncate">Gargantúa (ΔG)</button>
+            </div>
+
+            <!-- Interactive Holographic Astronaut & Force Vectors Chamber -->
+            <div class="relative h-52 bg-void-light/95 rounded-xl border border-white/10 flex flex-col items-center justify-center overflow-hidden px-4">
+                <!-- Background Reference Grid -->
+                <div class="absolute inset-0 opacity-20" style="background-image: linear-gradient(to right, #00f0ff 1px, transparent 1px), linear-gradient(to bottom, #00f0ff 1px, transparent 1px); background-size: 20px 20px;"></div>
+
+                <!-- Top & Side Force Arrows Indicator -->
+                <div id="spaghetti-vector-badge" class="absolute top-2 left-2.5 right-2.5 flex items-center justify-between text-[9px] font-mono">
+                    <span id="spaghetti-astro-name" class="font-bold text-singularity-cyan uppercase">ASTRO: SATURNO</span>
+                    <span id="spaghetti-weight-equiv" class="px-2 py-0.5 rounded bg-void/90 border border-white/15 text-amber-300">Peso de 70 kg ➔ 74.5 kg</span>
+                </div>
+
+                <!-- Dynamic SVG Astronaut with Force Vectors -->
+                <div id="astronaut-wrapper" class="transition-all duration-300 flex items-center justify-center my-2">
+                    <svg id="astronaut-svg" class="w-20 h-32 text-singularity-cyan transition-colors duration-300" viewBox="0 0 80 130" fill="none" stroke="currentColor" stroke-width="2.4">
+                        <!-- Helmet & Visor -->
+                        <circle cx="40" cy="24" r="11" fill="rgba(0,240,255,0.14)"/>
+                        <path d="M34 22 Q40 27 46 22" stroke-width="1.8" opacity="0.8"/>
+                        <!-- Spine / Torso -->
+                        <rect x="27" y="38" width="26" height="38" rx="6" fill="rgba(0,240,255,0.12)"/>
+                        <line x1="40" y1="39" x2="40" y2="75" stroke-dasharray="3 2" opacity="0.65"/>
+                        <!-- Arms -->
+                        <line id="astro-arm-l" x1="27" y1="43" x2="13" y2="66" stroke-linecap="round"/>
+                        <line id="astro-arm-r" x1="53" y1="43" x2="67" y2="66" stroke-linecap="round"/>
+                        <!-- Legs -->
+                        <line id="astro-leg-l" x1="33" y1="76" x2="29" y2="114" stroke-linecap="round"/>
+                        <line id="astro-leg-r" x1="47" y1="76" x2="51" y2="114" stroke-linecap="round"/>
+                    </svg>
+                </div>
+
+                <!-- Floor / Gravity Platform Line -->
+                <div id="spaghetti-floor-line" class="w-40 h-1 rounded-full bg-singularity-cyan/50 shadow-[0_0_10px_#00f0ff] transition-all duration-300"></div>
+
+                <span id="spaghetti-status-tag" class="mt-1.5 px-2.5 py-0.5 rounded bg-void/90 font-mono text-[9px] text-singularity-cyan border border-singularity-cyan/30">
+                    INTEGRIDAD CORPORAL ESTABLE
+                </span>
+            </div>
+
+            <!-- Physiological Explanation Box -->
+            <p id="spaghetti-bio-desc" class="text-[11px] text-slate-300 bg-void/70 border border-white/10 rounded-lg p-2.5 leading-relaxed">
+                En un planeta la gravedad tira casi igual de tu cabeza que de tus pies (compresión uniforme hacia el suelo), mientras que en un Púlsar o Agujero Negro la diferencia de gravedad entre cabeza y pies te estira verticalmente como un espagueti.
+            </p>
+
+            <!-- Black Hole Mass Slider (Only active/highlighted for Black Hole mode) -->
+            <div id="bh-mass-control-box" class="space-y-1 p-2 rounded-lg bg-void-light/60 border border-white/10">
+                <div class="flex justify-between text-[10px] font-mono">
+                    <span class="text-slate-400">MASA AGUJERO NEGRO (PARADOJA DE MAREA):</span>
+                    <span id="bh-mass-label" class="text-singularity-amber font-bold">4.0 × 10⁶ M☉</span>
+                </div>
+                <input id="bh-mass-slider" type="range" min="1" max="7" step="0.1" value="6.6" class="hud-slider">
+                <div class="flex justify-between text-[8px] font-mono text-slate-400">
+                    <span>10 M☉ (Estelar: Destruye antes)</span>
+                    <span>4×10⁶ M☉ (Supermasivo: Gradiente suave)</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+                <div class="bg-void-light p-2 rounded-lg border border-white/10">
+                    <span class="text-[8px] text-slate-400 block">DISTANCIA ACTUAL</span>
+                    <span id="spaghetti-rs" class="font-bold text-white text-[11px]">15.00 r_s</span>
+                </div>
+                <div class="bg-void-light p-2 rounded-lg border border-white/10">
+                    <span class="text-[8px] text-slate-400 block">GRAVEDAD SUPERFICIAL</span>
+                    <span id="spaghetti-surf-g" class="font-bold text-singularity-cyan text-[11px]">1.06 G</span>
+                </div>
+                <div class="bg-void-light p-2 rounded-lg border border-white/10">
+                    <span class="text-[8px] text-slate-400 block">MAREA CABEZA-PIES (Δg)</span>
+                    <span id="spaghetti-deltag" class="font-bold text-singularity-amber text-[11px]">0.0000003 G/m</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: Electromagnetic Laser Redshift Transmitter -->
+    <div id="modal-laser" role="dialog" aria-modal="true" class="fixed inset-0 z-50 hidden items-center justify-center p-3 bg-void/80 backdrop-blur-md">
+        <div class="glass-hud rounded-2xl max-w-lg w-full p-4 sm:p-5 border border-singularity-cyan/40 shadow-2xl space-y-3 max-h-[92dvh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-white/10 pb-2">
+                <div>
+                    <h3 class="font-mono text-xs sm:text-sm font-bold text-white uppercase">Transmisor Láser de Corrimiento al Rojo (Redshift)</h3>
+                    <p id="laser-subtitle" class="font-mono text-[9px] text-singularity-cyan">SONDA KERR-IX ➔ RECEPTOR EN LA TIERRA</p>
+                </div>
+                <button type="button" data-close-modal="modal-laser" aria-label="Cerrar" class="shrink-0 text-slate-400 hover:text-white p-2 -m-1 rounded-lg">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <div class="relative bg-void-light rounded-xl border border-white/10 p-2">
+                <canvas id="redshift-canvas" width="460" height="140" class="w-full h-32 rounded"></canvas>
+                <div class="flex justify-between text-[9px] font-mono text-slate-400 mt-1 px-1">
+                    <span class="text-singularity-cyan">EMISOR SONDA (450 nm Azul)</span>
+                    <span id="laser-receiver-label" class="text-rose-400">RECEPTOR TIERRA</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+                <div class="bg-void-light p-2 rounded-lg border border-white/10">
+                    <span class="text-[8px] text-slate-400 block">POSICIÓN</span>
+                    <span id="laser-rs" class="font-bold text-white">15.0 r_s</span>
+                </div>
+                <div class="bg-void-light p-2 rounded-lg border border-white/10">
+                    <span class="text-[8px] text-slate-400 block">REDSHIFT (z)</span>
+                    <span id="laser-z" class="font-bold text-singularity-amber">0.074</span>
+                </div>
+                <div class="bg-void-light p-2 rounded-lg border border-white/10">
+                    <span class="text-[8px] text-slate-400 block">ENERGÍA RECIBIDA</span>
+                    <span id="laser-freq" class="font-bold text-singularity-cyan">93.1%</span>
+                </div>
+            </div>
+
+            <button id="emit-ping-btn" type="button" class="w-full py-2 rounded-xl bg-singularity-cyan/20 hover:bg-singularity-cyan/30 border border-singularity-cyan/50 font-mono text-xs font-bold text-singularity-cyan transition-all">
+                EMITIR PULSO TELEMÉTRICO LÁSER (PING)
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL 3: Comparative Table of 12 Celestial Bodies -->
+    <div id="modal-compare" role="dialog" aria-modal="true" class="fixed inset-0 z-50 hidden items-center justify-center p-3 bg-void/80 backdrop-blur-md">
+        <div class="glass-hud rounded-2xl max-w-4xl w-full p-4 sm:p-5 border border-singularity-cyan/40 shadow-2xl space-y-3 max-h-[90dvh] flex flex-col">
+            <div class="flex items-center justify-between border-b border-white/10 pb-2 shrink-0">
+                <h3 class="font-mono text-xs sm:text-sm font-bold text-white uppercase">Tabla Comparativa Relativista (16 Astros)</h3>
+                <button type="button" data-close-modal="modal-compare" aria-label="Cerrar" class="shrink-0 text-slate-400 hover:text-white p-2 -m-1 rounded-lg">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div class="overflow-auto flex-1">
+                <table class="w-full min-w-[640px] text-left font-mono text-xs">
+                    <thead class="text-[10px] text-slate-400 border-b border-white/10 uppercase">
+                        <tr>
+                            <th class="py-1.5 px-2">Astro</th>
+                            <th class="py-1.5 px-2">Radio Real</th>
+                            <th class="py-1.5 px-2">Radio Schwarzschild (r_s)</th>
+                            <th class="py-1.5 px-2">Gravedad</th>
+                            <th class="py-1.5 px-2">Desfase Temporal</th>
+                            <th class="py-1.5 px-2">Fenómeno Clave</th>
+                        </tr>
+                    </thead>
+                    <tbody id="compare-table-body" class="divide-y divide-white/5 text-xs"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 5: Catálogo de misiones reales por astro -->
+    <div id="modal-missions" role="dialog" aria-modal="true" aria-labelledby="missions-title" class="fixed inset-0 z-50 hidden items-center justify-center p-3 bg-void/85 backdrop-blur-md">
+        <div class="glass-hud-amber rounded-2xl max-w-2xl w-full p-4 sm:p-5 shadow-2xl max-h-[92dvh] flex flex-col gap-3">
+            <div class="flex items-start justify-between gap-2 border-b border-white/10 pb-2">
+                <div class="min-w-0">
+                    <h3 id="missions-title" class="font-mono text-xs sm:text-sm font-bold text-singularity-amber uppercase flex items-center gap-1.5">
+                        <i data-lucide="rocket" class="w-4 h-4 shrink-0"></i>
+                        <span id="missions-title-text">Misiones</span>
+                    </h3>
+                    <p id="missions-subtitle" class="font-mono text-[9px] text-slate-400 mt-0.5"></p>
+                </div>
+                <button type="button" data-close-modal="modal-missions" aria-label="Cerrar" class="shrink-0 text-slate-400 hover:text-white p-2 -m-1 rounded-lg">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div id="missions-filters" class="flex flex-wrap gap-1" role="group" aria-label="Filtrar por tipo de misión"></div>
+            <ol id="missions-list" class="missions-list overflow-y-auto -mr-2 pr-2 space-y-2"></ol>
+            <p class="font-mono text-[9px] text-slate-500 leading-snug">Datos curados de NASA, ESA, JAXA, CNSA, ISRO y Roscosmos. Las fotos llegan en vivo de images-api.nasa.gov.</p>
+        </div>
+    </div>
+
+    <!-- MODAL 4: Official NASA Image & Video Library Gallery -->
+    <div id="modal-nasa" role="dialog" aria-modal="true" class="fixed inset-0 z-50 hidden items-center justify-center p-3 bg-void/85 backdrop-blur-md">
+        <div class="glass-hud rounded-2xl max-w-2xl w-full p-4 sm:p-5 border border-singularity-emerald/50 shadow-2xl space-y-3 max-h-[92dvh] overflow-y-auto">
+            <div class="flex items-start sm:items-center justify-between gap-2 border-b border-white/10 pb-2">
+                <div>
+                    <h3 class="font-mono text-xs sm:text-sm font-bold text-singularity-emerald uppercase flex items-center gap-1.5">
+                        <i data-lucide="satellite" class="w-4 h-4"></i>
+                        Archivo Fotográfico Oficial de Misiones NASA
+                    </h3>
+                    <p id="modal-nasa-subtitle" class="font-mono text-[9px] text-slate-400">API EN VIVO: images-api.nasa.gov</p>
+                </div>
+                <div class="flex flex-wrap justify-end items-center gap-1.5">
+                    <button type="button" data-open-missions class="px-2 py-1 rounded bg-singularity-amber/15 border border-singularity-amber/40 font-mono text-[9px] text-singularity-amber">MISIONES</button>
+                    <button id="open-compare-from-nasa" type="button" class="px-2 py-1 rounded bg-singularity-cyan/15 border border-singularity-cyan/40 font-mono text-[9px] text-singularity-cyan">TABLA 16 ASTROS</button>
+                    <button id="nasa-refresh-btn" type="button" class="px-2 py-1 rounded bg-white/5 hover:bg-white/10 font-mono text-[9px] text-slate-300">RECARGAR</button>
+                    <button type="button" data-close-modal="modal-nasa" aria-label="Cerrar" class="shrink-0 text-slate-400 hover:text-white p-2 -m-1 rounded-lg">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="relative h-48 sm:h-64 w-full rounded-xl overflow-hidden bg-void border border-white/10">
+                <img id="nasa-modal-main-img" src="https://placehold.co/800x500/05050e/00f0ff?text=NASA+API" alt="Fotografía NASA" class="w-full h-full object-contain bg-black">
+                <div class="absolute bottom-2 left-2 right-2 flex justify-between text-[9px] font-mono">
+                    <span id="nasa-modal-center" class="px-2 py-0.5 rounded bg-void/85 text-singularity-amber border border-singularity-amber/40">CENTRO: NASA / JPL</span>
+                    <span id="nasa-modal-date" class="px-2 py-0.5 rounded bg-void/85 text-slate-300">Misión Oficial</span>
+                </div>
+            </div>
+
+            <div>
+                <h4 id="nasa-modal-title" class="text-xs sm:text-sm font-bold text-white">Fotografía de Misión Espacial</h4>
+                <p id="nasa-modal-desc" class="text-[11px] text-slate-300 mt-1 max-h-24 overflow-y-auto leading-relaxed">Datos recibidos de images-api.nasa.gov.</p>
+            </div>
+
+            <div id="nasa-modal-thumbs" class="grid grid-cols-4 sm:grid-cols-6 gap-1.5 pt-1"></div>
+            <p class="font-mono text-[9px] text-slate-500 leading-snug">Texturas: Solar System Scope (CC BY 4.0), NASA/JPL-Caltech/USGS y three.js. Audio: grabaciones y sonificaciones de misiones NASA/ESA (Cassini, Juno, Voyager, Perseverance, Huygens, Chandra).</p>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 5. APPLICATION JAVASCRIPT: PBR NASA TEXTURES, LIVE NASA API & 12 BODIES   -->
+    <!-- ========================================================================= -->
+    <script src="js/ui/icons.js"></script>
+    <script src="js/config/targets.js"></script>
+    <script src="js/config/moons.js"></script>
+    <script src="js/config/missions.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/audio/engine.js"></script>
+    <script src="js/scene/core.js"></script>
+    <script src="js/scene/materials.js"></script>
+    <script src="js/scene/bodies/solar-system.js"></script>
+    <script src="js/scene/bodies/saturn-jupiter.js"></script>
+    <script src="js/scene/bodies/pulsar-blackhole.js"></script>
+    <script src="js/scene/bodies/pulsar-physics.js"></script>
+    <script src="js/scene/bodies/mars-weather.js"></script>
+    <script src="js/scene/moon-textures.js"></script>
+    <script src="js/scene/bodies/moons.js"></script>
+    <script src="js/scene/lens.js"></script>
+    <script src="js/scene/sky.js"></script>
+    <script src="js/ui/nasa.js"></script>
+    <script src="js/ui/telemetry.js"></script>
+    <script src="js/ui/controls.js"></script>
+    <script src="js/ui/missions.js"></script>
+    <script src="js/ui/moon-focus.js"></script>
+    <script src="js/surface/sites.js"></script>
+    <script src="js/surface/surface.js"></script>
+    <script src="js/audio/genesis-sound.js"></script>
+    <script src="js/genesis/data.js"></script>
+    <script src="js/genesis/particles.js"></script>
+    <script src="js/genesis/fx.js"></script>
+    <script src="js/genesis/postfx.js"></script>
+    <script src="js/genesis/events.js"></script>
+    <script src="js/genesis/events-v3.js"></script>
+    <script src="js/genesis/director.js"></script>
+    <script src="js/cosmos/stars.js"></script>
+    <script src="js/cosmos/cosmos.js"></script>
+    <script src="js/cosmos/bigbang.js"></script>
+    <script src="js/cosmos/orrery.js"></script>
+    <script src="js/cosmos/compare.js"></script>
+    <script src="js/cosmos/tour.js"></script>
+    <script src="js/surface/descent.js"></script>
+    <script src="js/surface/journey.js"></script>
+    <script src="js/cosmos/nav.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
