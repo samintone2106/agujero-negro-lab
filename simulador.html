@@ -468,6 +468,19 @@
         </div>
     </div>
 
+    <!-- VIAJE: cinemática de despegue, crucero y llegada -->
+    <div id="journey-hud" class="fixed inset-x-0 top-4 z-40 flex justify-center px-3 pointer-events-none" role="region" aria-label="Viaje" hidden>
+        <div class="glass-hud rounded-2xl p-3 sm:p-4 w-full max-w-lg pointer-events-auto border-amber-200/40">
+            <div class="flex items-center justify-between gap-2">
+                <span id="journey-phase" class="font-mono text-[10px] font-bold tracking-widest text-amber-200"></span>
+                <button id="journey-skip" type="button" class="genesis-ctl">SALTAR</button>
+            </div>
+            <div id="journey-title" class="text-sm sm:text-base font-bold text-white mt-1"></div>
+            <p id="journey-text" class="text-xs sm:text-sm text-slate-300 leading-snug mt-1" aria-live="polite"></p>
+            <div class="mt-2.5 h-1 rounded-full bg-white/10 overflow-hidden"><div id="journey-bar" class="h-full w-full origin-left bg-amber-300" style="transform:scaleX(0)"></div></div>
+        </div>
+    </div>
+
     <!-- SUPERFICIE: datos del sitio y controles para caminar -->
     <div id="surface-fade" class="surface-fade" aria-hidden="true"></div>
     <div id="surface-hud" class="fixed inset-x-0 bottom-0 z-30 p-3 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-end justify-between gap-2 pointer-events-none" role="region" aria-label="Superficie" hidden>
@@ -537,6 +550,7 @@
                 <div class="min-w-0"><dt class="text-slate-400">DESCUBIERTA</dt><dd id="moon-card-found" class="text-white text-[10px] leading-tight"></dd></div>
             </dl>
             <p id="moon-card-fact" class="mt-2 text-[11px] leading-snug text-slate-300"></p>
+            <button id="moon-card-land" type="button" class="mt-2 w-full min-h-[34px] rounded-xl border border-emerald-300/50 bg-emerald-300/10 hover:bg-emerald-300/20 font-mono text-[10px] font-bold text-emerald-200" hidden>ATERRIZAR AQUÍ ↓</button>
         </div>
     </div>
 
@@ -848,6 +862,8 @@
     <script src="js/cosmos/stars.js"></script>
     <script src="js/cosmos/cosmos.js"></script>
     <script src="js/cosmos/bigbang.js"></script>
+    <script src="js/surface/descent.js"></script>
+    <script src="js/surface/journey.js"></script>
     <script src="js/cosmos/nav.js"></script>
     <script src="js/main.js"></script>
 </body>

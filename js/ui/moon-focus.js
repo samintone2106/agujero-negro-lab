@@ -48,6 +48,11 @@ function focusMoon(mesh) {
     moonFocusDom.fact.textContent = cfg.fact;
     moonFocusDom.back.textContent = `← VOLVER A ${ASTRO_TARGETS[planetId].name.split(' (')[0]}`;
     moonFocusDom.card.hidden = false;
+    const landBtn = document.getElementById('moon-card-land');
+    if (landBtn) {
+        landBtn.hidden = !(typeof canLand === 'function' && canLand(cfg.name));
+        landBtn.onclick = () => startLanding(cfg.name);
+    }
     audioEngine.playClickTone(1040, 0.05);
 }
 

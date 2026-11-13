@@ -98,18 +98,22 @@ function buildTerrainMesh(size, segs, heightFn, site, far) {
             float sN(vec2 p) { vec2 i = floor(p); vec2 f = fract(p); f = f * f * (3.0 - 2.0 * f);
                 return mix(mix(sH(i), sH(i + vec2(1, 0)), f.x), mix(sH(i + vec2(0, 1)), sH(i + vec2(1, 1)), f.x), f.y); }`)
             .replace('#include <color_fragment>', `#include <color_fragment>
-            float g = sN(vWorldP.xz * 3.0) * 0.5 + sN(vWorldP.xz * 0.6) * 0.35 + sN(vWorldP.xz * 18.0) * 0.15;
-            diffuseColor.rgb *= 0.78 + g * 0.42;`)
+            // grano del suelo: las frecuencias finas se apagan con la distancia (si no, hacen moiré)
+            float camD = length(vWorldP - cameraPosition);
+            float fine = 1.0 - smoothstep(6.0, 40.0, camD);
+            float mid = 1.0 - smoothstep(40.0, 260.0, camD);
+            float g = sN(vWorldP.xz * 0.6) * 0.35 + (sN(vWorldP.xz * 3.0) * 0.5 - 0.25) * mid + (sN(vWorldP.xz * 18.0) * 0.15 - 0.075) * fine + 0.33;
+            diffuseColor.rgb *= 0.8 + g * 0.36;`)
             // relieve fino (piedritas, ondulaciones) con un gradiente suave: no depende del tamaño de los polígonos
             .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
             {
-                float fade = 1.0 - smoothstep(20.0, 120.0, length(vWorldP - cameraPosition));
+                float fade = 1.0 - smoothstep(8.0, 45.0, length(vWorldP - cameraPosition));
                 if (fade > 0.0) {
                     vec2 q = vWorldP.xz; float e = 0.04;
-                    float h0 = sN(q * 2.2) * 0.6 + sN(q * 9.0) * 0.3 + sN(q * 31.0) * 0.1;
-                    float hx = sN((q + vec2(e, 0.0)) * 2.2) * 0.6 + sN((q + vec2(e, 0.0)) * 9.0) * 0.3 + sN((q + vec2(e, 0.0)) * 31.0) * 0.1;
-                    float hz = sN((q + vec2(0.0, e)) * 2.2) * 0.6 + sN((q + vec2(0.0, e)) * 9.0) * 0.3 + sN((q + vec2(0.0, e)) * 31.0) * 0.1;
-                    vec3 bumpW = vec3(-(hx - h0) / e, 0.0, -(hz - h0) / e) * 0.12 * fade;
+                    float h0 = sN(q * 1.3) * 0.7 + sN(q * 5.0) * 0.3;
+                    float hx = sN((q + vec2(e, 0.0)) * 1.3) * 0.7 + sN((q + vec2(e, 0.0)) * 5.0) * 0.3;
+                    float hz = sN((q + vec2(0.0, e)) * 1.3) * 0.7 + sN((q + vec2(0.0, e)) * 5.0) * 0.3;
+                    vec3 bumpW = vec3(-(hx - h0) / e, 0.0, -(hz - h0) / e) * 0.05 * fade;
                     normal = normalize(normal + (viewMatrix * vec4(bumpW, 0.0)).xyz);
                 }
             }`);
@@ -166,7 +170,7 @@ function buildStars() {
 function buildRocks(site, heightFn, seed) {
     const rnd = surfRng(seed + 99);
     const count = site.pebbles ? 2600 : 1600;
-    const geo = new THREE.IcosahedronGeometry(1, 3);
+    const geo = new THREE.SphereGeometry(1, 22, 16); // indexada: normales suaves, sin facetas
     if (!site.pebbles) {
         const p = geo.attributes.position;
         // roca: esfera achatada y abollada con ruido suave (sin facetas)
@@ -202,8 +206,55 @@ function buildSkyBody(sb) {
     if (sb.tex) loadTextureWithFallback([TEX + sb.tex], (t) => { mat.map = t; mat.needsUpdate = true; });
     if (sb.look) { const t = makeMoonTexture(sb.look); mat.map = t.map; }
     const mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 64, 64), mat);
-    mesh.position.setFromSphericalCoords(D, THREE.MathUtils.degToRad(90 - sb.elev), THREE.MathUtils.degToRad(sb.az));
-    return mesh;
+    const group = new THREE.Group();
+    group.position.setFromSphericalCoords(D, THREE.MathUtils.degToRad(90 - sb.elev), THREE.MathUtils.degToRad(sb.az));
+    group.add(mesh);
+    group.lookAt(0, 0, 0); // +z del grupo hacia quien observa
+    if (sb.rings) {
+        // desde una luna que orbita en el plano de los anillos, se ven casi de canto (una línea fina)
+        const ring = new THREE.Mesh(new THREE.RingGeometry(radius * 1.24, radius * 2.27, 160, 1),
+            new THREE.MeshBasicMaterial({ color: 0xd8ccb0, side: THREE.DoubleSide, transparent: true, opacity: 0.7, fog: false }));
+        ring.rotation.x = Math.PI / 2 - THREE.MathUtils.degToRad(2.5);
+        group.add(ring);
+        group.rotateZ(THREE.MathUtils.degToRad(-12));
+    }
+    return group;
+}
+
+// Géiseres (Encélado: vapor de agua blanco; Tritón: nitrógeno con polvo oscuro).
+function buildGeysers(color, heightFn, seed) {
+    const rnd = surfRng(seed + 31);
+    const dark = new THREE.Color(color).getHSL({}).l < 0.3;
+    const mat = new THREE.ShaderMaterial({
+        transparent: true, depthWrite: false, side: THREE.DoubleSide, fog: false,
+        uniforms: { uTime: sharedUniforms.uTime, uColor: { value: new THREE.Color(color) } },
+        vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+        fragmentShader: `
+            uniform float uTime; uniform vec3 uColor; varying vec2 vUv;
+            float h(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+            void main() {
+                float y = vUv.y, x = (vUv.x - 0.5) / mix(0.08, 0.5, pow(y, 0.8));
+                float body = exp(-x * x * 3.0) * smoothstep(0.0, 0.05, y) * (1.0 - smoothstep(0.6, 1.0, y));
+                float flick = 0.7 + 0.3 * sin(y * 30.0 - uTime * 6.0 + h(vec2(floor(vUv.x * 8.0))) * 6.0);
+                gl_FragColor = vec4(uColor, body * flick * ${dark ? '0.75' : '0.55'});
+            }
+        `
+    });
+    const group = new THREE.Group();
+    for (let i = 0; i < 6; i++) {
+        const d = 700 + rnd() * 2800, a = rnd() * Math.PI * 2;
+        const x = Math.cos(a) * d, z = Math.sin(a) * d;
+        const H = dark ? 2000 + rnd() * 6000 : 800 + rnd() * 2500;
+        const g = new THREE.Group();
+        [0, Math.PI / 2].forEach(r => {
+            const geo = new THREE.PlaneGeometry(1, 1); geo.translate(0, 0.5, 0);
+            const m = new THREE.Mesh(geo, mat); m.rotation.y = r; m.scale.set(H * 0.35, H, 1); g.add(m);
+        });
+        if (dark) g.rotation.z = 0.35; // en Tritón el viento tuerce las columnas
+        g.position.set(x, heightFn(x, z), z);
+        group.add(g);
+    }
+    return group;
 }
 
 // Torbellinos de polvo de Marte a escala real: 100–200 m de ancho, 1–8 km de alto.
@@ -257,7 +308,7 @@ function buildPlume() {
 function buildSite(id) {
     if (surface.built[id]) return surface.built[id];
     const site = SURFACE_SITES[id];
-    const seed = id.length * 97 + 13;
+    const seed = [...id].reduce((a, c) => a + c.charCodeAt(0), 0) * 7 + 13;
     const heightFn = makeHeightFn(site, seed);
     const root = new THREE.Group();
     const near = buildTerrainMesh(SURF_NEAR, 400, heightFn, site, false); // ~1.75 m por polígono
@@ -275,6 +326,7 @@ function buildSite(id) {
     let devils = null;
     if (site.devils) { devils = buildDevils(heightFn, seed); root.add(devils); }
     if (site.plume) root.add(buildPlume());
+    if (site.geysers) root.add(buildGeysers(site.geysers, heightFn, seed));
     if (site.sea || site.lake) {
         const water = new THREE.Mesh(new THREE.CircleGeometry(SURF_FAR * 0.7, 96), new THREE.MeshStandardMaterial({
             color: site.sea || site.lake, roughness: 0.15, metalness: 0.3, transparent: true, opacity: site.lake ? 0.95 : 0.85
@@ -298,9 +350,16 @@ const surfaceDom = {
 };
 
 function canLand(id) { return !!SURFACE_SITES[id]; }
+const siteName = (id) => SURFACE_SITES[id].name || ASTRO_TARGETS[id].name.split(' (')[0];
 
 function syncLandButton() {
-    if (surfaceDom.btn) surfaceDom.btn.hidden = !canLand(state.currentTarget);
+    if (!surfaceDom.btn) return;
+    const id = state.currentTarget;
+    const descend = typeof DESCENTS !== 'undefined' && !!DESCENTS[id];
+    surfaceDom.btn.hidden = !(canLand(id) || descend);
+    const label = surfaceDom.btn.querySelector('span');
+    if (label) label.textContent = id === 'sun' ? 'ROZAR LA CORONA' : descend ? 'DESCENDER' : 'ATERRIZAR';
+    surfaceDom.btn.setAttribute('aria-label', label ? label.textContent : 'Aterrizar');
 }
 
 function fadeThen(fn) {
@@ -324,7 +383,7 @@ function enterSurface(id = state.currentTarget) {
         controls.enabled = false;
         document.body.classList.add('surface-mode');
         const s = SURFACE_SITES[id];
-        surfaceDom.title.textContent = `${ASTRO_TARGETS[id].name.split(' (')[0]} · ${s.place}`;
+        surfaceDom.title.textContent = `${siteName(id)} · ${s.place}`;
         surfaceDom.note.textContent = s.note;
         surfaceDom.data.replaceChildren(...[['GRAVEDAD', s.gravity], ['TEMPERATURA', s.temp], ['PRESIÓN', s.pressure]].map(([k, v]) => {
             const d = document.createElement('div');
@@ -400,8 +459,8 @@ function updateSurface(dt, time) {
     window.addEventListener('keyup', (e) => surface.keys.delete(e.key.toLowerCase()));
     window.addEventListener('blur', () => surface.keys.clear());
 
-    surfaceDom.btn?.addEventListener('click', () => enterSurface());
-    document.getElementById('surface-exit')?.addEventListener('click', exitSurface);
+    surfaceDom.btn?.addEventListener('click', () => startLanding());
+    document.getElementById('surface-exit')?.addEventListener('click', () => { if (surface.active) exitSurface(); });
     document.getElementById('surface-next-fact')?.addEventListener('click', () => {
         const facts = SURFACE_SITES[surface.id].facts;
         surface.factIdx = (surface.factIdx + 1) % facts.length;

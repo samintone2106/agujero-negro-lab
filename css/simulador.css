@@ -478,3 +478,11 @@ body[data-cosmos^="origin"] header, body[data-cosmos^="origin"] nav, body[data-c
 
 /* En superficie y en el universo, sin rejilla de escaneo (se leía como pixelado) */
 body.surface-mode .hud-scanline, body.cosmos-mode .hud-scanline, body.surface-mode .cockpit-frame, body.cosmos-mode .cockpit-frame, body.surface-mode .breadcrumb { display: none; }
+#moon-card-land[hidden] { display: none !important; }
+
+/* Viaje: solo la cinemática y su tarjeta */
+#journey-hud[hidden] { display: none !important; }
+body.journey-mode header, body.journey-mode nav, body.journey-mode .hud-fade, body.journey-mode #bottom-hud-deck,
+body.journey-mode #nasa-hud-widget, body.journey-mode #toggle-bottom-hud-btn, body.journey-mode #mini-zoom-bar,
+body.journey-mode .breadcrumb, body.journey-mode .hud-scanline, body.journey-mode .cockpit-frame, body.journey-mode #moon-card { display: none !important; }
+body.descent-mode #surface-hud .surface-walk, body.descent-mode #surface-hud p.font-mono { display: none !important; }

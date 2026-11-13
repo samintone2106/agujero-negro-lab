@@ -74,3 +74,72 @@ const SURFACE_SITES = {
         facts: ['Caronte nunca se mueve en el cielo: Plutón y Caronte se miran siempre la misma cara.', 'La luz del Sol es ~1,000 veces más débil que en la Tierra, pero más brillante que la Luna llena.', 'El hielo forma celdas de convección de 20–30 km.']
     }
 };
+
+// Lunas donde también se puede aterrizar (clave = nombre en js/config/moons.js).
+// skyBody.deg = tamaño aparente real del planeta: 2·asin(R_planeta / distancia).
+Object.assign(SURFACE_SITES, {
+    'Ganímedes': {
+        name: 'GANÍMEDES', place: 'Galileo Regio', note: 'El terreno oscuro y antiguo, surcado por bandas claras más jóvenes.',
+        radiusKm: 2634, gravity: '1.43 m/s²', temp: '-163 °C', pressure: 'Casi vacío',
+        sky: { zenith: 0x000000, horizon: 0x000000, halo: 0x000000, stars: true, sunDeg: 0.1, sunColor: 0xffffff, sunElev: 24 },
+        fog: 0, ground: [[0.32, 0.29, 0.26], [0.58, 0.55, 0.5]], relief: 12, craters: 160, ridges: true, roughness: 0.9,
+        skyBody: { tex: 'jupiter.jpg', deg: 7.6, elev: 32, az: 200 },
+        facts: ['Es más grande que Mercurio: la luna más grande del Sistema Solar.', 'Bajo el hielo esconde un océano salado (lo delatan sus auroras, Hubble 2015).', 'Júpiter se ve unas 15 veces más grande que nuestra Luna llena.']
+    },
+    'Calisto': {
+        name: 'CALISTO', place: 'Interior de la cuenca Valhalla', note: 'La cuenca de impacto con anillos de 3,800 km.',
+        radiusKm: 2410, gravity: '1.24 m/s²', temp: '-139 °C', pressure: 'Casi vacío',
+        sky: { zenith: 0x000000, horizon: 0x000000, halo: 0x000000, stars: true, sunDeg: 0.1, sunColor: 0xffffff, sunElev: 16 },
+        fog: 0, ground: [[0.16, 0.14, 0.12], [0.32, 0.29, 0.26]], relief: 16, craters: 520, roughness: 1,
+        skyBody: { tex: 'jupiter.jpg', deg: 4.35, elev: 26, az: 150 },
+        facts: ['La superficie más saturada de cráteres conocida: casi no ha cambiado en 4,000 Ma.', 'Está fuera de los cinturones de radiación de Júpiter: la NASA la estudió como posible base humana.', 'Júpiter se ve unas 8 veces más grande que nuestra Luna llena.']
+    },
+    'Encélado': {
+        name: 'ENCÉLADO', place: 'Rayas de tigre (polo sur)', note: 'Grietas de donde salen los géiseres que vio Cassini.',
+        radiusKm: 252, gravity: '0.113 m/s²', temp: '-198 °C', pressure: 'Casi vacío',
+        sky: { zenith: 0x000000, horizon: 0x000000, halo: 0x000000, stars: true, sunDeg: 0.06, sunColor: 0xffffff, sunElev: 10 },
+        fog: 0, ground: [[0.78, 0.82, 0.86], [0.94, 0.96, 1.0]], relief: 10, craters: 20, ridges: true, roughness: 0.4,
+        skyBody: { tex: 'saturn.jpg', deg: 27.6, elev: 22, az: 180, rings: true }, geysers: 0xeaf6ff,
+        facts: ['Los géiseres lanzan agua salada con moléculas orgánicas: alimentan el anillo E de Saturno.', 'Es la superficie más blanca del Sistema Solar: refleja casi toda la luz.', 'Con tan poca gravedad, un salto te levantaría decenas de metros.']
+    },
+    'Mimas': {
+        name: 'MIMAS', place: 'Borde del cráter Herschel', note: '130 km de ancho: un tercio de toda la luna.',
+        radiusKm: 198, gravity: '0.064 m/s²', temp: '-209 °C', pressure: 'Casi vacío',
+        sky: { zenith: 0x000000, horizon: 0x000000, halo: 0x000000, stars: true, sunDeg: 0.06, sunColor: 0xffffff, sunElev: 14 },
+        fog: 0, ground: [[0.55, 0.54, 0.52], [0.78, 0.77, 0.75]], relief: 18, craters: 300, roughness: 0.9,
+        skyBody: { tex: 'saturn.jpg', deg: 35, elev: 24, az: 210, rings: true },
+        facts: ['El impacto que hizo Herschel casi parte a Mimas en dos.', 'Saturno ocupa 35° del cielo y sus anillos se ven de canto, como una línea.', 'Cassini sugirió que tiene un océano joven bajo el hielo (2024).']
+    },
+    'Tritón': {
+        name: 'TRITÓN', place: 'Casquete polar sur', note: 'Hielo rosado de nitrógeno con rayas oscuras de géiseres (Voyager 2).',
+        radiusKm: 1353, gravity: '0.78 m/s²', temp: '-235 °C', pressure: '~0.014 milibares',
+        sky: { zenith: 0x000002, horizon: 0x06101e, halo: 0x0a1428, stars: true, sunDeg: 0.018, sunColor: 0xffffff, sunElev: 12 },
+        fog: 0, ground: [[0.62, 0.5, 0.48], [0.86, 0.74, 0.72]], relief: 8, craters: 4, cells: true, roughness: 0.7,
+        skyBody: { tex: 'neptune.jpg', deg: 7.9, elev: 26, az: 170 }, geysers: 0x2a2220,
+        facts: ['Es uno de los lugares más fríos medidos: -235 °C.', 'Sus géiseres levantan columnas oscuras de 8 km que el viento tuerce.', 'Gira al revés que Neptuno: dentro de miles de millones de años caerá hacia él.']
+    },
+    'Fobos': {
+        name: 'FOBOS', place: 'Junto al cráter Stickney', note: 'Una luna de 22 km a solo 6,000 km sobre Marte.',
+        radiusKm: 11.3, gravity: '0.0057 m/s² (pesarías como un lápiz)', temp: '-112 °C a -4 °C', pressure: 'Vacío',
+        sky: { zenith: 0x000000, horizon: 0x000000, halo: 0x000000, stars: true, sunDeg: 0.35, sunColor: 0xffffff, sunElev: 18 },
+        fog: 0, ground: [[0.22, 0.2, 0.18], [0.38, 0.35, 0.32]], relief: 8, craters: 60, roughness: 1,
+        skyBody: { tex: 'mars.jpg', deg: 42, elev: 30, az: 190 },
+        facts: ['Marte ocupa 42° del cielo: más de 80 veces nuestra Luna llena.', 'El horizonte está a ~200 m: es tan pequeña que se nota la curva al caminar.', 'Cae hacia Marte ~1.8 m por siglo; en unos 50 Ma se romperá.']
+    },
+    'Caronte': {
+        name: 'CARONTE', place: 'Vulcan Planitia', note: 'Llanuras lisas de una antigua inundación de hielo.',
+        radiusKm: 606, gravity: '0.29 m/s²', temp: '-220 °C', pressure: 'Vacío',
+        sky: { zenith: 0x000000, horizon: 0x000000, halo: 0x000000, stars: true, sunDeg: 0.016, sunColor: 0xfff6e8, sunElev: 12 },
+        fog: 0, ground: [[0.3, 0.29, 0.28], [0.5, 0.49, 0.47]], relief: 8, craters: 90, roughness: 0.95,
+        skyBody: { tex: 'pluto.jpg', deg: 6.9, elev: 24, az: 140 },
+        facts: ['Plutón cuelga quieto en el cielo: nunca sale ni se pone.', 'El polo norte rojizo (Mordor Macula) se tiñe con gas que escapa de Plutón.', 'Plutón se ve unas 13 veces más grande que nuestra Luna llena.']
+    },
+    'Miranda': {
+        name: 'MIRANDA', place: 'Cima de Verona Rupes', note: 'El acantilado más alto conocido: ~20 km.',
+        radiusKm: 236, gravity: '0.079 m/s²', temp: '-187 °C', pressure: 'Vacío',
+        sky: { zenith: 0x000000, horizon: 0x000000, halo: 0x000000, stars: true, sunDeg: 0.03, sunColor: 0xffffff, sunElev: 8 },
+        fog: 0, ground: [[0.42, 0.41, 0.4], [0.62, 0.61, 0.6]], relief: 40, craters: 60, ridges: true, roughness: 0.9,
+        skyBody: { tex: 'uranus.jpg', deg: 22.8, elev: 28, az: 160 },
+        facts: ['Saltar desde Verona Rupes sería una caída de unos 12 minutos por su baja gravedad.', 'Urano ocupa casi 23° del cielo.', 'Parece un rompecabezas de terrenos distintos: quizá se rompió y se rearmó.']
+    }
+});

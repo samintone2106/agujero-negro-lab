@@ -12,6 +12,16 @@ function animate() {
         renderer.render(cosmos.scene, cosmos.camera);
         return;
     }
+    if (journey.active) {
+        updateJourney(frameDt);
+        renderer.render(journey.scene, journey.camera);
+        return;
+    }
+    if (descent.active) {
+        updateDescent(frameDt, elapsedTime);
+        renderer.render(descent.scene, descent.camera);
+        return;
+    }
     if (surface.active) {
         updateSurface(frameDt, elapsedTime);
         renderer.render(surface.scene, surface.camera);
