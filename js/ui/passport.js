@@ -10,8 +10,8 @@ const ACHIEVEMENTS = [
     ['torbellino', '🌪️', 'Cazador de torbellinos', 'Deja que te alcance un torbellino en Marte.'],
     ['muestras', '💎', 'Geólogo espacial', 'Recoge las 5 muestras de un mundo.'],
     ['viaje', '🧭', 'Navegante', 'Completa un viaje con la ruta real sin saltarlo.'],
-    ['gg_win', '🕳️', 'Rozaste el abismo', 'Escapa de Gargantúa tras bajar de 3 r_s.'],
-    ['gg_lose', '⏳', 'Congelado en el tiempo', 'Cruza el horizonte de Gargantúa.'],
+    ['gg_win', '✉️', 'Correo puntual', 'Entrega un correo al futuro a tiempo desde Gargantúa.'],
+    ['gg_lose', '⏳', 'Congelado en el tiempo', 'Cae al horizonte de Gargantúa sin combustible.'],
     ['tour', '🎬', 'Del Big Bang a casa', 'Mira el tour completo con el narrador.'],
     ['mundos5', '🛂', 'Trotamundos', 'Pisa 5 mundos distintos.'],
     ['mundos12', '👑', 'Explorador del Sistema Solar', 'Pisa 12 mundos distintos.']
@@ -112,7 +112,7 @@ setInterval(() => {
         if (surface.id === 'Fobos' && best > 100) unlock('fobos100');
         if (surface.id === 'mars' && player.gust.lengthSq() > 1) unlock('torbellino');
     }
-    if (gg.over === 'win') unlock('gg_win');
-    if (gg.over === 'lose') unlock('gg_lose');
+    if (mail.result === 'win') unlock('gg_win');
+    if (mail.result === 'fall') unlock('gg_lose');
     if (tourState.active && tourState.step === TOUR_STEPS.length - 1) unlock('tour');
 }, 500);

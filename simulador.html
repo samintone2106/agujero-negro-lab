@@ -434,7 +434,7 @@
                 <div id="lens-modes" class="flex flex-wrap justify-end gap-1" role="group" aria-label="Modo de vista del agujero negro"></div>
             </div>
             <p id="lens-note" class="hidden sm:block mt-1.5 text-[10px] sm:text-[11px] leading-snug text-slate-300" aria-live="polite"></p>
-            <button id="gg-start" type="button" class="gg-start mt-2">▶ JUGAR: ROZAR EL HORIZONTE</button>
+            <button id="gg-start" type="button" class="gg-start mt-2">▶ JUGAR: CORREO AL FUTURO</button>
         </div>
     </div>
 
@@ -484,42 +484,50 @@
         <div><div class="ach-kicker">LOGRO DESBLOQUEADO</div><div id="ach-name" class="ach-name"></div><div id="ach-how" class="ach-how"></div></div>
     </div>
 
-    <!-- JUEGO DEL AGUJERO NEGRO -->
-    <div id="gg-hud" class="gg-hud" role="region" aria-label="Juego: rozar el horizonte" hidden>
-        <div class="glass-hud gg-card">
+    <!-- JUEGO DEL AGUJERO NEGRO: CORREO AL FUTURO -->
+    <div id="cf-hud" class="cf-hud" role="region" aria-label="Juego: correo al futuro" hidden>
+        <section class="cf-top glass-hud">
             <div class="flex items-center justify-between gap-2">
-                <span class="font-mono text-[10px] font-bold tracking-widest text-rose-300">ROZAR EL HORIZONTE</span>
-                <button id="gg-exit" type="button" class="genesis-ctl">SALIR</button>
+                <span id="cf-level" class="font-mono text-[10px] font-bold tracking-widest text-amber-200"></span>
+                <button id="cf-exit" type="button" class="genesis-ctl">SALIR</button>
             </div>
-            <p id="gg-goal" class="text-[11px] text-amber-100 mt-1 leading-snug"></p>
-            <dl class="gg-stats mt-2">
-                <div><dt>DISTANCIA</dt><dd id="gg-r"></dd></div>
-                <div><dt>VELOCIDAD</dt><dd id="gg-v"></dd></div>
-                <div><dt>TU RELOJ</dt><dd id="gg-clock"></dd></div>
-                <div><dt>MAREA EN LA NAVE (50 m)</dt><dd id="gg-tide"></dd></div>
-            </dl>
-            <div class="mt-2 font-mono text-[9px] text-slate-400">COMBUSTIBLE</div>
-            <div class="mt-1 h-1.5 rounded-full bg-white/10 overflow-hidden"><div id="gg-fuel" class="h-full w-full origin-left bg-sky-300"></div></div>
-            <p class="hidden sm:block mt-2 font-mono text-[9px] text-slate-500">A / D giran · W o Espacio acelera · la línea amarilla es tu ruta si no tocas nada · Esc sale</p>
+            <p id="cf-mission" class="text-sm text-white mt-1 leading-snug"></p>
+            <p id="cf-window" class="cf-window"></p>
+        </section>
+        <section class="cf-clocks">
+            <div class="cf-clock glass-hud"><span>TU RELOJ</span><b id="cf-ship">0 días</b></div>
+            <div class="cf-clock cf-clock-far glass-hud"><span id="cf-stage">🛰️ Estación Kepler</span><b id="cf-station">0 días</b></div>
+        </section>
+        <p id="cf-rate" class="cf-rate"></p>
+        <div class="cf-gauge" aria-hidden="true">
+            <span>ESTACIÓN</span>
+            <div class="cf-depth"><div id="cf-depth-bar"></div></div>
+            <span>HORIZONTE</span>
         </div>
-        <div class="gg-touch">
-            <button id="gg-left" type="button" class="play-btn" aria-label="Girar a la izquierda">⟲</button>
-            <button id="gg-thrust" type="button" class="play-btn play-btn-main" aria-label="Acelerar">ACELERAR</button>
-            <button id="gg-right" type="button" class="play-btn" aria-label="Girar a la derecha">⟳</button>
+        <p id="cf-depth" class="cf-depth-txt"></p>
+        <ul id="cf-feed" class="cf-feed" aria-live="polite"></ul>
+        <div class="cf-bottom">
+            <div class="cf-fuel"><span>COMBUSTIBLE</span><div><div id="cf-fuel"></div></div></div>
+            <div class="flex gap-2">
+                <button id="cf-hold" type="button" class="play-btn play-btn-main cf-hold" aria-label="Mantener para bajar">▼ BAJAR <small>(Espacio)</small></button>
+                <button id="cf-up" type="button" class="play-btn cf-hold cf-up" aria-label="Mantener para subir">▲ SUBIR <small>(W)</small></button>
+                <button id="cf-deliver" type="button" class="play-btn cf-deliver">ENTREGAR</button>
+            </div>
         </div>
-        <div id="gg-end" class="gg-end" role="dialog" aria-modal="true" aria-labelledby="gg-end-title" hidden>
+        <div id="cf-end" class="gg-end" role="dialog" aria-modal="true" aria-labelledby="cf-end-title" hidden>
             <div class="glass-hud gg-end-card">
-                <h3 id="gg-end-title" class="text-lg font-bold text-white"></h3>
-                <p id="gg-end-text" class="text-sm text-slate-200 mt-2 leading-snug"></p>
-                <div class="flex gap-2 mt-4">
-                    <button id="gg-retry" type="button" class="play-btn play-btn-main">OTRA VEZ</button>
-                    <button id="gg-leave" type="button" class="play-btn">VOLVER</button>
+                <div id="cf-stars" class="cf-stars" aria-label="Estrellas"></div>
+                <h3 id="cf-end-title" class="text-lg font-bold text-white"></h3>
+                <p id="cf-end-text" class="text-sm text-slate-200 mt-2 leading-snug"></p>
+                <div class="flex flex-wrap gap-2 mt-4">
+                    <button id="cf-next" type="button" class="play-btn play-btn-main">SIGUIENTE NIVEL</button>
+                    <button id="cf-retry" type="button" class="play-btn">OTRA VEZ</button>
+                    <button id="cf-leave" type="button" class="play-btn">VOLVER</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Migas de pan: en qué escala del universo estás -->
     <!-- UNIVERSO: ficha de lo que tocas en la galaxia o el vecindario -->
     <div id="cosmos-panel" class="fixed z-30 left-1/2 -translate-x-1/2 bottom-4 w-[min(92vw,30rem)]" role="region" aria-label="Universo" hidden>
         <div class="glass-hud rounded-2xl p-3 sm:p-4 border-indigo-300/40">

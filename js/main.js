@@ -13,11 +13,6 @@ function animate() {
         renderer.render(cosmos.scene, cosmos.camera);
         return;
     }
-    if (gg.active) {
-        updateBHGame(frameDt);
-        renderer.render(gg.scene, gg.camera);
-        return;
-    }
     if (voyage.active) {
         updateVoyage(frameDt);
         renderer.render(voyage.scene, voyage.camera);
@@ -116,6 +111,7 @@ function animate() {
     if (!dom.modalLaser.classList.contains('hidden')) renderRedshiftWave();
     updateGenesis(elapsedTime);
 
+    updateMailGame(frameDt); // juego del agujero negro: mueve la cámara de esta misma escena
     updateMoonFocus(frameDt);
     if (!genesis.active) controls.update();
     if (!renderGenesisFrame(elapsedTime) && !gravLens.render(elapsedTime)) renderer.render(scene, camera);
