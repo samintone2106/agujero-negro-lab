@@ -34,7 +34,7 @@ class GenesisSound {
         comp.threshold.value = -16; comp.knee.value = 12; comp.ratio.value = 6;
         comp.attack.value = 0.004; comp.release.value = 0.4;
         this.master.connect(comp);
-        comp.connect(ctx.destination);
+        comp.connect(this.engine.output());
         this.reverb = ctx.createConvolver();
         this.reverb.buffer = this.makeImpulse(4.2, 2.6);
         this.reverbIn = ctx.createGain();

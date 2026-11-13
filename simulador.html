@@ -145,6 +145,11 @@
                     <i id="audio-icon" data-lucide="volume-x" class="w-3.5 h-3.5 text-slate-400"></i>
                     <span id="audio-label" class="hidden sm:inline font-mono text-[10px] sm:text-xs font-semibold text-slate-300">SONIDO: APAGADO</span>
                 </button>
+                <label class="glass-hud rounded-xl px-2.5 py-1.5 hidden lg:flex items-center gap-1.5" title="Volumen">
+                    <span class="sr-only">Volumen</span>
+                    <i data-lucide="volume-1" class="w-3.5 h-3.5 text-slate-400" aria-hidden="true"></i>
+                    <input id="volume-slider" type="range" min="0" max="100" value="90" class="w-20 accent-[#00f0ff]" aria-label="Volumen">
+                </label>
             </div>
 
         </header>

@@ -51,11 +51,38 @@ class SpatialAudioEngine {
         this.noiseGain = null;
     }
 
+    // Salida común: volumen del usuario -> realce -> limitador -> parlantes.
+    // Todo (síntesis, grabaciones, Génesis, clics) pasa por aquí para sonar parejo y fuerte sin saturar.
+    output() {
+        if (!this.outChain) {
+            const ctx = this.ctx;
+            const volume = ctx.createGain();
+            volume.gain.value = this.userVolume ?? 0.9;
+            const makeup = ctx.createGain();
+            makeup.gain.value = 1.8;
+            const limiter = ctx.createDynamicsCompressor();
+            limiter.threshold.value = -10; limiter.knee.value = 6; limiter.ratio.value = 12;
+            limiter.attack.value = 0.003; limiter.release.value = 0.25;
+            volume.connect(makeup); makeup.connect(limiter); limiter.connect(ctx.destination);
+            this.outChain = { volume, limiter };
+        }
+        return this.outChain.volume;
+    }
+
+    setVolume(v) {
+        this.userVolume = Math.max(0, Math.min(1, v));
+        if (this.outChain) this.outChain.volume.gain.setTargetAtTime(this.userVolume, this.ctx.currentTime, 0.05);
+    }
+
     synthBus() {
         if (!this.bus) {
+            // la síntesis procedural sale muy baja (~-26 dB): se le da su propio realce
+            const lift = this.ctx.createGain();
+            lift.gain.value = 2.6;
             this.bus = this.ctx.createGain();
             this.bus.gain.value = 1.0;
-            this.bus.connect(this.ctx.destination);
+            this.bus.connect(lift);
+            lift.connect(this.output());
         }
         return this.bus;
     }
@@ -102,7 +129,7 @@ class SpatialAudioEngine {
                 filter.frequency.value = 1800;
                 gain = this.ctx.createGain();
                 gain.gain.value = 0;
-                src.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+                src.connect(filter); filter.connect(gain); gain.connect(this.output());
             } else {
                 el.volume = 0;
             }
@@ -368,7 +395,7 @@ class SpatialAudioEngine {
         osc.frequency.exponentialRampToValueAtTime(freq * 0.5, now + duration);
         gain.gain.setValueAtTime(0.1, now);
         gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.connect(gain); gain.connect(this.output());
         osc.start(now); osc.stop(now + duration);
     }
 
@@ -384,7 +411,7 @@ class SpatialAudioEngine {
         osc.frequency.exponentialRampToValueAtTime(endFreq, now + 0.65);
         gain.gain.setValueAtTime(0.15, now);
         gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.7);
-        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.connect(gain); gain.connect(this.output());
         osc.start(now); osc.stop(now + 0.72);
     }
 

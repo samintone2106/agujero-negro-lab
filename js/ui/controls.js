@@ -129,7 +129,32 @@ function toggleAudioUI() {
     }
     lucide.createIcons();
 }
-document.getElementById('audio-btn')?.addEventListener('click', toggleAudioUI);
+const SOUND_PREF_KEY = 'eh-sound';
+const readPref = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const writePref = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* almacenamiento bloqueado: se ignora */ } };
+
+document.getElementById('audio-btn')?.addEventListener('click', () => {
+    toggleAudioUI();
+    writePref(SOUND_PREF_KEY, audioEngine.isPlaying ? 'on' : 'off');
+});
+
+// Los navegadores solo dejan sonar audio tras un gesto: el primer toque en la página lo enciende,
+// salvo que la persona lo haya apagado antes a propósito.
+window.addEventListener('pointerdown', (e) => {
+    if (audioEngine.isPlaying || readPref(SOUND_PREF_KEY) === 'off' || e.target.closest('#audio-btn')) return;
+    toggleAudioUI();
+}, { once: true, capture: true });
+
+const volumeSlider = document.getElementById('volume-slider');
+if (volumeSlider) {
+    const saved = parseInt(readPref('eh-volume'), 10);
+    if (!Number.isNaN(saved)) volumeSlider.value = saved;
+    audioEngine.setVolume(volumeSlider.value / 100);
+    volumeSlider.addEventListener('input', () => {
+        audioEngine.setVolume(volumeSlider.value / 100);
+        writePref('eh-volume', volumeSlider.value);
+    });
+}
 
 document.getElementById('open-spaghetti-btn').addEventListener('click', () => {
     audioEngine.playClickTone(820, 0.05);
