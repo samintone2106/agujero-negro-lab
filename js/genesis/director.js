@@ -155,6 +155,7 @@ function startGenesis(targetId) {
     const off = camera.position.clone().sub(controls.target);
     genesis.theta = Math.atan2(off.x, off.z);
     genesis.camFrom = null;
+    genesis.look = null; genesis.dodge = 0; genesis.focusW = null; genesis.occludersW = null;
 
     document.body.classList.add('genesis-mode');
     genesisDom.kicker.textContent = `GÉNESIS · ${ASTRO_TARGETS[targetId].name.split(' (')[0]}`;
@@ -230,6 +231,25 @@ function updateGenesisCamera(prog, dt) {
     const phi = a[1] + (b[1] - a[1]) * k;
     const speed = a[2] + (b[2] - a[2]) * k;
     if (!reduceMotion.matches) genesis.theta += speed * dt;
+
+    // foco: lo que importa en esta fase (el choque, el anillo, la luna que nace...)
+    const want = genesis.focusW || controls.target;
+    if (!genesis.look) genesis.look = controls.target.clone();
+    genesis.look.lerp(want, 1 - Math.exp(-dt * 2.5));
+
+    // si un cuerpo se interpone entre la cámara y el foco, la órbita gira hasta despejar la vista
+    const blocked = (th) => {
+        genesisCamTmp.setFromSphericalCoords(dist, phi, th).add(controls.target);
+        return (genesis.occludersW || []).some(o => genesisSegmentHitsSphere(genesisCamTmp, genesis.look, o.c, o.r));
+    };
+    if (blocked(genesis.theta)) {
+        for (let s = 1; s <= 24; s++) {
+            const d = s * 0.13;
+            if (!blocked(genesis.theta + d)) { genesis.dodge = d; break; }
+            if (!blocked(genesis.theta - d)) { genesis.dodge = -d; break; }
+        }
+    } else genesis.dodge = (genesis.dodge || 0) * Math.exp(-dt * 0.5);
+    genesis.theta += (genesis.dodge || 0) * Math.min(1, dt * 2.2);
     genesisCamTmp.setFromSphericalCoords(dist, phi, genesis.theta).add(controls.target);
     if (genesis.shake > 0.001 && !reduceMotion.matches) {
         const s = genesis.shake * genesis.R * 0.12;
@@ -241,7 +261,17 @@ function updateGenesisCamera(prog, dt) {
     if (!genesis.camFrom) genesis.camFrom = camera.position.clone();
     const intro = smooth01(0, 0.05, prog);
     camera.position.copy(genesis.camFrom).lerp(genesisCamTmp, intro);
-    camera.lookAt(controls.target);
+    camera.lookAt(genesis.look);
+}
+
+// ¿El segmento a→b atraviesa la esfera (c, r)? (si b está dentro de la esfera no cuenta: es su superficie)
+const _gsA = new THREE.Vector3(), _gsB = new THREE.Vector3();
+function genesisSegmentHitsSphere(a, b, c, r) {
+    if (b.distanceTo(c) < r * 1.02) return false;
+    _gsA.copy(b).sub(a);
+    const len2 = _gsA.lengthSq();
+    const t = Math.max(0, Math.min(1, _gsB.copy(c).sub(a).dot(_gsA) / len2));
+    return _gsB.copy(a).addScaledVector(_gsA, t).distanceTo(c) < r;
 }
 
 /* ------------------------------ por cuadro ------------------------------ */
@@ -357,8 +387,11 @@ function updateGenesis() {
     }
 
     // evento propio del astro (puede cambiar cuándo crece, el destello y las lunas)
-    const ov = { flash, grow: null, particleAlpha: 1, hideMoons: false, hazeMul: 1 };
+    const ov = { flash, grow: null, particleAlpha: 1, hideMoons: false, hazeMul: 1, focus: null, occluders: null };
     updateGenesisScript(genesis.target, prog, time, dt, R, ov);
+    // foco y obstáculos del guion, de coordenadas de genesisFx a mundo
+    genesis.focusW = ov.focus ? ov.focus.clone().add(genesisFx.position) : null;
+    genesis.occludersW = (ov.occluders || []).map(o => ({ c: o.c.clone().add(genesisFx.position), r: o.r }));
     flash = ov.flash;
     if (ov.grow !== null) grow = ov.grow;
     genesis.hideMoons = ov.hideMoons;
@@ -414,7 +447,7 @@ function updateGenesis() {
             debrisGeo.attributes.position.needsUpdate = true;
             debrisPoints.material.opacity = (1 - smooth01(0.16, 0.32, dtI)) * 0.95;
         }
-        if (hasFx('tilt')) group.rotation.z = (genesis.baseRotZ || 0) - 1.6 * (1 - smooth01(imp.at, imp.at + 0.1, prog));
+        if (hasFx('tilt')) group.rotation.z = (genesis.baseRotZ || 0) - THREE.MathUtils.degToRad(98) * (1 - smooth01(imp.at, imp.at + 0.1, prog));
     }
 
     // océano de magma que se enfría
@@ -466,6 +499,7 @@ function updateGenesis() {
     // el astro real crece desde la nube
     const k = 1 - Math.pow(1 - grow, 3);
     setGenesisScale(k, lateK === null ? k : lateK);
+    if (ov.after) ov.after();
 
     // destello global
     genesis.flash = flash;

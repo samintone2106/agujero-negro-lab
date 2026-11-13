@@ -21,6 +21,8 @@ const atmosphereFragmentShader = `
 // bandas de nubes que fluyen, vórtices (Gran Mancha Roja, hexágono de Saturno),
 // sombra de nubes y luces nocturnas. Cada opción se compila solo si se usa.
 const DERIV_OK = '(defined(GL_OES_standard_derivatives) || __VERSION__ >= 300)';
+// Valores animables de las superficies (el Génesis de Saturno "forma" el hexágono).
+const SURFACE_ANIM = { hex: { value: 1 } };
 function enhancePlanetMaterial(mat, opts = {}) {
     const o = {
         detail: opts.detail ?? 0.32, relief: opts.relief ?? 0, craters: opts.craters ?? 0,
@@ -34,6 +36,7 @@ function enhancePlanetMaterial(mat, opts = {}) {
         shader.uniforms.uSunDirView = sharedUniforms.uSunDirView;
         shader.uniforms.uDetail = sharedUniforms.uDetail;
         shader.uniforms.uTime = sharedUniforms.uTime;
+        shader.uniforms.uHexK = SURFACE_ANIM.hex;
         if (o.cloudShadow) {
             shader.uniforms.uCloudMap = o.cloudShadow.map;
             shader.uniforms.uCloudShift = o.cloudShadow.shift;
@@ -42,6 +45,7 @@ function enhancePlanetMaterial(mat, opts = {}) {
             uniform vec3 uSunDirView;
             uniform float uDetail;
             uniform float uTime;
+            uniform float uHexK;
             ${o.cloudShadow ? 'uniform sampler2D uCloudMap; uniform float uCloudShift;' : ''}
             float dHash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
             float dNoise(vec2 p) {
@@ -135,8 +139,8 @@ function enhancePlanetMaterial(mat, opts = {}) {
                 float hexR = 0.2 * cos(0.5236) / cos(seg);
                 float edge = exp(-pow((colat - hexR) * 60.0, 2.0));
                 float inside = 1.0 - smoothstep(hexR - 0.01, hexR + 0.01, colat);
-                diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(0.7, 0.8, 0.88), inside * 0.6);
-                diffuseColor.rgb *= 1.0 - edge * 0.35;
+                diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(0.7, 0.8, 0.88), inside * 0.6 * uHexK);
+                diffuseColor.rgb *= 1.0 - edge * 0.35 * uHexK;
                 diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.25, 0.3, 0.35), (1.0 - smoothstep(0.0, 0.06, colat)) * 0.6);
             }` : ''}
             ${o.cloudShadow ? `

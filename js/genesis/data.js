@@ -44,13 +44,13 @@ const GENESIS = {
         ]
     },
     mercury: {
-        type: 'rocky', fx: ['molten', 'bombard', { impact: { at: 0.6, size: 0.55, dir: [-1, 0.2, 0.5], debris: true } }],
+        type: 'rocky', fx: ['molten', 'bombard'],
         clock: ['Hace 4,568 Ma', '+100 mil años', '+1 Ma', '+10 Ma', '+30 Ma', 'Hoy'],
         steps: [
             ['Solo roca y metal', 'Tan cerca del joven Sol el hielo se evapora: en el disco sobreviven granos de silicato y hierro.'],
             ['De polvo a planetesimales', 'Los granos se pegan en guijarros y estos en planetesimales de kilómetros que chocan sin parar.'],
             ['Un embrión fundido', 'Los choques liberan tanta energía que el pequeño planeta se mantiene derretido.'],
-            ['Un impacto gigante', 'Una colisión violenta le arranca gran parte del manto rocoso y lo lanza al espacio.'],
+            ['Un choque rozante', 'Un cuerpo enorme lo roza y sigue de largo, llevándose gran parte del manto (hipótesis: los volátiles que halló MESSENGER la ponen en duda).'],
             ['Bombardeo y enfriamiento', 'La lluvia de asteroides marca su superficie con cráteres que aún vemos hoy.'],
             ['Un planeta casi todo núcleo', 'Su núcleo de hierro ocupa ~85 % de su radio: el mayor del Sistema Solar en proporción.']
         ]
