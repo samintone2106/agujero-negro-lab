@@ -44,16 +44,10 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@1.72.0/dist/umd/lucide.min.js"></script>
 
-    <!-- Three.js r128 & OrbitControls -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <!-- Postproceso del Génesis (bloom) -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+    <!-- Three.js 0.160 (módulo) expuesto como window.THREE para los scripts de js/ -->
+    <script type="module" src="/src/three-global.js"></script>
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
 
     <link rel="stylesheet" href="css/simulador.css">
 </head>
@@ -1037,56 +1031,56 @@
     <!-- ========================================================================= -->
     <!-- 5. APPLICATION JAVASCRIPT: PBR NASA TEXTURES, LIVE NASA API & 12 BODIES   -->
     <!-- ========================================================================= -->
-    <script src="js/ui/icons.js"></script>
-    <script src="js/config/targets.js"></script>
-    <script src="js/config/moons.js"></script>
-    <script src="js/config/missions.js"></script>
-    <script src="js/config/facts.js"></script>
-    <script src="js/state.js"></script>
-    <script src="js/audio/engine.js"></script>
-    <script src="js/scene/core.js"></script>
-    <script src="js/scene/materials.js"></script>
-    <script src="js/scene/bodies/solar-system.js"></script>
-    <script src="js/scene/bodies/saturn-jupiter.js"></script>
-    <script src="js/scene/bodies/pulsar-blackhole.js"></script>
-    <script src="js/scene/bodies/pulsar-physics.js"></script>
-    <script src="js/scene/bodies/mars-weather.js"></script>
-    <script src="js/scene/moon-textures.js"></script>
-    <script src="js/scene/bodies/moons.js"></script>
-    <script src="js/scene/lens.js"></script>
-    <script src="js/scene/sky.js"></script>
-    <script src="js/scene/bh-game.js"></script>
-    <script src="js/ui/nasa.js"></script>
-    <script src="js/ui/telemetry.js"></script>
-    <script src="js/ui/controls.js"></script>
-    <script src="js/ui/missions.js"></script>
-    <script src="js/ui/moon-focus.js"></script>
-    <script src="js/ui/facts-pop.js"></script>
-    <script src="js/surface/sites.js"></script>
-    <script src="js/surface/surface.js"></script>
-    <script src="js/surface/biomes.js"></script>
-    <script src="js/surface/player.js"></script>
-    <script src="js/audio/genesis-sound.js"></script>
-    <script src="js/genesis/data.js"></script>
-    <script src="js/genesis/particles.js"></script>
-    <script src="js/genesis/fx.js"></script>
-    <script src="js/genesis/postfx.js"></script>
-    <script src="js/genesis/events.js"></script>
-    <script src="js/genesis/events-v3.js"></script>
-    <script src="js/genesis/director.js"></script>
-    <script src="js/cosmos/stars.js"></script>
-    <script src="js/cosmos/cosmos.js"></script>
-    <script src="js/cosmos/bigbang.js"></script>
-    <script src="js/cosmos/orrery.js"></script>
-    <script src="js/cosmos/compare.js"></script>
-    <script src="js/cosmos/tour.js"></script>
-    <script src="js/cosmos/explore.js"></script>
-    <script src="js/surface/descent.js"></script>
-    <script src="js/surface/journey.js"></script>
-    <script src="js/cosmos/voyage.js"></script>
-    <script src="js/surface/egress.js"></script>
-    <script src="js/cosmos/nav.js"></script>
-    <script src="js/ui/passport.js"></script>
-    <script src="js/main.js"></script>
+    <script defer src="js/ui/icons.js"></script>
+    <script defer src="js/config/targets.js"></script>
+    <script defer src="js/config/moons.js"></script>
+    <script defer src="js/config/missions.js"></script>
+    <script defer src="js/config/facts.js"></script>
+    <script defer src="js/state.js"></script>
+    <script defer src="js/audio/engine.js"></script>
+    <script defer src="js/scene/core.js"></script>
+    <script defer src="js/scene/materials.js"></script>
+    <script defer src="js/scene/bodies/solar-system.js"></script>
+    <script defer src="js/scene/bodies/saturn-jupiter.js"></script>
+    <script defer src="js/scene/bodies/pulsar-blackhole.js"></script>
+    <script defer src="js/scene/bodies/pulsar-physics.js"></script>
+    <script defer src="js/scene/bodies/mars-weather.js"></script>
+    <script defer src="js/scene/moon-textures.js"></script>
+    <script defer src="js/scene/bodies/moons.js"></script>
+    <script defer src="js/scene/lens.js"></script>
+    <script defer src="js/scene/sky.js"></script>
+    <script defer src="js/scene/bh-game.js"></script>
+    <script defer src="js/ui/nasa.js"></script>
+    <script defer src="js/ui/telemetry.js"></script>
+    <script defer src="js/ui/controls.js"></script>
+    <script defer src="js/ui/missions.js"></script>
+    <script defer src="js/ui/moon-focus.js"></script>
+    <script defer src="js/ui/facts-pop.js"></script>
+    <script defer src="js/surface/sites.js"></script>
+    <script defer src="js/surface/surface.js"></script>
+    <script defer src="js/surface/biomes.js"></script>
+    <script defer src="js/surface/player.js"></script>
+    <script defer src="js/audio/genesis-sound.js"></script>
+    <script defer src="js/genesis/data.js"></script>
+    <script defer src="js/genesis/particles.js"></script>
+    <script defer src="js/genesis/fx.js"></script>
+    <script defer src="js/genesis/postfx.js"></script>
+    <script defer src="js/genesis/events.js"></script>
+    <script defer src="js/genesis/events-v3.js"></script>
+    <script defer src="js/genesis/director.js"></script>
+    <script defer src="js/cosmos/stars.js"></script>
+    <script defer src="js/cosmos/cosmos.js"></script>
+    <script defer src="js/cosmos/bigbang.js"></script>
+    <script defer src="js/cosmos/orrery.js"></script>
+    <script defer src="js/cosmos/compare.js"></script>
+    <script defer src="js/cosmos/tour.js"></script>
+    <script defer src="js/cosmos/explore.js"></script>
+    <script defer src="js/surface/descent.js"></script>
+    <script defer src="js/surface/journey.js"></script>
+    <script defer src="js/cosmos/voyage.js"></script>
+    <script defer src="js/surface/egress.js"></script>
+    <script defer src="js/cosmos/nav.js"></script>
+    <script defer src="js/ui/passport.js"></script>
+    <script defer src="js/main.js"></script>
 </body>
 </html>

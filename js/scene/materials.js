@@ -42,6 +42,8 @@ function enhancePlanetMaterial(mat, opts = {}) {
             shader.uniforms.uCloudShift = o.cloudShadow.shift;
         }
         shader.fragmentShader = `
+            // desde Three r151 la coordenada del mapa se llama vMapUv
+            #define vUv vMapUv
             uniform vec3 uSunDirView;
             uniform float uDetail;
             uniform float uTime;
@@ -118,7 +120,7 @@ function enhancePlanetMaterial(mat, opts = {}) {
             ${uvCode}
             #ifdef USE_MAP
             vec4 texelColor = texture2D(map, pUv);
-            texelColor = mapTexelToLinear(texelColor);
+            // (r152+: ya no existe mapTexelToLinear; sin gestión de color el texel va tal cual)
             diffuseColor *= texelColor;
             ${o.gamma !== 1 ? `diffuseColor.rgb = pow(diffuseColor.rgb, vec3(${f(o.gamma)}));` : ''}
             ${o.tint ? `diffuseColor.rgb *= vec3(${o.tint.map(f).join(', ')});` : ''}
