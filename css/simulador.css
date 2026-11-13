@@ -442,6 +442,27 @@ body.surface-mode:not(.descent-mode) .play-hud { display: block; }
     background: rgba(5, 5, 14, 0.55); border: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(10px);
     font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #94a3b8; white-space: nowrap;
 }
+/* Juego del agujero negro */
+.gg-start { width: 100%; min-height: 36px; border-radius: 10px; font: 700 11px 'JetBrains Mono', monospace; letter-spacing: .1em;
+    color: #1a0610; background: #fb7185; transition: background .15s, transform .15s cubic-bezier(0.23, 1, 0.32, 1); }
+.gg-start:hover { background: #fda4af; }
+.gg-start:active { transform: scale(0.97); }
+.gg-start:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.gg-hud { position: fixed; inset: 0; z-index: 40; pointer-events: none; }
+.gg-card { position: absolute; left: 12px; top: max(12px, env(safe-area-inset-top)); width: min(calc(100vw - 24px), 25rem); pointer-events: auto;
+    border-radius: 16px; padding: 12px 14px; border-color: rgba(251, 113, 133, .4); }
+.gg-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; font: 600 10px 'JetBrains Mono', monospace; }
+.gg-stats dt { color: #94a3b8; font-size: 9px; }
+.gg-stats dd { color: #fff; }
+.gg-touch { position: absolute; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; gap: 10px; pointer-events: auto; }
+@media (pointer: fine) { .gg-touch { display: none; } }
+.gg-end { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; background: rgba(2, 3, 8, .55); pointer-events: auto; }
+.gg-end-card { width: min(100%, 26rem); border-radius: 18px; padding: 18px; border-color: rgba(251, 113, 133, .45); animation: landIn .25s cubic-bezier(0.23, 1, 0.32, 1); }
+#gg-hud[hidden], #gg-end[hidden] { display: none !important; }
+body.gg-mode header, body.gg-mode nav, body.gg-mode .hud-fade, body.gg-mode #bottom-hud-deck, body.gg-mode #nasa-hud-widget, body.gg-mode #toggle-bottom-hud-btn,
+body.gg-mode #mini-zoom-bar, body.gg-mode .hud-scanline, body.gg-mode .cockpit-frame, body.gg-mode #moon-card { display: none !important; }
+@media (prefers-reduced-motion: reduce) { .gg-end-card { animation: none; } .gg-start { transition: none; } }
+
 /* Navegación (Hohmann) y salida por la esclusa */
 .voyage-hud, .egress-hud { position: fixed; z-index: 40; left: 12px; top: max(12px, env(safe-area-inset-top)); width: min(calc(100vw - 24px), 27rem); pointer-events: none; }
 .voyage-card, .egress-card { pointer-events: auto; border-radius: 16px; padding: 12px 14px; border-color: rgba(253, 230, 138, .35); }

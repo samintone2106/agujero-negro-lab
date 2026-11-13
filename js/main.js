@@ -13,6 +13,11 @@ function animate() {
         renderer.render(cosmos.scene, cosmos.camera);
         return;
     }
+    if (gg.active) {
+        updateBHGame(frameDt);
+        renderer.render(gg.scene, gg.camera);
+        return;
+    }
     if (voyage.active) {
         updateVoyage(frameDt);
         renderer.render(voyage.scene, voyage.camera);

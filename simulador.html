@@ -423,13 +423,49 @@
     </div>
 
     <!-- GARGANTÚA: selector de vista de la lente gravitacional -->
-    <div id="lens-panel" class="hud-fade fixed left-1/2 -translate-x-1/2 top-[10rem] md:top-[6.25rem] z-20 w-[min(92vw,26rem)] pointer-events-none" hidden>
+    <div id="lens-panel" class="hud-fade fixed left-1/2 -translate-x-1/2 top-[10rem] md:top-[9rem] z-20 w-[min(92vw,26rem)] pointer-events-none" hidden>
         <div class="glass-hud rounded-2xl border-singularity-crimson/40 p-2 sm:p-2.5 pointer-events-auto">
             <div class="flex items-center justify-between gap-2">
                 <span class="font-mono text-[9px] sm:text-[10px] font-bold tracking-widest text-rose-300 shrink-0">VISTA</span>
                 <div id="lens-modes" class="flex flex-wrap justify-end gap-1" role="group" aria-label="Modo de vista del agujero negro"></div>
             </div>
             <p id="lens-note" class="hidden sm:block mt-1.5 text-[10px] sm:text-[11px] leading-snug text-slate-300" aria-live="polite"></p>
+            <button id="gg-start" type="button" class="gg-start mt-2">▶ JUGAR: ROZAR EL HORIZONTE</button>
+        </div>
+    </div>
+
+    <!-- JUEGO DEL AGUJERO NEGRO -->
+    <div id="gg-hud" class="gg-hud" role="region" aria-label="Juego: rozar el horizonte" hidden>
+        <div class="glass-hud gg-card">
+            <div class="flex items-center justify-between gap-2">
+                <span class="font-mono text-[10px] font-bold tracking-widest text-rose-300">ROZAR EL HORIZONTE</span>
+                <button id="gg-exit" type="button" class="genesis-ctl">SALIR</button>
+            </div>
+            <p id="gg-goal" class="text-[11px] text-amber-100 mt-1 leading-snug"></p>
+            <dl class="gg-stats mt-2">
+                <div><dt>DISTANCIA</dt><dd id="gg-r"></dd></div>
+                <div><dt>VELOCIDAD</dt><dd id="gg-v"></dd></div>
+                <div><dt>TU RELOJ</dt><dd id="gg-clock"></dd></div>
+                <div><dt>MAREA EN LA NAVE (50 m)</dt><dd id="gg-tide"></dd></div>
+            </dl>
+            <div class="mt-2 font-mono text-[9px] text-slate-400">COMBUSTIBLE</div>
+            <div class="mt-1 h-1.5 rounded-full bg-white/10 overflow-hidden"><div id="gg-fuel" class="h-full w-full origin-left bg-sky-300"></div></div>
+            <p class="hidden sm:block mt-2 font-mono text-[9px] text-slate-500">A / D giran · W o Espacio acelera · la línea amarilla es tu ruta si no tocas nada · Esc sale</p>
+        </div>
+        <div class="gg-touch">
+            <button id="gg-left" type="button" class="play-btn" aria-label="Girar a la izquierda">⟲</button>
+            <button id="gg-thrust" type="button" class="play-btn play-btn-main" aria-label="Acelerar">ACELERAR</button>
+            <button id="gg-right" type="button" class="play-btn" aria-label="Girar a la derecha">⟳</button>
+        </div>
+        <div id="gg-end" class="gg-end" role="dialog" aria-modal="true" aria-labelledby="gg-end-title" hidden>
+            <div class="glass-hud gg-end-card">
+                <h3 id="gg-end-title" class="text-lg font-bold text-white"></h3>
+                <p id="gg-end-text" class="text-sm text-slate-200 mt-2 leading-snug"></p>
+                <div class="flex gap-2 mt-4">
+                    <button id="gg-retry" type="button" class="play-btn play-btn-main">OTRA VEZ</button>
+                    <button id="gg-leave" type="button" class="play-btn">VOLVER</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -632,7 +668,7 @@
     </div>
 
     <!-- PÚLSAR VELA: datos reales, pulsos y glitch -->
-    <div id="pulsar-panel" class="hud-fade fixed left-1/2 -translate-x-1/2 top-[10rem] md:top-[6.25rem] z-20 w-[min(92vw,27rem)]" role="region" aria-label="Púlsar de Vela" hidden>
+    <div id="pulsar-panel" class="hud-fade fixed left-1/2 -translate-x-1/2 top-[10rem] md:top-[9rem] z-20 w-[min(92vw,27rem)]" role="region" aria-label="Púlsar de Vela" hidden>
         <div class="glass-hud rounded-2xl p-2.5 sm:p-3">
             <div class="flex items-center justify-between gap-2">
                 <span class="font-mono text-[9px] sm:text-[10px] font-bold tracking-widest text-singularity-cyan">PULSOS RECIBIDOS EN LA TIERRA</span>
@@ -660,7 +696,7 @@
     <p id="surface-note" class="hud-fade fixed z-20 left-1/2 -translate-x-1/2 bottom-[13.5rem] md:bottom-[11rem] w-[min(92vw,30rem)] glass-hud rounded-xl px-3 py-2 text-[10px] sm:text-[11px] leading-snug text-amber-100 border-singularity-amber/40 pointer-events-none" hidden></p>
 
     <!-- Ficha de la luna enfocada -->
-    <div id="moon-card" class="hud-fade fixed z-20 left-1/2 -translate-x-1/2 top-[10rem] md:top-[6.25rem] w-[min(92vw,24rem)]" role="region" aria-label="Luna enfocada" hidden>
+    <div id="moon-card" class="hud-fade fixed z-20 left-1/2 -translate-x-1/2 top-[10rem] md:top-[9rem] w-[min(92vw,24rem)]" role="region" aria-label="Luna enfocada" hidden>
         <div class="glass-hud rounded-2xl p-3 border-sky-300/40">
             <div class="flex items-start justify-between gap-2">
                 <div class="min-w-0">
@@ -969,6 +1005,7 @@
     <script src="js/scene/bodies/moons.js"></script>
     <script src="js/scene/lens.js"></script>
     <script src="js/scene/sky.js"></script>
+    <script src="js/scene/bh-game.js"></script>
     <script src="js/ui/nasa.js"></script>
     <script src="js/ui/telemetry.js"></script>
     <script src="js/ui/controls.js"></script>
