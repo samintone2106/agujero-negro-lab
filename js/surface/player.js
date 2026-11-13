@@ -130,7 +130,7 @@ function resetPlayer(id) {
     surface.scene.add(plModel.root, plModel.shadow);
     player.pos.set(0, surface.site.heightFn(0, 0), 0);
     player.vel.set(0, 0, 0);
-    Object.assign(player, { onGround: true, facing: surface.yaw, phase: 0, air: 0, peak: 0, best: 0, lastAir: 0 });
+    Object.assign(player, { onGround: true, facing: surface.yaw, phase: 0, air: 0, peak: 0, best: 0, lastAir: 0, chargeAt: null, jumpQueued: 0 });
     player.wind.set(0, 0, 0); player.gust.set(0, 0, 0);
     plDom.weight.textContent = plWeightText();
     plDom.hint.textContent = plHintText();
@@ -410,13 +410,13 @@ function plBreath(dt) {
 /* ------------------------------ salto cargado ------------------------------ */
 // Apretar y soltar: hasta 0.9 s de carga da 1.6 veces la velocidad (×2.56 de altura).
 const PL_CHARGE_MAX = 0.9, PL_CHARGE_MUL = 1.6;
-function plChargeStart() { if (player.chargeAt == null) player.chargeAt = performance.now(); }
+function plChargeStart() { if (surface.active && player.chargeAt == null) player.chargeAt = performance.now(); }
 function plChargeLevel() { return player.chargeAt == null ? 0 : Math.min(1, (performance.now() - player.chargeAt) / 1000 / PL_CHARGE_MAX); }
 function plChargeRelease() {
     if (player.chargeAt == null) return;
     const k = plChargeLevel();
     player.chargeAt = null;
-    if (player.onGround) player.jumpQueued = PL_V0 * (1 + (PL_CHARGE_MUL - 1) * k);
+    if (surface.active && player.onGround) player.jumpQueued = PL_V0 * (1 + (PL_CHARGE_MUL - 1) * k);
 }
 
 /* ------------------------------ controles ------------------------------ */
@@ -430,6 +430,8 @@ function plChargeRelease() {
         if (key === 'q') player.jetHeld = true;
         if (key === 'v' && !e.repeat) setPlayerCam(player.cam === 'helmet' ? 'third' : 'helmet');
     }, true);
+    // si la ventana pierde el foco no llega el keyup: se cancela la carga
+    window.addEventListener('blur', () => { player.chargeAt = null; player.jetHeld = false; });
     window.addEventListener('keyup', (e) => {
         const key = e.key.toLowerCase();
         if (key === ' ') plChargeRelease();

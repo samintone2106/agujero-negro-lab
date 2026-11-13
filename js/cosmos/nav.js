@@ -38,7 +38,9 @@ function planetOfTarget(id) {
 
 function closeMobileNav() { navState.mobileOpen = false; navEl.classList.remove('is-open'); }
 
+let navSeq = 0;
 function goTarget(id) {
+    navSeq++;
     audioEngine.playClickTone(860, 0.05);
     state.ringSkimMode = false;
     if (moonFocus.mesh) clearMoonFocus();
@@ -132,7 +134,13 @@ function renderNav() {
                         if (!moonsState.visible) setMoonsVisible(true);
                         requestAnimationFrame(() => { focusMoon(m.get()); closeMobileNav(); });
                         // las lunas con vista propia: mismo acercamiento que las demás y luego se entra a su vista
-                        if (m.target) setTimeout(() => { if (moonFocus.mesh === m.get()) fadeThen(() => goTarget(m.target)); }, 1300);
+                        if (m.target) {
+                            const seq = ++navSeq; // si eliges otra cosa mientras tanto, esta transición se cancela
+                            setTimeout(() => {
+                                if (seq !== navSeq || cosmos.active || moonFocus.mesh !== m.get()) return;
+                                fadeThen(() => { if (seq === navSeq) goTarget(m.target); });
+                            }, 1300);
+                        }
                     });
                     list.appendChild(mb);
                 });
