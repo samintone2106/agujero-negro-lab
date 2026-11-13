@@ -43,10 +43,13 @@ export default defineConfig({
             },
             workbox: {
                 globPatterns: ['**/*.{html,js,css,wasm}'],
+                // sin página de respaldo: cada HTML se sirve solo; ?target= y ?view= no cambian el archivo
+                navigateFallback: null,
+                ignoreURLParametersMatching: [/^utm_/, /^fbclid$/, /^target$/, /^view$/],
                 maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
                 runtimeCaching: [
                     { urlPattern: ({ url }) => url.pathname.includes('/js/') || url.pathname.includes('/css/'), handler: 'StaleWhileRevalidate', options: { cacheName: 'codigo' } },
-                    { urlPattern: ({ url }) => url.pathname.includes('/assets/'), handler: 'CacheFirst', options: { cacheName: 'recursos', expiration: { maxEntries: 300 } } },
+                    { urlPattern: ({ url }) => url.pathname.includes('/assets/'), handler: 'StaleWhileRevalidate', options: { cacheName: 'recursos-v5', expiration: { maxEntries: 300 } } },
                     { urlPattern: ({ url }) => /cdn\.tailwindcss\.com|unpkg\.com|fonts\.(googleapis|gstatic)\.com|cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net/.test(url.host), handler: 'CacheFirst', options: { cacheName: 'cdn', expiration: { maxEntries: 60 } } },
                     { urlPattern: ({ url }) => /nasa\.gov|images-api/.test(url.host), handler: 'NetworkFirst', options: { cacheName: 'nasa', expiration: { maxEntries: 80 } } }
                 ]

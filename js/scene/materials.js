@@ -41,9 +41,13 @@ function enhancePlanetMaterial(mat, opts = {}) {
             shader.uniforms.uCloudMap = o.cloudShadow.map;
             shader.uniforms.uCloudShift = o.cloudShadow.shift;
         }
+        shader.vertexShader = shader.vertexShader
+            .replace('#include <common>', '#include <common>\nvarying vec2 vPlanetUv;')
+            .replace('#include <begin_vertex>', '#include <begin_vertex>\nvPlanetUv = uv;');
         shader.fragmentShader = `
-            // desde Three r151 la coordenada del mapa se llama vMapUv
-            #define vUv vMapUv
+            // coordenada propia: en Three r160 vMapUv solo existe cuando ya cargó la textura
+            varying vec2 vPlanetUv;
+            #define vUv vPlanetUv
             uniform vec3 uSunDirView;
             uniform float uDetail;
             uniform float uTime;

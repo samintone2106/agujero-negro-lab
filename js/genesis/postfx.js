@@ -2,8 +2,8 @@
 /* GÉNESIS: POSTPROCESO CINEMATOGRÁFICO (BLOOM + VIÑETA + GRANO)               */
 /* -------------------------------------------------------------------------- */
 // Solo se usa durante el Génesis; el resto del simulador sigue con render directo.
-// Three r128 aplica el tone mapping también dentro del render target, así que
-// aquí no se vuelve a aplicar: la pasada final solo añade viñeta y grano.
+// Three r160 solo aplica el tone mapping (ACES) al dibujar en pantalla: lo hace
+// la pasada final, que además añade viñeta y grano.
 const genesisPost = (() => {
     if (!THREE.EffectComposer || !THREE.RenderPass || !THREE.UnrealBloomPass || !THREE.ShaderPass) return null;
     const lowEnd = isCoarsePointer || (navigator.hardwareConcurrency || 8) <= 4;
@@ -38,6 +38,8 @@ const genesisPost = (() => {
                 c += (hash(vUv * 900.0) - 0.5) * 0.025;
                 c = mix(c, vec3(1.0), uFlash);
                 gl_FragColor = vec4(c, 1.0);
+                // Three r153+ ya no aplica el tone mapping dentro del render target: se aplica aquí, al salir a pantalla
+                #include <tonemapping_fragment>
             }
         `
     });
