@@ -379,3 +379,21 @@ body.genesis-mode .genesis-letterbox > div { transform: none; }
 
 /* atributo hidden por encima de las clases de display (flex/grid) */
 #genesis-proof[hidden], #lens-panel[hidden], #pulsar-panel[hidden], #moon-card[hidden], #surface-note[hidden] { display: none !important; }
+
+/* Superficie */
+body.surface-mode .glass-hud:not(#surface-hud .glass-hud),
+body.surface-mode .hud-fade { opacity: 0 !important; pointer-events: none !important; }
+#surface-hud[hidden], #land-btn[hidden] { display: none !important; }
+.surface-fade {
+    position: fixed; inset: 0; z-index: 60; background: #000; opacity: 0; pointer-events: none;
+    transition: opacity 300ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.surface-fade.is-on { opacity: 1; }
+.surface-walk {
+    width: 52px; height: 52px; border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.18); background: rgba(5, 5, 14, 0.6);
+    color: #e2e8f0; font-size: 18px; backdrop-filter: blur(10px); touch-action: none;
+}
+.surface-walk:active { background: rgba(16, 185, 129, 0.25); transform: scale(0.96); }
+@media (pointer: fine) { .surface-walk { display: none; } }
+@media (prefers-reduced-motion: reduce) { .surface-fade { transition: none; } }

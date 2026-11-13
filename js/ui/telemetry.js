@@ -34,6 +34,7 @@ function switchTarget(targetId) {
     fetchNasaMissionTelemetry(targetId);
     if (typeof syncLensPanel === 'function') syncLensPanel();
     if (typeof syncPulsarPanel === 'function') syncPulsarPanel();
+    if (typeof syncLandButton === 'function') syncLandButton();
     if (typeof clearMoonFocus === 'function') clearMoonFocus();
     const surfaceNote = document.getElementById('surface-note');
     if (surfaceNote) surfaceNote.hidden = true;

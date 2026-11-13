@@ -6,6 +6,13 @@ function animate() {
     const elapsedTime = clock.elapsedTime;
     sharedUniforms.uTime.value = elapsedTime;
 
+    // en la superficie solo se dibuja esa escena
+    if (surface.active) {
+        updateSurface(frameDt, elapsedTime);
+        renderer.render(surface.scene, surface.camera);
+        return;
+    }
+
     const t = state.currentTarget;
 
     if (t === 'saturn') {
