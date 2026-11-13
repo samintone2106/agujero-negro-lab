@@ -442,6 +442,26 @@ body.surface-mode:not(.descent-mode) .play-hud { display: block; }
     background: rgba(5, 5, 14, 0.55); border: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(10px);
     font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #94a3b8; white-space: nowrap;
 }
+/* Navegación (Hohmann) y salida por la esclusa */
+.voyage-hud, .egress-hud { position: fixed; z-index: 40; left: 12px; top: max(12px, env(safe-area-inset-top)); width: min(calc(100vw - 24px), 27rem); pointer-events: none; }
+.voyage-card, .egress-card { pointer-events: auto; border-radius: 16px; padding: 12px 14px; border-color: rgba(253, 230, 138, .35); }
+.egress-card { border-color: rgba(125, 211, 252, .4); }
+#voyage-hud[hidden], #egress-hud[hidden] { display: none !important; }
+.voyage-log { display: flex; flex-direction: column; gap: 4px; font-size: 11px; line-height: 1.35; color: #fef3c7; }
+.voyage-log li { padding: 5px 8px; border-radius: 8px; background: rgba(253, 230, 138, .08); border-left: 2px solid #fcd34d; animation: vyIn .25s cubic-bezier(0.23, 1, 0.32, 1); }
+.voyage-log li + li { opacity: .6; }
+@keyframes vyIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.egress-list { font-size: 11px; line-height: 1.6; color: #bbf7d0; }
+.egress-list li { animation: vyIn .2s cubic-bezier(0.23, 1, 0.32, 1); }
+body.egress-mode header, body.egress-mode nav, body.egress-mode .hud-fade, body.egress-mode #bottom-hud-deck, body.egress-mode #nasa-hud-widget,
+body.egress-mode #toggle-bottom-hud-btn, body.egress-mode #mini-zoom-bar, body.egress-mode .hud-scanline, body.egress-mode .cockpit-frame, body.egress-mode #moon-card { display: none !important; }
+/* el casco "baja" y se sella al empezar la salida */
+.visor.is-closing .visor-frame { animation: visorDown 1.4s cubic-bezier(0.23, 1, 0.32, 1); }
+.visor.is-closing .visor-glass { animation: visorTint 1.4s ease-out; }
+@keyframes visorDown { from { transform: translateY(-75%) scale(1.25); } to { transform: none; } }
+@keyframes visorTint { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .voyage-log li, .egress-list li, .visor.is-closing .visor-frame, .visor.is-closing .visor-glass { animation: none; } }
+
 /* Saltar el viaje y elegir cómo llegar */
 .skip-big {
     position: fixed; z-index: 45; left: 50%; bottom: max(20px, env(safe-area-inset-bottom)); transform: translateX(-50%);

@@ -499,6 +499,51 @@
             <div class="mt-2.5 h-1 rounded-full bg-white/10 overflow-hidden"><div id="journey-bar" class="h-full w-full origin-left bg-amber-300" style="transform:scaleX(0)"></div></div>
         </div>
     </div>
+    <!-- NAVEGACIÓN: ruta de Hohmann real, ventana de lanzamiento y bitácora -->
+    <div id="voyage-hud" class="voyage-hud" role="region" aria-label="Navegación" hidden>
+        <div class="glass-hud voyage-card">
+            <div class="flex items-center justify-between gap-2">
+                <span class="font-mono text-[10px] font-bold tracking-widest text-amber-200">NAVEGACIÓN · TRANSFERENCIA DE HOHMANN</span>
+                <div class="flex items-center gap-1">
+                    <button id="voyage-slower" type="button" class="genesis-ctl" aria-label="Más lento">−</button>
+                    <span id="voyage-rate" class="font-mono text-[10px] text-slate-300 w-7 text-center">×1</span>
+                    <button id="voyage-faster" type="button" class="genesis-ctl" aria-label="Más rápido">+</button>
+                    <button id="voyage-skip" type="button" class="genesis-ctl">SALTAR</button>
+                </div>
+            </div>
+            <h3 id="voyage-title" class="text-sm sm:text-base font-bold text-white mt-1"></h3>
+            <p id="voyage-window" class="text-[11px] text-emerald-300 mt-0.5"></p>
+            <dl class="grid grid-cols-3 gap-2 mt-2 font-mono text-[9px] sm:text-[10px]">
+                <div><dt class="text-slate-400">SALIDA</dt><dd id="voyage-dep" class="text-white font-bold"></dd></div>
+                <div><dt class="text-slate-400">LLEGADA</dt><dd id="voyage-arr" class="text-white font-bold"></dd></div>
+                <div><dt class="text-slate-400">DURACIÓN</dt><dd id="voyage-dur" class="text-amber-200 font-bold"></dd></div>
+            </dl>
+            <div class="grid grid-cols-3 gap-2 mt-2 font-mono text-[9px] sm:text-[10px]">
+                <div><span class="text-slate-400 block">RELOJ</span><span id="voyage-day" class="text-white font-bold"></span></div>
+                <div><span class="text-slate-400 block">VELOCIDAD (SOL)</span><span id="voyage-speed" class="text-white font-bold"></span></div>
+                <div><span class="text-slate-400 block">DIST. AL SOL</span><span id="voyage-dist" class="text-white font-bold"></span></div>
+            </div>
+            <div class="mt-2 h-1 rounded-full bg-white/10 overflow-hidden"><div id="voyage-bar" class="h-full w-full origin-left bg-amber-300" style="transform:scaleX(0)"></div></div>
+            <ul id="voyage-log" class="voyage-log mt-2" aria-live="polite"></ul>
+            <p id="voyage-note" class="text-[10px] text-slate-400 mt-1.5 leading-snug"></p>
+        </div>
+    </div>
+
+    <!-- SALIDA POR LA ESCLUSA: traje, presión y compuerta -->
+    <div id="egress-hud" class="egress-hud" role="region" aria-label="Salida por la esclusa" hidden>
+        <div class="glass-hud egress-card">
+            <div class="flex items-center justify-between gap-2">
+                <span class="font-mono text-[10px] font-bold tracking-widest text-sky-300">ESCLUSA</span>
+                <button id="egress-skip" type="button" class="genesis-ctl">SALTAR</button>
+            </div>
+            <h3 id="egress-step" class="text-sm sm:text-base font-bold text-white mt-1"></h3>
+            <ul id="egress-list" class="egress-list mt-1.5"></ul>
+            <div class="mt-2 font-mono text-[9px] text-slate-400">PRESIÓN EN LA ESCLUSA</div>
+            <div class="mt-1 h-1.5 rounded-full bg-white/10 overflow-hidden"><div id="egress-gauge" class="h-full w-full origin-left bg-sky-300" style="transform:scaleX(1)"></div></div>
+            <div id="egress-gauge-txt" class="font-mono text-[10px] text-white mt-1"></div>
+        </div>
+    </div>
+
     <button id="journey-skip-big" type="button" class="skip-big" hidden>SALTAR VIAJE <span aria-hidden="true">⏭</span> <kbd>Esc</kbd></button>
 
     <!-- Antes de aterrizar: ver el viaje o ir directo (se puede recordar) -->
@@ -949,6 +994,8 @@
     <script src="js/cosmos/tour.js"></script>
     <script src="js/surface/descent.js"></script>
     <script src="js/surface/journey.js"></script>
+    <script src="js/cosmos/voyage.js"></script>
+    <script src="js/surface/egress.js"></script>
     <script src="js/cosmos/nav.js"></script>
     <script src="js/main.js"></script>
 </body>

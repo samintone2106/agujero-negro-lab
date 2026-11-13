@@ -199,7 +199,7 @@ function startJourney(id, onArrive) {
     const isSun = id === 'sun';
     jDest.material.emissive = new THREE.Color(isSun ? 0xff8a2a : 0x000000);
     jDest.material.emissiveIntensity = isSun ? 1.2 : 0;
-    Object.assign(journey, { active: true, t: 0, dest: id, onArrive, air: HAS_AIR.includes(id), info: travelFor(id) || ['', '', ''], phaseShown: -1 });
+    Object.assign(journey, { active: true, t: 0, dest: id, onArrive, air: HAS_AIR.includes(id), info: travelFor(id) || ['', '', ''], phaseShown: -1, paused: false, voyaged: false, skipAll: false });
     for (let i = 0; i < J_N; i++) jFlameAge[i] = 1;
     controls.enabled = false;
     document.body.classList.add('journey-mode');
@@ -215,8 +215,16 @@ function endJourney(arrived) {
     journeyDom.box.hidden = true;
     document.getElementById('journey-skip-big').hidden = true;
     if (typeof journeyRumble === 'function') journeyRumble(false);
-    if (arrived && journey.onArrive) journey.onArrive();
+    if (arrived && journey.onArrive) journey.onArrive(journey.skipAll);
     else controls.enabled = true;
+}
+
+// SALTAR: termina el viaje (y la navegación, si está en curso) y aparece en la superficie.
+function skipTrip() {
+    if (!journey.active) return;
+    journey.skipAll = true;
+    if (typeof voyage !== 'undefined' && voyage.active) endVoyage(true);
+    journey.t = 0.995;
 }
 
 const J_PHASES = [
@@ -232,7 +240,22 @@ function updateJourney(dt) {
     const cam = journey.camera;
     const size = renderer.getSize(new THREE.Vector2());
     if (cam.aspect !== size.x / size.y) { cam.aspect = size.x / size.y; cam.updateProjectionMatrix(); }
+    if (journey.paused) return;
     journey.t += dt / journey.dur;
+    // al salir de la Tierra: el mapa de navegación con la ruta real (js/cosmos/voyage.js)
+    if (journey.t >= 0.36 && !journey.voyaged && typeof canVoyage === 'function' && canVoyage(journey.dest)) {
+        journey.voyaged = true;
+        journey.paused = true;
+        journeyDom.box.hidden = true;
+        if (typeof journeyRumble === 'function') journeyRumble(false);
+        startVoyage(journey.dest, (skip) => {
+            journey.paused = false;
+            journeyDom.box.hidden = false;
+            journey.t = skip ? 0.995 : 0.68;
+            if (!skip && typeof journeyRumble === 'function') journeyRumble(true);
+        });
+        return;
+    }
     const p = Math.min(1, journey.t);
     const sm = (a, b) => smooth01(a, b, p);
     const [dist, time, mission] = journey.info;
@@ -357,8 +380,9 @@ function journeyRumbleLevel(k) {
     jNoise.lp.frequency.setTargetAtTime(250 + k * 900, t, 0.1);
 }
 
-document.getElementById('journey-skip')?.addEventListener('click', () => { journey.t = 0.995; });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && journey.active) journey.t = 0.995; });
+document.getElementById('journey-skip')?.addEventListener('click', skipTrip);
+document.getElementById('voyage-skip')?.addEventListener('click', skipTrip);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && journey.active) skipTrip(); });
 
 /* ------------------------------ punto de entrada ------------------------------ */
 // ATERRIZAR (superficie sólida) o DESCENDER (gigantes gaseosos / rozar el Sol), con viaje antes.
@@ -389,8 +413,10 @@ function pickLandMode(mode) {
 
 function startLanding(id = state.currentTarget, opts = {}) {
     if (typeof clearMoonFocus === 'function' && moonFocus.mesh) clearMoonFocus();
-    const arrive = () => (typeof DESCENTS !== 'undefined' && DESCENTS[id]) ? startDescent(id) : enterSurface(id);
-    const go = (mode) => (mode === 'direct' || reduceMotion.matches) ? arrive() : startJourney(id, arrive);
+    // al llegar: descenso (gaseosos), o salir por la esclusa con el traje y pisar la superficie
+    const arrive = (skipAll) => (typeof DESCENTS !== 'undefined' && DESCENTS[id]) ? startDescent(id)
+        : skipAll ? enterSurface(id) : startEgress(id, () => enterSurface(id));
+    const go = (mode) => (mode === 'direct' || reduceMotion.matches) ? arrive(true) : startJourney(id, arrive);
     if (opts.mode) { go(opts.mode); return; }
     const pref = readLandPref();
     if (pref === 'trip' || pref === 'direct') { go(pref); return; }
@@ -406,4 +432,4 @@ landChoiceDom.direct?.addEventListener('click', () => pickLandMode('direct'));
 landChoiceDom.cancel?.addEventListener('click', closeLandChoice);
 landChoiceDom.box?.addEventListener('click', (e) => { if (e.target === landChoiceDom.box) closeLandChoice(); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !landChoiceDom.box.hidden) closeLandChoice(); });
-document.getElementById('journey-skip-big')?.addEventListener('click', () => { journey.t = 0.995; });
+document.getElementById('journey-skip-big')?.addEventListener('click', skipTrip);

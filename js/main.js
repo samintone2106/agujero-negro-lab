@@ -13,6 +13,16 @@ function animate() {
         renderer.render(cosmos.scene, cosmos.camera);
         return;
     }
+    if (voyage.active) {
+        updateVoyage(frameDt);
+        renderer.render(voyage.scene, voyage.camera);
+        return;
+    }
+    if (egress.active) {
+        updateEgress(frameDt);
+        renderer.render(egress.scene, egress.camera);
+        return;
+    }
     if (journey.active) {
         updateJourney(frameDt);
         renderer.render(journey.scene, journey.camera);
