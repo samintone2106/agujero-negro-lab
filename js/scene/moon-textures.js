@@ -207,6 +207,52 @@ const MOON_LOOKS = {
     }
 };
 
+// Lunas añadidas en v3
+Object.assign(MOON_LOOKS, {
+    amalthea: { colors: [[120, 52, 34], [170, 86, 58]], seed: 47, craters: [30, 1.5, 6] },
+    tethys: {
+        colors: [[196, 194, 190], [232, 230, 226]], seed: 53, craters: [150, 1, 5], bright: true,
+        paint(gc, gb) {
+            drawCrater(gc, gb, 0.62, 0.4, 40, { dark: 0.25, peak: true }); // Odiseo
+            [gc, gb].forEach((g, k) => {
+                g.strokeStyle = k ? 'rgba(0,0,0,0.6)' : 'rgba(120,118,112,0.5)'; g.lineWidth = 6;
+                g.beginPath(); for (let x = 0; x <= 380; x += 10) g.lineTo(x + 60, 40 + x * 0.45 + Math.sin(x * 0.05) * 8); g.stroke();
+            }); // Ítaca Chasma
+        }
+    },
+    dione: {
+        colors: [[150, 148, 144], [200, 198, 194]], seed: 59, craters: [160, 1, 5],
+        paint(gc, gb, rnd) {
+            [gc, gb].forEach((g, k) => {
+                g.strokeStyle = k ? 'rgba(255,255,255,0.5)' : 'rgba(245,248,255,0.55)'; g.lineWidth = 1.2;
+                for (let i = 0; i < 40; i++) { const x = 300 + rnd() * 160, y = 40 + rnd() * 180; g.beginPath(); g.moveTo(x, y); g.bezierCurveTo(x + 20, y + 15, x - 10, y + 40, x + 15, y + 60); g.stroke(); }
+            });
+        }
+    },
+    iapetus: {
+        colors: [[200, 196, 188], [236, 232, 224]], seed: 61, craters: [120, 1, 6], bright: true,
+        paint(gc, gb) {
+            // Cassini Regio: el hemisferio delantero es oscuro como el carbón
+            const grad = gc.createLinearGradient(0, 0, PAINT_W, 0);
+            grad.addColorStop(0, 'rgba(25,18,12,0)'); grad.addColorStop(0.12, 'rgba(25,18,12,0.95)');
+            grad.addColorStop(0.45, 'rgba(25,18,12,0.95)'); grad.addColorStop(0.55, 'rgba(25,18,12,0)');
+            gc.fillStyle = grad; gc.fillRect(0, PAINT_H * 0.12, PAINT_W, PAINT_H * 0.76);
+            // cresta ecuatorial
+            [gc, gb].forEach((g, k) => { g.strokeStyle = k ? 'rgba(255,255,255,0.8)' : 'rgba(80,70,60,0.5)'; g.lineWidth = 3; g.beginPath(); g.moveTo(0, PAINT_H / 2); g.lineTo(PAINT_W * 0.5, PAINT_H / 2 + 2); g.stroke(); });
+        }
+    },
+    hyperion: {
+        colors: [[120, 104, 84], [170, 154, 130]], seed: 67, craters: [0, 0, 0],
+        paint(gc, gb, rnd) { for (let i = 0; i < 260; i++) drawCrater(gc, gb, rnd(), 0.08 + rnd() * 0.84, 3 + rnd() * 9, { dark: 0.6 }); } // "esponja"
+    },
+    umbriel: {
+        colors: [[62, 62, 64], [92, 92, 96]], seed: 71, craters: [120, 1, 6],
+        paint(gc) { stampEllipse(gc, 0.3, 0.2, 14, (g, r) => { g.strokeStyle = 'rgba(230,230,225,0.85)'; g.lineWidth = 5; g.beginPath(); g.arc(0, 0, r, 0, Math.PI * 2); g.stroke(); }); } // Wunda
+    },
+    oberon: { colors: [[110, 100, 94], [150, 140, 132]], seed: 73, craters: [160, 1, 7], rays: true },
+    proteus: { colors: [[70, 66, 64], [100, 96, 92]], seed: 79, craters: [50, 1.5, 7] }
+});
+
 const moonTextureCache = {};
 function makeMoonTexture(kind) {
     if (moonTextureCache[kind]) return moonTextureCache[kind];

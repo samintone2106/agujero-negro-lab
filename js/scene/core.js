@@ -13,12 +13,12 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, isCoarsePointer ? 1.5 : 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.25;
+renderer.toneMappingExposure = 1.0;
 container.appendChild(renderer.domElement);
 
-const ambientLight = new THREE.AmbientLight(0x22283a, 0.85);
+const ambientLight = new THREE.AmbientLight(0x22283a, 0.45); // poca luz ambiente: lado nocturno oscuro, como en las fotos reales
 scene.add(ambientLight);
-const sunDirectionalLight = new THREE.DirectionalLight(0xfff8ed, 2.35);
+const sunDirectionalLight = new THREE.DirectionalLight(0xfff8ed, 2.1);
 sunDirectionalLight.position.set(18, 8, 16);
 scene.add(sunDirectionalLight);
 const rimBackLight = new THREE.DirectionalLight(0x00f0ff, 0.45);

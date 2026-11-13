@@ -118,17 +118,17 @@
                 <button id="nasa-live-btn" type="button" aria-label="Fotos NASA" class="planet-only glass-hud hover:border-singularity-emerald/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5 group border-singularity-emerald/40" title="Abrir Galería Oficial de Misiones NASA en Tiempo Real">
                     <span class="w-2 h-2 rounded-full bg-singularity-emerald animate-ping"></span>
                     <i data-lucide="satellite" class="w-3.5 h-3.5 text-singularity-emerald"></i>
-                    <span class="hidden sm:inline font-mono text-[10px] sm:text-xs font-bold text-singularity-emerald tracking-wider">FOTOS NASA</span>
+                    <span class="hidden 2xl:inline font-mono text-[10px] sm:text-xs font-bold text-singularity-emerald tracking-wider">FOTOS NASA</span>
                 </button>
 
                 <button id="skim-btn" type="button" aria-label="Vista anillos" class="planet-only glass-hud hover:border-singularity-cyan/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5 group" title="Vuelo rasante sobre los anillos de hielo 3D">
                     <i data-lucide="disc" class="w-3.5 h-3.5 text-singularity-cyan group-hover:rotate-45 transition-transform"></i>
-                    <span id="skim-label" class="hidden sm:inline font-mono text-[10px] sm:text-xs font-bold text-singularity-cyan tracking-wider">VISTA ANILLOS</span>
+                    <span id="skim-label" class="hidden 2xl:inline font-mono text-[10px] sm:text-xs font-bold text-singularity-cyan tracking-wider">VISTA ANILLOS</span>
                 </button>
 
                 <button id="warp-btn" type="button" aria-label="Impulso" class="planet-only glass-hud hover:border-singularity-amber/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5 group">
                     <i data-lucide="zap" class="w-3.5 h-3.5 text-singularity-amber group-hover:scale-110 transition-transform"></i>
-                    <span class="hidden sm:inline font-mono text-[10px] sm:text-xs font-bold text-singularity-amber glow-amber tracking-wider">IMPULSO</span>
+                    <span class="hidden 2xl:inline font-mono text-[10px] sm:text-xs font-bold text-singularity-amber glow-amber tracking-wider">IMPULSO</span>
                 </button>
 
                 <button id="moons-btn" type="button" aria-label="Mostrar u ocultar lunas" aria-pressed="true" class="planet-only glass-hud hover:border-sky-300/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5 group">
@@ -148,7 +148,7 @@
 
                 <button id="audio-btn" type="button" aria-label="Activar o desactivar sonido" aria-pressed="false" class="glass-hud hover:border-singularity-cyan/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5">
                     <i id="audio-icon" data-lucide="volume-x" class="w-3.5 h-3.5 text-slate-400"></i>
-                    <span id="audio-label" class="hidden sm:inline font-mono text-[10px] sm:text-xs font-semibold text-slate-300">SONIDO: APAGADO</span>
+                    <span id="audio-label" class="hidden 2xl:inline font-mono text-[10px] sm:text-xs font-semibold text-slate-300">SONIDO: APAGADO</span>
                 </button>
                 <label class="glass-hud rounded-xl px-2.5 py-1.5 hidden lg:flex items-center gap-1.5" title="Volumen">
                     <span class="sr-only">Volumen</span>
@@ -163,60 +163,7 @@
         <div class="relative flex-1 min-h-0 flex flex-col md:flex-row items-stretch md:items-center justify-between w-full gap-2 my-0.5 pointer-events-none">
 
             <!-- LEFT VERTICAL SIDEBAR: 12 Celestial Bodies Selector -->
-            <nav aria-label="Selector vertical de cuerpos celestes" class="glass-hud rounded-2xl p-1.5 sm:p-2 flex flex-row md:flex-col gap-1 md:max-h-full overflow-x-auto md:overflow-x-hidden md:overflow-y-auto no-scrollbar pointer-events-auto w-full md:w-44 shrink-0 border border-singularity-cyan/30 shadow-2xl">
-                <div class="hidden md:flex text-[8px] sm:text-[9px] font-mono text-singularity-cyan uppercase tracking-wider font-bold px-1.5 py-0.5 border-b border-white/10 items-center justify-between">
-                    <span>16 ASTROS</span>
-                    <i data-lucide="orbit" class="w-3 h-3"></i>
-                </div>
-                <button type="button" data-target="sun" class="target-btn shrink-0 w-auto md:w-full text-left px-2.5 md:px-2 py-1.5 md:py-1 rounded-lg font-mono text-[10px] sm:text-[11px] font-bold transition-all duration-200 border border-transparent text-slate-300 hover:text-white hover:bg-white/5 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-yellow-400 shadow-[0_0_8px_#facc15] shrink-0"></span><span class="truncate">SOL</span>
-                </button>
-                <button type="button" data-target="mercury" class="target-btn shrink-0 w-auto md:w-full text-left px-2.5 md:px-2 py-1.5 md:py-1 rounded-lg font-mono text-[10px] sm:text-[11px] font-bold transition-all duration-200 border border-transparent text-slate-300 hover:text-white hover:bg-white/5 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-stone-400 shrink-0"></span><span class="truncate">MERCURIO</span>
-                </button>
-                <button type="button" data-target="venus" class="target-btn shrink-0 w-auto md:w-full text-left px-2.5 md:px-2 py-1.5 md:py-1 rounded-lg font-mono text-[10px] sm:text-[11px] font-bold transition-all duration-200 border border-transparent text-slate-300 hover:text-white hover:bg-white/5 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span><span class="truncate">VENUS</span>
-                </button>
-                <button type="button" data-target="earth" class="target-btn shrink-0 w-auto md:w-full text-left px-2.5 md:px-2 py-1.5 md:py-1 rounded-lg font-mono text-[10px] sm:text-[11px] font-bold transition-all duration-200 border border-transparent text-slate-300 hover:text-white hover:bg-white/5 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-sky-400 shrink-0"></span><span class="truncate">TIERRA</span>
-                </button>
-                <button type="button" data-target="moon" class="target-btn shrink-0 w-auto md:w-full text-left px-2.5 md:px-2 py-1.5 md:py-1 rounded-lg font-mono text-[10px] sm:text-[11px] font-bold transition-all duration-200 border border-transparent text-slate-300 hover:text-white hover:bg-white/5 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-slate-300 shrink-0"></span><span class="truncate">LUNA</span>
-                </button>
-                <button type="button" data-target="mars" class="target-btn shrink-0 w-auto md:w-full text-left px-2.5 md:px-2 py-1.5 md:py-1 rounded-lg font-mono text-[10px] sm:text-[11px] font-bold transition-all duration-200 border border-transparent text-slate-300 hover:text-white hover:bg-white/5 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-red-500 shrink-0"></span><span class="truncate">MARTE</span>
-                </button>
-                <button type="button" data-target="jupiter" class="target-btn shrink-0 w-auto md:w-full text-left px-2.5 md:px-2 py-1.5 md:py-1 rounded-lg font-mono text-[10px] sm:text-[11px] font-bold transition-all duration-200 border border-transparent text-slate-300 hover:text-white hover:bg-white/5 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-orange-400 shrink-0"></span><span class="truncate">JÚPITER</span>
-                </button>
-                <button type="button" data-target="io" class="target-btn shrink-0 w-auto md:w-full text-left px-2.5 md:px-2 py-1.5 md:py-1 rounded-lg font-mono text-[10px] sm:text-[11px] font-bold transition-all duration-200 border border-transparent text-slate-300 hover:text-white hover:bg-white/5 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-yellow-300 shadow-[0_0_8px_#fde047] shrink-0"></span><span class="truncate">ÍO</span>
-                </button>
-                <button type="button" data-target="europa" class="target-btn shrink-0 w-auto md:w-full text-left px-2.5 md:px-2 py-1.5 md:py-1 rounded-lg font-mono text-[10px] sm:text-[11px] font-bold transition-all duration-200 border border-transparent text-slate-300 hover:text-white hover:bg-white/5 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-sky-100 shrink-0"></span><span class="truncate">EUROPA</span>
-                </button>
-                <button type="button" data-target="saturn" class="target-btn shrink-0 w-auto md:w-full text-left px-2.5 md:px-2 py-1.5 md:py-1 rounded-lg font-mono text-[10px] sm:text-[11px] font-bold transition-all duration-200 border border-singularity-cyan bg-singularity-cyan/20 text-singularity-cyan glow-cyan flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-amber-200 shadow-[0_0_8px_#fde68a] shrink-0"></span><span class="truncate">SATURNO</span>
-                </button>
-                <button type="button" data-target="titan" class="target-btn shrink-0 w-auto md:w-full text-left px-2.5 md:px-2 py-1.5 md:py-1 rounded-lg font-mono text-[10px] sm:text-[11px] font-bold transition-all duration-200 border border-transparent text-slate-300 hover:text-white hover:bg-white/5 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-orange-300 shrink-0"></span><span class="truncate">TITÁN</span>
-                </button>
-                <button type="button" data-target="uranus" class="target-btn shrink-0 w-auto md:w-full text-left px-2.5 md:px-2 py-1.5 md:py-1 rounded-lg font-mono text-[10px] sm:text-[11px] font-bold transition-all duration-200 border border-transparent text-slate-300 hover:text-white hover:bg-white/5 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-teal-300 shrink-0"></span><span class="truncate">URANO</span>
-                </button>
-                <button type="button" data-target="neptune" class="target-btn shrink-0 w-auto md:w-full text-left px-2.5 md:px-2 py-1.5 md:py-1 rounded-lg font-mono text-[10px] sm:text-[11px] font-bold transition-all duration-200 border border-transparent text-slate-300 hover:text-white hover:bg-white/5 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span><span class="truncate">NEPTUNO</span>
-                </button>
-                <button type="button" data-target="pluto" class="target-btn shrink-0 w-auto md:w-full text-left px-2.5 md:px-2 py-1.5 md:py-1 rounded-lg font-mono text-[10px] sm:text-[11px] font-bold transition-all duration-200 border border-transparent text-slate-300 hover:text-white hover:bg-white/5 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-rose-200 shrink-0"></span><span class="truncate">PLUTÓN</span>
-                </button>
-                <button type="button" data-target="pulsar" class="target-btn shrink-0 w-auto md:w-full text-left px-2.5 md:px-2 py-1.5 md:py-1 rounded-lg font-mono text-[10px] sm:text-[11px] font-bold transition-all duration-200 border border-transparent text-slate-300 hover:text-white hover:bg-white/5 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-singularity-cyan shadow-[0_0_8px_#00f0ff] shrink-0"></span><span class="truncate">PÚLSAR</span>
-                </button>
-                <button type="button" data-target="gargantua" class="target-btn shrink-0 w-auto md:w-full text-left px-2.5 md:px-2 py-1.5 md:py-1 rounded-lg font-mono text-[10px] sm:text-[11px] font-bold transition-all duration-200 border border-transparent text-slate-300 hover:text-white hover:bg-white/5 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-singularity-crimson shadow-[0_0_8px_#ff0055] shrink-0"></span><span class="truncate">GARGANTÚA</span>
-                </button>
-            </nav>
+            <nav aria-label="Selector de astros y escalas del universo" class="nav-shell glass-hud rounded-2xl pointer-events-auto shrink-0 border border-singularity-cyan/30 shadow-2xl"></nav>
 
             <!-- CENTER: AIMING RETICLE CROSSHAIR + CLOSE-UP REAL NASA PHOTO OVERLAY -->
             <div class="hud-fade relative flex-1 flex flex-col items-center justify-center pointer-events-none">

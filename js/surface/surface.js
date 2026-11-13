@@ -99,7 +99,20 @@ function buildTerrainMesh(size, segs, heightFn, site, far) {
                 return mix(mix(sH(i), sH(i + vec2(1, 0)), f.x), mix(sH(i + vec2(0, 1)), sH(i + vec2(1, 1)), f.x), f.y); }`)
             .replace('#include <color_fragment>', `#include <color_fragment>
             float g = sN(vWorldP.xz * 3.0) * 0.5 + sN(vWorldP.xz * 0.6) * 0.35 + sN(vWorldP.xz * 18.0) * 0.15;
-            diffuseColor.rgb *= 0.78 + g * 0.42;`);
+            diffuseColor.rgb *= 0.78 + g * 0.42;`)
+            // relieve fino (piedritas, ondulaciones) con un gradiente suave: no depende del tamaño de los polígonos
+            .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+            {
+                float fade = 1.0 - smoothstep(20.0, 120.0, length(vWorldP - cameraPosition));
+                if (fade > 0.0) {
+                    vec2 q = vWorldP.xz; float e = 0.04;
+                    float h0 = sN(q * 2.2) * 0.6 + sN(q * 9.0) * 0.3 + sN(q * 31.0) * 0.1;
+                    float hx = sN((q + vec2(e, 0.0)) * 2.2) * 0.6 + sN((q + vec2(e, 0.0)) * 9.0) * 0.3 + sN((q + vec2(e, 0.0)) * 31.0) * 0.1;
+                    float hz = sN((q + vec2(0.0, e)) * 2.2) * 0.6 + sN((q + vec2(0.0, e)) * 9.0) * 0.3 + sN((q + vec2(0.0, e)) * 31.0) * 0.1;
+                    vec3 bumpW = vec3(-(hx - h0) / e, 0.0, -(hz - h0) / e) * 0.12 * fade;
+                    normal = normalize(normal + (viewMatrix * vec4(bumpW, 0.0)).xyz);
+                }
+            }`);
     };
     return new THREE.Mesh(geo, mat);
 }
@@ -153,14 +166,20 @@ function buildStars() {
 function buildRocks(site, heightFn, seed) {
     const rnd = surfRng(seed + 99);
     const count = site.pebbles ? 2600 : 1600;
-    const geo = new THREE.IcosahedronGeometry(1, site.pebbles ? 2 : 1);
+    const geo = new THREE.IcosahedronGeometry(1, 3);
     if (!site.pebbles) {
         const p = geo.attributes.position;
-        for (let i = 0; i < p.count; i++) p.setXYZ(i, p.getX(i) * (0.8 + rnd() * 0.4), p.getY(i) * (0.55 + rnd() * 0.3), p.getZ(i) * (0.8 + rnd() * 0.4));
+        // roca: esfera achatada y abollada con ruido suave (sin facetas)
+        const v = new THREE.Vector3();
+        for (let i = 0; i < p.count; i++) {
+            v.fromBufferAttribute(p, i);
+            const n = 1 + (fbm2D(v.x * 1.7 + 3, v.y * 1.7 + v.z * 1.3, 3) - 0.5) * 0.6;
+            p.setXYZ(i, v.x * n, v.y * n * 0.6, v.z * n);
+        }
         geo.computeVertexNormals();
     } else geo.scale(1, 0.6, 1);
     const [lo, hi] = site.ground;
-    const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(lo[0] * 0.9, lo[1] * 0.9, lo[2] * 0.9), roughness: site.pebbles ? 0.55 : 0.95, flatShading: !site.pebbles });
+    const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(lo[0] * 0.9, lo[1] * 0.9, lo[2] * 0.9), roughness: site.pebbles ? 0.55 : 0.95 });
     const mesh = new THREE.InstancedMesh(geo, mat, count);
     const m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), p = new THREE.Vector3();
     for (let i = 0; i < count; i++) {
@@ -241,7 +260,7 @@ function buildSite(id) {
     const seed = id.length * 97 + 13;
     const heightFn = makeHeightFn(site, seed);
     const root = new THREE.Group();
-    const near = buildTerrainMesh(SURF_NEAR, 220, heightFn, site, false);
+    const near = buildTerrainMesh(SURF_NEAR, 400, heightFn, site, false); // ~1.75 m por polígono
     const far = buildTerrainMesh(SURF_FAR, 256, heightFn, site, true);
     root.add(near, far);
     const { sky, sunDir } = buildSky(site);

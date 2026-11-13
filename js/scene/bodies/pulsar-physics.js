@@ -33,13 +33,13 @@ const beamMat = new THREE.ShaderMaterial({
 });
 [northJet, southJet].forEach(j => {
     j.geometry.dispose();
-    j.geometry = new THREE.ConeGeometry(Math.tan(VELA.beamHalf) * 16, 16, 40, 1, true);
+    j.geometry = new THREE.ConeGeometry(Math.tan(VELA.beamHalf) * 10, 10, 40, 1, true);
     j.material = beamMat;
 });
-northJet.position.y = 8; southJet.position.y = -8;
+northJet.position.y = 5; southJet.position.y = -5;
 
 // Líneas de campo dipolar (r = L·sen²θ medido desde el eje magnético).
-const fieldMat = new THREE.LineBasicMaterial({ color: 0x7df9ff, transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending, depthWrite: false });
+const fieldMat = new THREE.LineBasicMaterial({ color: 0x7df9ff, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false });
 const openFieldMat = new THREE.LineBasicMaterial({ color: 0xffb36b, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false });
 (() => {
     const R = 1.15;
@@ -66,7 +66,7 @@ const openFieldMat = new THREE.LineBasicMaterial({ color: 0xffb36b, transparent:
 // Real: c/Ω ≈ 4,270 km frente a ~10 km de radio (427 veces). Aquí va a escala reducida.
 const lightCylinder = new THREE.Group();
 (() => {
-    const mat = new THREE.LineBasicMaterial({ color: 0xffd27a, transparent: true, opacity: 0.16, depthWrite: false });
+    const mat = new THREE.LineBasicMaterial({ color: 0xffd27a, transparent: true, opacity: 0.08, depthWrite: false });
     const R = 10, H = 12;
     [-H, 0, H].forEach(y => {
         const pts = Array.from({ length: 97 }, (_, i) => new THREE.Vector3(Math.cos(i / 96 * Math.PI * 2) * R, y, Math.sin(i / 96 * Math.PI * 2) * R));

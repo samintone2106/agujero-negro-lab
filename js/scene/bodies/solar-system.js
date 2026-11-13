@@ -80,7 +80,8 @@ ioMesh.add(ioPlumes);
 
 // Jupiter hanging in Io's / Europa's sky, Saturn behind Titan: sense of scale.
 function addParentPlanetBackdrop(group, texUrl, radius, pos, tint) {
-    const m = new THREE.MeshPhongMaterial({ color: tint, shininess: 4 });
+    // sin niebla: a ~80 unidades la niebla de la escena lo volvía un disco gris
+    const m = new THREE.MeshPhongMaterial({ color: tint, shininess: 4, fog: false });
     loadTextureWithFallback([texUrl], (tx) => { m.map = tx; m.color.set(0xffffff); m.needsUpdate = true; });
     const mesh = new THREE.Mesh(new THREE.SphereGeometry(radius, 64, 64), m);
     mesh.position.set(...pos);
@@ -108,17 +109,28 @@ charon.userData.genesisLate = 'charon';
 const marsMesh = createPhotorealisticPlanet('mars', 2.25, true);
 
 const uranusMesh = createPhotorealisticPlanet('uranus', 2.4, true);
-const uranusRings = new THREE.Mesh(
-    new THREE.RingGeometry(3.2, 5.8, 96, 16),
-    new THREE.MeshBasicMaterial({ color: 0x7dd3fc, side: THREE.DoubleSide, transparent: true, opacity: 0.12, depthWrite: false })
-);
-uranusRings.rotation.y = Math.PI * 0.08;
+// Anillos de Urano: 13 anillos estrechos y oscuros (radios en radios de Urano, Voyager 2 / Hubble).
+// ε es el más ancho y brillante; ν y μ son exteriores y polvorientos (μ azulado).
+const uranusRings = new THREE.Group();
+[[1.64, 0.004], [1.66, 0.004], [1.68, 0.004], [1.75, 0.005], [1.79, 0.006], [1.85, 0.004], [1.86, 0.005],
+ [1.90, 0.006], [1.96, 0.003], [2.00, 0.02, 0x8f8a84, 0.75], [2.6, 0.08, 0xc49a80, 0.05], [3.9, 0.2, 0x7aa8ff, 0.035]
+].forEach(([r, w, color = 0x8a8f96, opacity = 0.42]) => {
+    const R = 2.4;
+    uranusRings.add(new THREE.Mesh(
+        new THREE.RingGeometry((r - w) * R, (r + w) * R, 192, 1),
+        new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide, transparent: true, opacity, depthWrite: false })
+    ));
+});
+uranusRings.rotation.set(0.25, Math.PI * 0.08, 0);
 targetGroups.uranus.add(uranusRings);
 
 const neptuneMesh = createPhotorealisticPlanet('neptune', 2.4, true);
-const neptuneRings = new THREE.Mesh(
-    new THREE.RingGeometry(3.5, 5.9, 96, 8),
-    new THREE.MeshBasicMaterial({ color: 0x60a5fa, side: THREE.DoubleSide, transparent: true, opacity: 0.18 })
-);
+// Anillos de Neptuno: Galle (~1.7 R), Le Verrier (~2.15 R) y Adams (~2.54 R, con sus "arcos"); muy tenues.
+const neptuneRings = new THREE.Group();
+[[1.69, 0.06, 0.05], [2.15, 0.006, 0.28], [2.54, 0.006, 0.32]].forEach(([r, w, opacity]) => {
+    const R = 2.4;
+    neptuneRings.add(new THREE.Mesh(new THREE.RingGeometry((r - w) * R, (r + w) * R, 192, 1),
+        new THREE.MeshBasicMaterial({ color: 0x9aa6b8, side: THREE.DoubleSide, transparent: true, opacity, depthWrite: false })));
+});
 neptuneRings.rotation.x = Math.PI * 0.42;
 targetGroups.neptune.add(neptuneRings);

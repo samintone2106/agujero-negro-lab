@@ -1,8 +1,7 @@
 /* -------------------------------------------------------------------------- */
-/* ORIGEN: EL BIG BANG (CIENCIA) Y "EN EL PRINCIPIO" (FE)                      */
+/* ORIGEN: EL BIG BANG                                                         */
 /* -------------------------------------------------------------------------- */
-// Ciencia: cronología del modelo cosmológico estándar (ΛCDM), Planck 2018 y JWST.
-// Fe: versículos de la Reina-Valera 1909 (dominio público), como versión personal aparte.
+// Cronología del modelo cosmológico estándar (ΛCDM), Planck 2018 y JWST.
 const ORIGIN_SCIENCE = {
     sound: 'hole', duration: 78000, end: 'Entrar al Sistema Solar',
     steps: [
@@ -15,19 +14,6 @@ const ORIGIN_SCIENCE = {
         ['~300–400 Ma', 'Primeras galaxias', 'Las estrellas se agrupan en galaxias. El telescopio Webb ha visto algunas de solo ~300 Ma después del inicio.', 0.64],
         ['Hace ~13,000 Ma', 'Nace la Vía Láctea', 'Galaxias pequeñas se fusionan y forman la nuestra; sus estrellas más viejas tienen unos 13,000 millones de años.', 0.76],
         ['Hace 4,600 Ma', 'Nace el Sol', 'En un brazo de la Vía Láctea, una nube de gas colapsa y nace el Sol con sus planetas.', 0.9]
-    ]
-};
-const ORIGIN_FAITH = {
-    sound: 'star', duration: 72000, end: 'Ver la Tierra',
-    steps: [
-        ['Juan 1:1', 'En el principio', 'EN el principio era el Verbo, y el Verbo era con Dios, y el Verbo era Dios.', 0.0],
-        ['Génesis 1:1', 'Los cielos y la tierra', 'EN el principio crió Dios los cielos y la tierra.', 0.13],
-        ['Génesis 1:2', 'Sobre la haz de las aguas', 'Y la tierra estaba desordenada y vacía, y las tinieblas estaban sobre la haz del abismo, y el Espíritu de Dios se movía sobre la haz de las aguas.', 0.24],
-        ['Génesis 1:3', 'Sea la luz', 'Y dijo Dios: Sea la luz: y fué la luz.', 0.38],
-        ['Génesis 1:6', 'La expansión', 'Y dijo Dios: Haya expansión en medio de las aguas, y separe las aguas de las aguas.', 0.52],
-        ['Génesis 1:16', 'Las lumbreras', 'E hizo Dios las dos grandes lumbreras; la lumbrera mayor para que señorease en el día, y la lumbrera menor para que señorease en la noche: hizo también las estrellas.', 0.66],
-        ['Juan 1:3', 'Todas las cosas', 'Todas las cosas por él fueron hechas; y sin él nada de lo que es hecho, fué hecho.', 0.8],
-        ['Salmo 19:1', 'Los cielos cuentan', 'Los cielos cuentan la gloria de Dios, y la expansión denuncia la obra de sus manos.', 0.9]
     ]
 };
 
@@ -65,11 +51,11 @@ const originParticles = (() => {
     const mat = new THREE.ShaderMaterial({
         uniforms: {
             uScale: { value: 0 }, uWeb: { value: 0 }, uGal: { value: 0 }, uTemp: { value: 1 }, uStars: { value: 0 },
-            uAlpha: { value: 1 }, uTime: { value: 0 }, uFaith: { value: 0 }, uSplit: { value: 0 }, uSwirl: { value: 0 }
+            uAlpha: { value: 1 }, uTime: { value: 0 }
         },
         vertexShader: `
             attribute vec4 aSeed; attribute vec3 aWeb; attribute vec3 aGal;
-            uniform float uScale, uWeb, uGal, uTemp, uStars, uTime, uFaith, uSplit, uSwirl, uAlpha;
+            uniform float uScale, uWeb, uGal, uTemp, uStars, uTime, uAlpha;
             varying vec3 vCol; varying float vA;
             vec3 hot(float t) { // de blanco-azul (muy caliente) a rojo apagado (frío)
                 return mix(vec3(0.55, 0.12, 0.05), mix(vec3(1.0, 0.62, 0.25), vec3(0.85, 0.92, 1.0), smoothstep(0.5, 1.0, t)), smoothstep(0.05, 0.5, t));
@@ -77,10 +63,6 @@ const originParticles = (() => {
             void main() {
                 vec3 dir = normalize(aSeed.xyz - 0.5 + 1e-4);
                 vec3 base = dir * pow(aSeed.w, 0.333) * 190.0;
-                // remolino "sobre la haz de las aguas" (fe)
-                float a = uSwirl * (uTime * 0.25 + length(base.xz) * 0.01);
-                base.xz = mat2(cos(a), -sin(a), sin(a), cos(a)) * base.xz;
-                base.y = mix(base.y, base.y * 0.12 + sign(base.y) * 40.0 * uSplit, uSplit);
                 vec3 p = mix(base * uScale, aWeb, uWeb);
                 // la galaxia gira despacio
                 float ga = uTime * 0.08;
@@ -89,7 +71,6 @@ const originParticles = (() => {
                 vec4 mv = modelViewMatrix * vec4(p, 1.0);
                 bool star = aSeed.y < 0.06;
                 vec3 c = hot(uTemp);
-                c = mix(c, vec3(1.0, 0.86, 0.55), uFaith * 0.6);
                 // en la galaxia: estrellas amarillas (viejas, centro) y azules (jóvenes, brazos)
                 c = mix(c, mix(vec3(1.0, 0.84, 0.6), vec3(0.62, 0.74, 1.0), aSeed.z), uGal * step(0.5, aSeed.x));
                 if (star) c = mix(c, mix(vec3(0.7, 0.8, 1.0), vec3(1.0, 0.9, 0.7), aSeed.z), uStars);
@@ -147,16 +128,15 @@ const originDom = {
     pause: document.getElementById('origin-pause'),
     end: document.getElementById('origin-end')
 };
-const origin = { cfg: null, faith: false, elapsed: 0, paused: false, phase: -1 };
+const origin = { cfg: null, elapsed: 0, paused: false, phase: -1 };
 
-function originStart(faith) {
-    origin.cfg = faith ? ORIGIN_FAITH : ORIGIN_SCIENCE;
-    origin.faith = faith;
+function originStart() {
+    origin.cfg = ORIGIN_SCIENCE;
     origin.elapsed = 0; origin.paused = false; origin.phase = -1;
     cosmos.scene.add(originParticles, cmbSphere, originFlash, originSun, originGlow);
     cosmos.scene.fog = null;
     cosmos.controls.enabled = false;
-    originDom.kicker.textContent = faith ? 'ORIGEN · FE (REINA-VALERA 1909)' : 'ORIGEN · CIENCIA (MODELO ΛCDM)';
+    originDom.kicker.textContent = 'ORIGEN · MODELO COSMOLÓGICO ΛCDM';
     originDom.segs.replaceChildren(...origin.cfg.steps.map(() => { const s = document.createElement('div'); s.className = 'genesis-seg'; s.appendChild(document.createElement('span')); return s; }));
     originDom.segs.style.gridTemplateColumns = `repeat(${origin.cfg.steps.length}, minmax(0, 1fr))`;
     originDom.end.textContent = origin.cfg.end.toUpperCase();
@@ -184,45 +164,25 @@ function originUpdate(dt, time) {
     const cam = cosmos.camera;
     let flash = 0, sunK = 0, camDist, camH;
 
-    if (!origin.faith) {
-        // escala: punto -> inflación explosiva -> expansión lenta
-        u.uScale.value = 0.002 + sm2(0.06, 0.12, p) * 0.5 + sm2(0.12, 0.5, p) * 0.5;
-        u.uTemp.value = 1 - sm2(0.1, 0.45, p);
-        u.uWeb.value = sm2(0.42, 0.62, p);
-        u.uStars.value = sm2(0.5, 0.58, p);
-        u.uGal.value = sm2(0.72, 0.86, p);
-        u.uAlpha.value = sm2(0, 0.02, p) * (1 - sm2(0.38, 0.42, p) * 0.75) + sm2(0.44, 0.5, p) * 0.75;
-        u.uFaith.value = 0; u.uSplit.value = 0; u.uSwirl.value = 0;
-        cmbSphere.material.uniforms.uOpacity.value = sm2(0.36, 0.4, p) * (1 - sm2(0.47, 0.52, p));
-        flash = pulse(0.07, 0.03, p);
-        sunK = sm2(0.9, 0.95, p);
-        camDist = 60 + sm2(0.07, 0.5, p) * 380 - sm2(0.66, 0.9, p) * 330;
-        camH = 0.25 + sm2(0.7, 0.85, p) * 0.5;
-    } else {
-        u.uScale.value = 0.002 + sm2(0.3, 0.5, p) * 0.9;
-        u.uTemp.value = 0.35;
-        u.uFaith.value = 1;
-        u.uSwirl.value = sm2(0.2, 0.3, p) * (1 - sm2(0.36, 0.42, p));
-        u.uSplit.value = sm2(0.52, 0.64, p) * (1 - sm2(0.76, 0.84, p));
-        u.uStars.value = sm2(0.66, 0.74, p);
-        u.uGal.value = sm2(0.8, 0.9, p);
-        u.uWeb.value = 0;
-        // tinieblas: casi nada se ve hasta "sea la luz"
-        u.uAlpha.value = 0.04 + sm2(0.2, 0.3, p) * 0.12 + sm2(0.38, 0.42, p) * 0.84;
-        cmbSphere.material.uniforms.uOpacity.value = 0;
-        flash = pulse(0.395, 0.04, p);
-        sunK = sm2(0.68, 0.74, p);
-        camDist = 140 + sm2(0.38, 0.5, p) * 120 - sm2(0.8, 0.92, p) * 180;
-        camH = 0.2 + sm2(0.5, 0.6, p) * 0.35;
-        if (p < 0.38) { u.uScale.value = 0.08 + p * 0.4; }
-    }
+    // escala: punto -> inflación explosiva -> expansión lenta
+    u.uScale.value = 0.002 + sm2(0.06, 0.12, p) * 0.5 + sm2(0.12, 0.5, p) * 0.5;
+    u.uTemp.value = 1 - sm2(0.1, 0.45, p);
+    u.uWeb.value = sm2(0.42, 0.62, p);
+    u.uStars.value = sm2(0.5, 0.58, p);
+    u.uGal.value = sm2(0.72, 0.86, p);
+    u.uAlpha.value = sm2(0, 0.02, p) * (1 - sm2(0.38, 0.42, p) * 0.75) + sm2(0.44, 0.5, p) * 0.75;
+    cmbSphere.material.uniforms.uOpacity.value = sm2(0.36, 0.4, p) * (1 - sm2(0.47, 0.52, p));
+    flash = pulse(0.07, 0.03, p);
+    sunK = sm2(0.9, 0.95, p);
+    camDist = 60 + sm2(0.07, 0.5, p) * 380 - sm2(0.66, 0.9, p) * 330;
+    camH = 0.25 + sm2(0.7, 0.85, p) * 0.5;
     // cámara en órbita lenta
     const ang = time * 0.05;
     cam.position.set(Math.cos(ang) * camDist, camDist * camH, Math.sin(ang) * camDist);
     cam.lookAt(0, 0, 0);
 
     // plasma: blanco-azulado muy caliente -> naranja -> se apaga al hacerse transparente (380 mil años)
-    const glowK = origin.faith ? sm2(0.38, 0.42, p) * (1 - sm2(0.5, 0.62, p)) * 0.5 : sm2(0.04, 0.08, p) * (1 - sm2(0.36, 0.41, p));
+    const glowK = sm2(0.04, 0.08, p) * (1 - sm2(0.36, 0.41, p));
     originGlow.visible = glowK > 0.01;
     originGlow.material.opacity = glowK * 0.85;
     originGlow.material.color.setRGB(1, 0.55 + u.uTemp.value * 0.4, 0.3 + u.uTemp.value * 0.7);
@@ -246,7 +206,7 @@ function originUpdate(dt, time) {
         originDom.clock.textContent = clock;
         originDom.title.textContent = title;
         originDom.text.textContent = text;
-        if (idx > 0) genesisSound.cue(idx === 1 || (origin.faith && idx === 3) ? 'shock' : 'phase');
+        if (idx > 0) genesisSound.cue(idx === 1 ? 'shock' : 'phase');
     }
     Array.from(originDom.segs.children).forEach((seg, i) => {
         const a = steps[i][3], b = i + 1 < steps.length ? steps[i + 1][3] : 1;
@@ -255,8 +215,7 @@ function originUpdate(dt, time) {
     originDom.end.hidden = p < 0.9;
 }
 
-cosmos.views.origin = { start() { originStart(false); }, update: originUpdate, stop: originStop, render: true };
-cosmos.views['origin-faith'] = { start() { originStart(true); }, update: originUpdate, stop: originStop, render: true };
+cosmos.views.origin = { start() { originStart(); }, update: originUpdate, stop: originStop };
 
 originDom.pause?.addEventListener('click', () => {
     origin.paused = !origin.paused;
@@ -264,5 +223,5 @@ originDom.pause?.addEventListener('click', () => {
     genesisSound.setPaused(origin.paused);
 });
 document.getElementById('origin-skip')?.addEventListener('click', () => { origin.elapsed = origin.cfg.duration * 0.92; });
-originDom.end?.addEventListener('click', () => exitCosmos(origin.faith ? 'earth' : 'sun'));
+originDom.end?.addEventListener('click', () => exitCosmos('sun'));
 document.getElementById('origin-exit')?.addEventListener('click', () => exitCosmos());

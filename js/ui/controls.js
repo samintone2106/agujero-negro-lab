@@ -11,9 +11,12 @@ document.querySelectorAll('.target-btn').forEach(btn => {
 });
 
 controls.addEventListener('change', () => {
+    // con una luna enfocada la distancia es a la luna: no debe mover el propulsor del planeta
+    if (typeof moonFocus !== 'undefined' && moonFocus.mesh) return;
     const dist = camera.position.distanceTo(controls.target);
     sharedUniforms.uCameraDist.value = dist;
-    const computedPct = Math.max(0, Math.min(100, ((28.0 - dist) / 23.9) * 100));
+    const far = frameFarFor(state.currentTarget);
+    const computedPct = Math.max(0, Math.min(100, ((far - dist) / (far - FRAME_NEAR)) * 100));
     if (Math.abs(computedPct - state.descentPercent) > 1.2) {
         state.descentPercent = computedPct;
         dom.descentSlider.value = computedPct;
@@ -121,10 +124,10 @@ function toggleAudioUI() {
     document.getElementById('audio-btn')?.setAttribute('aria-pressed', String(active));
     if (active) {
         audioEngine.playClickTone(980, 0.06);
-        if (audioLabel) { audioLabel.textContent = 'SONIDO: ENCENDIDO'; audioLabel.className = 'hidden sm:inline font-mono text-[10px] sm:text-xs font-semibold text-singularity-cyan glow-cyan'; }
+        if (audioLabel) { audioLabel.textContent = 'SONIDO: ENCENDIDO'; audioLabel.className = 'hidden 2xl:inline font-mono text-[10px] sm:text-xs font-semibold text-singularity-cyan glow-cyan'; }
         audioIcon?.setAttribute('data-lucide', 'volume-2');
     } else {
-        if (audioLabel) { audioLabel.textContent = 'SONIDO: APAGADO'; audioLabel.className = 'hidden sm:inline font-mono text-[10px] sm:text-xs font-semibold text-slate-300'; }
+        if (audioLabel) { audioLabel.textContent = 'SONIDO: APAGADO'; audioLabel.className = 'hidden 2xl:inline font-mono text-[10px] sm:text-xs font-semibold text-slate-300'; }
         audioIcon?.setAttribute('data-lucide', 'volume-x');
     }
     lucide.createIcons();

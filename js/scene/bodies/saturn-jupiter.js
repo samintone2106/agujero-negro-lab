@@ -145,3 +145,9 @@ const magnetoTorus = new THREE.Mesh(
 );
 magnetoTorus.rotation.x = Math.PI * 0.46;
 targetGroups.jupiter.add(magnetoTorus);
+
+// Anillos reales también en el Saturno que se ve desde Titán.
+titanSaturnRing.geometry.dispose();
+titanSaturnRing.geometry = new THREE.RingGeometry(2.85, 11.8, 180, 32);
+titanSaturnRing.material = saturnRings.material;
+titanSaturnRing.scale.setScalar(13 / 2.35 * 0.6);

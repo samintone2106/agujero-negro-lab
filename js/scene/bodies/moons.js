@@ -83,8 +83,9 @@ Object.entries(MOONS).forEach(([planetId, list]) => {
         const ring = new THREE.LineLoop(
             new THREE.BufferGeometry().setFromPoints(
                 Array.from({ length: 128 }, (_, i) => {
-                    const a = (i / 128) * Math.PI * 2;
-                    return new THREE.Vector3(Math.cos(a) * m.orbit, Math.sin(a) * m.orbit, 0);
+                    const a = (i / 128) * Math.PI * 2, e = m.ecc || 0;
+                    const r = e ? m.orbit * (1 - e * e) / (1 + e * Math.cos(a)) : m.orbit;
+                    return new THREE.Vector3(Math.cos(a) * r, Math.sin(a) * r, 0);
                 })
             ),
             new THREE.LineBasicMaterial({ color: 0x7fd4ff, transparent: true, opacity: 0.13, depthWrite: false })
@@ -142,9 +143,13 @@ function updateMoons(planetId, time) {
     texturizeMoons(sys);
     sys.moons.forEach(m => {
         const a = m.phase + time * m.omega;
-        m.mesh.position.set(Math.cos(a) * m.cfg.orbit, Math.sin(a) * m.cfg.orbit, 0);
+        // órbitas excéntricas (Nereida): r = a(1-e²)/(1+e·cos ν), con ν≈ángulo medio
+        const e = m.cfg.ecc || 0;
+        const r = e ? m.cfg.orbit * (1 - e * e) / (1 + e * Math.cos(a)) : m.cfg.orbit;
+        m.mesh.position.set(Math.cos(a) * r, Math.sin(a) * r, 0);
         // eje de giro perpendicular a la órbita y rotación sincrónica (misma cara hacia el planeta)
-        m.mesh.rotation.set(Math.PI / 2, a + Math.PI, 0);
+        if (m.cfg.tumble) m.mesh.rotation.set(time * 0.7, time * 0.31, time * 0.53); // Hiperión: giro caótico
+        else m.mesh.rotation.set(Math.PI / 2, a + Math.PI, 0);
     });
 }
 

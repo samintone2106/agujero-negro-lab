@@ -170,15 +170,16 @@ function enhancePlanetMaterial(mat, opts = {}) {
 
 // Ajustes de superficie por astro (el resto usa solo el detalle básico).
 const SURFACE_OPTS = {
-    mercury: { relief: 1.0, craters: 1.4 },
-    moon: { relief: 1.0, craters: 1.6 },
+    mercury: { relief: 1.0, craters: 1.4, gamma: 1.25, tint: [0.86, 0.8, 0.72] },
+    moon: { relief: 1.0, craters: 1.6, gamma: 1.2 },
+    venus: { gamma: 1.4, tint: [1.0, 0.86, 0.6] },
     mars: { relief: 0.55, craters: 0.22, dust: true, tint: [0.92, 0.72, 0.6] },
     io: { relief: 0.8 },
     europa: { relief: 0.6 },
     pluto: { relief: 0.9, craters: 0.6 },
     jupiter: { bands: 0.0009, spot: [0.366, 0.391, 0.024, 0.016], gamma: 1.6, tint: [1.0, 0.9, 0.8] },
     saturn: { bands: 0.0006, hexagon: true, gamma: 1.3 },
-    uranus: { bands: 0.0003 },
+    uranus: { bands: 0.0003, gamma: 1.3, tint: [0.78, 0.95, 1.0] },
     neptune: { bands: 0.0007 }
 };
 

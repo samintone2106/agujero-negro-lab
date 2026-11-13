@@ -29,7 +29,7 @@ function focusMoon(mesh) {
     const info = mesh.userData.moon;
     if (!info) return;
     if (!moonFocus.mesh) {
-        moonFocus.saved = { minDistance: controls.minDistance, autoRotate: controls.autoRotate, target: controls.target.clone() };
+        moonFocus.saved = { minDistance: controls.minDistance, autoRotate: controls.autoRotate, target: controls.target.clone(), descent: state.descentPercent };
     }
     moonFocus.mesh = mesh;
     moonFocus.blend = 0;
@@ -58,6 +58,7 @@ function clearMoonFocus() {
     controls.autoRotate = moonFocus.saved.autoRotate;
     controls.target.copy(moonFocus.saved.target);
     moonFocusDom.card.hidden = true;
+    updateRelativityTelemetry(moonFocus.saved.descent); // vuelve a encuadrar el planeta como estaba
 }
 
 // Se llama cada cuadro antes de controls.update(): la cámara viaja con la luna.

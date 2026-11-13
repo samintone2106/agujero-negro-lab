@@ -1,3 +1,8 @@
+// Encuadre: cerca fija y lejos según el tamaño de lo que hay que ver (anillos, discos, haces).
+const FRAME_NEAR = 3.4;
+const FRAME_FAR = { saturn: 23, gargantua: 30, pulsar: 26, uranus: 15, neptune: 14, jupiter: 15, io: 16, europa: 16, titan: 18, pluto: 14, earth: 13 };
+function frameFarFor(id) { return FRAME_FAR[id] || 11.5; }
+
 function switchTarget(targetId) {
     if (typeof genesis !== 'undefined' && genesis.active) stopGenesis();
     state.currentTarget = targetId;
@@ -108,7 +113,9 @@ function updateRelativityTelemetry(percentage) {
         dom.velocityReadout.textContent = `v = ${orbVel} km/s`;
     }
 
-    const targetZ = 4.1 + (1 - prox) * 23.9;
+    // distancia lejana por astro: el astro llena ~40 % de la pantalla al 0 % del propulsor
+    const far = frameFarFor(t);
+    const targetZ = FRAME_NEAR + (1 - prox) * (far - FRAME_NEAR);
     sharedUniforms.uCameraDist.value = targetZ;
 
     const bottomHudDeck = document.getElementById('bottom-hud-deck');
@@ -126,7 +133,7 @@ function updateRelativityTelemetry(percentage) {
         camera.position.set(1.5, 0.35, targetZ);
     } else {
         offset.normalize().multiplyScalar(targetZ);
-        offset.y = 3.2 * (1 - prox * 0.45);
+        offset.y = far * 0.14 * (1 - prox * 0.45);
         camera.position.copy(controls.target).add(offset);
     }
     controls.update();
