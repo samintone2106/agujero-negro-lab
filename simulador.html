@@ -477,6 +477,28 @@
         </div>
     </div>
 
+    <!-- Nota científica de lo que se ve en la superficie -->
+    <p id="surface-note" class="hud-fade fixed z-20 left-1/2 -translate-x-1/2 bottom-[13.5rem] md:bottom-[11rem] w-[min(92vw,30rem)] glass-hud rounded-xl px-3 py-2 text-[10px] sm:text-[11px] leading-snug text-amber-100 border-singularity-amber/40 pointer-events-none" hidden></p>
+
+    <!-- Ficha de la luna enfocada -->
+    <div id="moon-card" class="hud-fade fixed z-20 left-1/2 -translate-x-1/2 top-[10rem] md:top-[6.25rem] w-[min(92vw,24rem)]" role="region" aria-label="Luna enfocada" hidden>
+        <div class="glass-hud rounded-2xl p-3 border-sky-300/40">
+            <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                    <div id="moon-card-planet" class="font-mono text-[9px] font-bold tracking-widest text-sky-300"></div>
+                    <h3 id="moon-card-name" class="text-base font-bold text-white leading-tight"></h3>
+                </div>
+                <button id="moon-card-back" type="button" class="shrink-0 min-h-[30px] px-2 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 font-mono text-[9px] font-bold text-slate-200"></button>
+            </div>
+            <dl class="grid grid-cols-3 gap-2 mt-2 font-mono text-[9px]">
+                <div><dt class="text-slate-400">RADIO</dt><dd id="moon-card-km" class="text-white text-[11px] font-bold"></dd></div>
+                <div><dt class="text-slate-400">ÓRBITA</dt><dd id="moon-card-period" class="text-white text-[11px] font-bold"></dd></div>
+                <div class="min-w-0"><dt class="text-slate-400">DESCUBIERTA</dt><dd id="moon-card-found" class="text-white text-[10px] leading-tight"></dd></div>
+            </dl>
+            <p id="moon-card-fact" class="mt-2 text-[11px] leading-snug text-slate-300"></p>
+        </div>
+    </div>
+
     <!-- GENESIS: cinematic formation timeline -->
     <div class="genesis-letterbox" aria-hidden="true"><div></div><div></div></div>
     <div class="fixed inset-x-0 bottom-[calc(var(--genesis-bar)+10px)] z-30 flex justify-center px-3 sm:px-4 pointer-events-none">
@@ -762,6 +784,7 @@
     <script src="js/scene/bodies/saturn-jupiter.js"></script>
     <script src="js/scene/bodies/pulsar-blackhole.js"></script>
     <script src="js/scene/bodies/mars-weather.js"></script>
+    <script src="js/scene/moon-textures.js"></script>
     <script src="js/scene/bodies/moons.js"></script>
     <script src="js/scene/lens.js"></script>
     <script src="js/scene/sky.js"></script>
@@ -769,6 +792,7 @@
     <script src="js/ui/telemetry.js"></script>
     <script src="js/ui/controls.js"></script>
     <script src="js/ui/missions.js"></script>
+    <script src="js/ui/moon-focus.js"></script>
     <script src="js/audio/genesis-sound.js"></script>
     <script src="js/genesis/data.js"></script>
     <script src="js/genesis/particles.js"></script>

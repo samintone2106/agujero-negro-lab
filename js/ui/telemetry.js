@@ -33,6 +33,9 @@ function switchTarget(targetId) {
     updateRelativityTelemetry(state.descentPercent);
     fetchNasaMissionTelemetry(targetId);
     if (typeof syncLensPanel === 'function') syncLensPanel();
+    if (typeof clearMoonFocus === 'function') clearMoonFocus();
+    const surfaceNote = document.getElementById('surface-note');
+    if (surfaceNote) surfaceNote.hidden = true;
 }
 
 function updateRelativityTelemetry(percentage) {

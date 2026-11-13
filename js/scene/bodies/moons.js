@@ -98,28 +98,51 @@ Object.entries(MOONS).forEach(([planetId, list]) => {
         if (m.tex) {
             loadTextureWithFallback([TEX + m.tex], (t) => { mat.map = t; mat.bumpMap = t; mat.color.set(0xffffff); mat.needsUpdate = true; });
         }
-        const geo = m.lumpy ? lumpyGeometry(m.size, m.lumpy) : new THREE.SphereGeometry(m.size, 32, 32);
+        const geo = m.lumpy ? lumpyGeometry(m.size, m.lumpy) : new THREE.SphereGeometry(m.size, 48, 48);
         const mesh = new THREE.Mesh(geo, mat);
         const label = makeMoonLabel(m.name.toUpperCase());
         mesh.add(label);
         orbitPlane.add(mesh);
 
+        mesh.userData.moon = { cfg: m, planetId };
+
         const periodSec = MOON_TIME_SCALE * Math.sqrt(m.period);
-        return { cfg: m, mesh, label, ring, omega: (Math.PI * 2 / periodSec) * (m.retro ? -1 : 1), phase: idx * 2.1 + planetId.length };
+        return { cfg: m, mesh, mat, label, ring, omega: (Math.PI * 2 / periodSec) * (m.retro ? -1 : 1), phase: idx * 2.1 + planetId.length };
     });
-    moonSystems[planetId] = { pivot, moons };
+    moonSystems[planetId] = { pivot, moons, textured: false };
 });
+
+// Las texturas con rasgos se pintan la primera vez que se ve cada sistema (evita bloquear la carga).
+function texturizeMoons(sys) {
+    if (sys.textured) return;
+    sys.textured = true;
+    sys.moons.forEach(m => {
+        if (!m.cfg.look) return;
+        const t = makeMoonTexture(m.cfg.look);
+        m.mat.map = t.map; m.mat.bumpMap = t.bump; m.mat.bumpScale = 0.035; m.mat.color.set(0xffffff);
+        m.mat.needsUpdate = true;
+    });
+}
+
+// Caronte (de Plutón) con su Mordor Macula.
+(() => {
+    const t = makeMoonTexture('charon');
+    charon.material.map = t.map; charon.material.bumpMap = t.bump; charon.material.bumpScale = 0.04;
+    charon.material.color.set(0xffffff); charon.material.needsUpdate = true;
+    charon.userData.moon = { cfg: CHARON_INFO, planetId: 'pluto' };
+})();
 
 function updateMoons(planetId, time) {
     const sys = moonSystems[planetId];
     if (!sys) return;
     sys.pivot.visible = moonsState.visible;
     if (!moonsState.visible) return;
+    texturizeMoons(sys);
     sys.moons.forEach(m => {
         const a = m.phase + time * m.omega;
         m.mesh.position.set(Math.cos(a) * m.cfg.orbit, Math.sin(a) * m.cfg.orbit, 0);
-        // rotación sincrónica: siempre la misma cara hacia el planeta
-        m.mesh.rotation.z = a;
+        // eje de giro perpendicular a la órbita y rotación sincrónica (misma cara hacia el planeta)
+        m.mesh.rotation.set(Math.PI / 2, a + Math.PI, 0);
     });
 }
 

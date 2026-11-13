@@ -82,6 +82,7 @@ function animate() {
     if (!dom.modalLaser.classList.contains('hidden')) renderRedshiftWave();
     updateGenesis(elapsedTime);
 
+    updateMoonFocus(frameDt);
     if (!genesis.active) controls.update();
     if (!renderGenesisFrame(elapsedTime) && !gravLens.render(elapsedTime)) renderer.render(scene, camera);
 }
