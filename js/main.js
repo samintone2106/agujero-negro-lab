@@ -26,9 +26,7 @@ function animate() {
         jupiterSphere.rotation.y = elapsedTime * 0.25;
         magnetoTorus.rotation.z = -elapsedTime * 0.18;
     } else if (t === 'pulsar') {
-        pulsarCrust.rotation.y = elapsedTime * 12.0;
-        pulsarJetAxis.rotation.y = elapsedTime * 8.5;
-        pulsarLensRing.rotation.z = -elapsedTime * 1.5;
+        if (!genesis.active) updatePulsar(frameDt, elapsedTime);
     } else if (t === 'sun') {
         sunMesh.rotation.y = elapsedTime * 0.05;
         sunCorona.rotation.z = -elapsedTime * 0.15;
@@ -55,8 +53,6 @@ function animate() {
             m.scale.set(s, s, 1);
             m.material.opacity = 0.25 + Math.sin(elapsedTime * 0.9 + i) * 0.12;
         });
-    } else if (t === 'pulsar') {
-        pulsarGlow.material.opacity = 0.55 + Math.abs(Math.sin(elapsedTime * 6.0)) * 0.45;
     } else if (t === 'io') {
         ioPlumes.material.opacity = 0.4 + Math.sin(elapsedTime * 1.3) * 0.15;
         ioJupiter.rotation.y = elapsedTime * 0.05;

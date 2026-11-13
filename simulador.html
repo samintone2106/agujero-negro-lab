@@ -477,6 +477,31 @@
         </div>
     </div>
 
+    <!-- PÚLSAR VELA: datos reales, pulsos y glitch -->
+    <div id="pulsar-panel" class="hud-fade fixed left-1/2 -translate-x-1/2 top-[10rem] md:top-[6.25rem] z-20 w-[min(92vw,27rem)]" role="region" aria-label="Púlsar de Vela" hidden>
+        <div class="glass-hud rounded-2xl p-2.5 sm:p-3">
+            <div class="flex items-center justify-between gap-2">
+                <span class="font-mono text-[9px] sm:text-[10px] font-bold tracking-widest text-singularity-cyan">PULSOS RECIBIDOS EN LA TIERRA</span>
+                <div class="flex gap-1">
+                    <button id="pulsar-speed" type="button" class="lens-mode-btn" aria-pressed="false"></button>
+                    <button id="pulsar-glitch" type="button" class="lens-mode-btn">GLITCH</button>
+                </div>
+            </div>
+            <canvas id="pulse-graph" width="400" height="56" class="mt-2 w-full h-12 rounded-lg bg-black/40" aria-hidden="true"></canvas>
+            <dl class="mt-2 grid grid-cols-3 sm:grid-cols-4 gap-x-2 gap-y-1.5 font-mono text-[9px]">
+                <div><dt class="text-slate-400">PERIODO</dt><dd class="text-white font-bold">89.3 ms</dd></div>
+                <div><dt class="text-slate-400">GIRO</dt><dd class="text-white font-bold">11.19 /s</dd></div>
+                <div><dt class="text-slate-400">MASA</dt><dd class="text-white font-bold">~1.4 M☉</dd></div>
+                <div><dt class="text-slate-400">DIÁMETRO</dt><dd class="text-white font-bold">~20 km</dd></div>
+                <div><dt class="text-slate-400">CAMPO B</dt><dd class="text-white font-bold">3.4×10¹² G</dd></div>
+                <div><dt class="text-slate-400">FRENADO</dt><dd class="text-white font-bold">1.25×10⁻¹³ s/s</dd></div>
+                <div><dt class="text-slate-400">DISTANCIA</dt><dd class="text-white font-bold">~950 a. luz</dd></div>
+                <div><dt class="text-slate-400">EDAD</dt><dd class="text-white font-bold">~11,000 años</dd></div>
+            </dl>
+            <p id="pulsar-note" class="hidden lg:block mt-2 text-[10px] leading-snug text-slate-300">Flecha verde: la Tierra. Línea blanca: eje de giro. El haz sigue el eje magnético, inclinado ~70°: cada vez que nos barre llega un pulso. Naranja: líneas de campo abiertas que cruzan el cilindro de luz (amarillo).</p>
+        </div>
+    </div>
+
     <!-- Nota científica de lo que se ve en la superficie -->
     <p id="surface-note" class="hud-fade fixed z-20 left-1/2 -translate-x-1/2 bottom-[13.5rem] md:bottom-[11rem] w-[min(92vw,30rem)] glass-hud rounded-xl px-3 py-2 text-[10px] sm:text-[11px] leading-snug text-amber-100 border-singularity-amber/40 pointer-events-none" hidden></p>
 
@@ -783,6 +808,7 @@
     <script src="js/scene/bodies/solar-system.js"></script>
     <script src="js/scene/bodies/saturn-jupiter.js"></script>
     <script src="js/scene/bodies/pulsar-blackhole.js"></script>
+    <script src="js/scene/bodies/pulsar-physics.js"></script>
     <script src="js/scene/bodies/mars-weather.js"></script>
     <script src="js/scene/moon-textures.js"></script>
     <script src="js/scene/bodies/moons.js"></script>
