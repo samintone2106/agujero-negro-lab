@@ -146,6 +146,16 @@
                     <span class="hidden sm:inline font-mono text-[10px] sm:text-xs font-bold text-purple-300 tracking-wider">GÉNESIS</span>
                 </button>
 
+                <button id="facts-btn" type="button" aria-label="¿Sabías que? Datos curiosos" aria-expanded="false" aria-controls="fact-pop" class="planet-only glass-hud hover:border-amber-300/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5 group border-amber-300/40">
+                    <i data-lucide="lightbulb" class="w-3.5 h-3.5 text-amber-300 group-hover:scale-110 transition-transform"></i>
+                    <span class="hidden xl:inline font-mono text-[10px] sm:text-xs font-bold text-amber-300 tracking-wider">¿SABÍAS QUE?</span>
+                </button>
+
+                <button id="passport-btn" type="button" aria-label="Pasaporte espacial: sellos y logros" aria-expanded="false" aria-controls="passport" class="glass-hud hover:border-emerald-300/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5 group">
+                    <i data-lucide="award" class="w-3.5 h-3.5 text-emerald-300 group-hover:scale-110 transition-transform"></i>
+                    <span class="hidden 2xl:inline font-mono text-[10px] sm:text-xs font-bold text-emerald-300 tracking-wider">PASAPORTE</span>
+                </button>
+
                 <button id="audio-btn" type="button" aria-label="Activar o desactivar sonido" aria-pressed="false" class="glass-hud hover:border-singularity-cyan/80 active:scale-95 transition-all duration-200 rounded-xl p-2 sm:px-2.5 sm:py-1.5 flex items-center gap-1.5">
                     <i id="audio-icon" data-lucide="volume-x" class="w-3.5 h-3.5 text-slate-400"></i>
                     <span id="audio-label" class="hidden 2xl:inline font-mono text-[10px] sm:text-xs font-semibold text-slate-300">SONIDO: APAGADO</span>
@@ -434,6 +444,41 @@
         </div>
     </div>
 
+    <!-- ¿SABÍAS QUE? datos curiosos del astro, se puede dejar abierto y en automático -->
+    <div id="fact-pop" class="fact-pop glass-hud" role="dialog" aria-labelledby="fact-pop-title" hidden>
+        <div class="flex items-center justify-between gap-2">
+            <span id="fact-pop-title" class="font-mono text-[10px] font-bold tracking-widest text-amber-300">¿SABÍAS QUE? · <span id="fact-pop-astro"></span></span>
+            <button id="fact-pop-close" type="button" class="genesis-ctl" aria-label="Cerrar">✕</button>
+        </div>
+        <p id="fact-pop-text" class="fact-pop-text" aria-live="polite"></p>
+        <div class="flex items-center justify-between gap-2 mt-2">
+            <div class="flex items-center gap-1">
+                <button id="fact-prev" type="button" class="genesis-ctl" aria-label="Dato anterior">◀</button>
+                <span id="fact-count" class="font-mono text-[10px] text-slate-400 w-10 text-center"></span>
+                <button id="fact-next" type="button" class="genesis-ctl" aria-label="Siguiente dato">▶</button>
+            </div>
+            <label class="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer"><input id="fact-auto" type="checkbox" class="accent-amber-300"> Cambiar solo</label>
+        </div>
+        <div class="fact-timer"><div id="fact-timer-bar"></div></div>
+    </div>
+
+    <!-- PASAPORTE ESPACIAL -->
+    <div id="passport" class="land-choice" role="dialog" aria-modal="true" aria-labelledby="passport-title" hidden>
+        <div class="land-choice-card glass-hud passport-card">
+            <div class="flex items-center justify-between gap-2">
+                <div>
+                    <div id="passport-title" class="font-mono text-[11px] tracking-widest text-emerald-300 font-bold">PASAPORTE ESPACIAL</div>
+                    <div id="passport-count" class="text-[11px] text-slate-400 mt-0.5"></div>
+                </div>
+                <button id="passport-close" type="button" class="genesis-ctl" aria-label="Cerrar">✕</button>
+            </div>
+            <div class="font-mono text-[9px] tracking-widest text-slate-400 mt-3">SELLOS · MUNDOS PISADOS</div>
+            <ul id="passport-stamps" class="pass-stamps mt-1.5"></ul>
+            <div class="font-mono text-[9px] tracking-widest text-slate-400 mt-3">LOGROS</div>
+            <ul id="passport-ach" class="pass-achs mt-1.5"></ul>
+        </div>
+    </div>
+
     <!-- JUEGO DEL AGUJERO NEGRO -->
     <div id="gg-hud" class="gg-hud" role="region" aria-label="Juego: rozar el horizonte" hidden>
         <div class="glass-hud gg-card">
@@ -499,7 +544,10 @@
     <!-- TOUR: subtítulos -->
     <div id="tour-caption" class="fixed inset-x-0 bottom-10 z-50 flex flex-col items-center gap-3 px-4 pointer-events-none" hidden>
         <p id="tour-text" class="tour-text max-w-2xl text-center text-lg sm:text-2xl font-semibold text-white"></p>
-        <button id="tour-stop" type="button" class="genesis-ctl pointer-events-auto">TERMINAR TOUR</button>
+        <div class="flex gap-2 pointer-events-auto">
+            <button id="tour-voice" type="button" class="genesis-ctl" aria-pressed="true">🔊 NARRADOR</button>
+            <button id="tour-stop" type="button" class="genesis-ctl">TERMINAR TOUR</button>
+        </div>
     </div>
 
     <!-- ORIGEN: Big Bang -->
@@ -992,6 +1040,7 @@
     <script src="js/config/targets.js"></script>
     <script src="js/config/moons.js"></script>
     <script src="js/config/missions.js"></script>
+    <script src="js/config/facts.js"></script>
     <script src="js/state.js"></script>
     <script src="js/audio/engine.js"></script>
     <script src="js/scene/core.js"></script>
@@ -1011,6 +1060,7 @@
     <script src="js/ui/controls.js"></script>
     <script src="js/ui/missions.js"></script>
     <script src="js/ui/moon-focus.js"></script>
+    <script src="js/ui/facts-pop.js"></script>
     <script src="js/surface/sites.js"></script>
     <script src="js/surface/surface.js"></script>
     <script src="js/surface/biomes.js"></script>
@@ -1029,11 +1079,13 @@
     <script src="js/cosmos/orrery.js"></script>
     <script src="js/cosmos/compare.js"></script>
     <script src="js/cosmos/tour.js"></script>
+    <script src="js/cosmos/explore.js"></script>
     <script src="js/surface/descent.js"></script>
     <script src="js/surface/journey.js"></script>
     <script src="js/cosmos/voyage.js"></script>
     <script src="js/surface/egress.js"></script>
     <script src="js/cosmos/nav.js"></script>
+    <script src="js/ui/passport.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>

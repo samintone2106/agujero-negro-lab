@@ -5,14 +5,22 @@
 // valores publicados recientes y se marcan con "~".
 const SIZE_LADDER = [
     { name: 'Luna', km: 1737, tex: 'moon.jpg', text: 'Nuestro satélite: 1/4 del tamaño de la Tierra.' },
+    { name: 'Mercurio', km: 2440, tex: 'mercury.jpg', text: 'El planeta más pequeño: apenas un poco más grande que nuestra Luna.' },
+    { name: 'Marte', km: 3390, tex: 'mars.jpg', text: 'La mitad de ancho que la Tierra, pero con el volcán más alto del Sistema Solar (Olympus Mons, ~22 km).' },
     { name: 'Tierra', km: 6371, tex: 'earth_atmos_2048.jpg', text: 'Nuestro hogar.' },
+    { name: 'Neptuno', km: 24622, tex: 'neptune.jpg', text: 'Casi 4 veces el ancho de la Tierra; tiene los vientos más rápidos medidos (~2,100 km/h).' },
     { name: 'Júpiter', km: 69911, tex: 'jupiter.jpg', text: 'Dentro cabrían unas 1,300 Tierras.' },
+    { name: 'Próxima Centauri', km: 1.07e5, color: 0xff8a5a, text: 'La estrella más cercana al Sol (4.24 años luz) es una enana roja apenas más ancha que Júpiter.' },
     { name: 'Sol', km: 696340, tex: 'sun.jpg', glow: 0xffb040, text: 'Dentro cabrían 1.3 millones de Tierras.' },
     { name: 'Sirio A', km: 1.19e6, color: 0xcfe0ff, text: 'La estrella más brillante del cielo: 1.7 veces el Sol.' },
+    { name: 'Sagitario A* (horizonte)', km: 1.27e7, hole: true, text: 'El agujero negro del centro de nuestra galaxia (4.3 millones de soles): su horizonte cabría dentro de la órbita de Mercurio.' },
     { name: 'Arturo', km: 1.77e7, color: 0xffb070, text: 'Gigante naranja: ~25 veces el Sol.' },
+    { name: 'Rigel', km: 5.5e7, color: 0xb8ccff, approx: true, text: 'Supergigante azul de Orión: ~79 veces el Sol y ~120,000 veces más luminosa.' },
     { name: 'Betelgeuse', km: 5.3e8, color: 0xff6a3a, approx: true, text: 'Supergigante roja: ~760 veces el Sol. Puesta en su lugar llegaría más allá de Marte.' },
     { name: 'UY Scuti', km: 6.3e8, color: 0xff5530, approx: true, text: 'Una de las estrellas más grandes conocidas: ~900 veces el Sol (Gaia, 2023).' },
-    { name: 'M87* (horizonte)', km: 1.9e10, hole: true, text: 'Agujero negro de 6,500 millones de soles: su horizonte es ~30 veces más ancho que UY Scuti, más grande que la órbita de Plutón.' }
+    { name: 'VY Canis Majoris', km: 9.9e8, color: 0xff4a2a, approx: true, text: 'Hipergigante roja de ~1,400 radios solares (estimación incierta): en lugar del Sol llegaría más allá de Júpiter.' },
+    { name: 'M87* (horizonte)', km: 1.9e10, hole: true, text: 'Agujero negro de 6,500 millones de soles: su horizonte es ~30 veces más ancho que UY Scuti, más grande que la órbita de Plutón.' },
+    { name: 'TON 618 (horizonte)', km: 1.95e11, hole: true, approx: true, text: 'Uno de los agujeros negros más masivos medidos (~66,000 millones de soles): su horizonte mediría ~1,300 veces la distancia Tierra–Sol.' }
 ];
 
 const compare = { idx: 0, k: 0, target: 0, built: null };
@@ -56,15 +64,45 @@ function buildCompare() {
 
 const COMPARE_H = 9; // la estrella/astro grande ocupa ~9 unidades de radio en pantalla
 
+// "Cabrían N" por volumen (radio al cubo), en palabras fáciles.
+const fmtCount = (n) => n >= 1e12 ? `${(n / 1e12).toLocaleString('es-CO', { maximumFractionDigits: 1 })} billones`
+    : n >= 1e6 ? `${(n / 1e6).toLocaleString('es-CO', { maximumFractionDigits: 1 })} millones` : Math.round(n).toLocaleString('es-CO');
+const EARTH_KM = 6371;
+
+function compareStep(d) {
+    const t = Math.max(0, Math.min(SIZE_LADDER.length - 1, compare.target + d));
+    if (t === compare.target) return;
+    compare.target = t;
+    audioEngine.playClickTone(600 + t * 25, 0.04);
+    showCompareCard();
+}
+
 function showCompareCard() {
     const b = SIZE_LADDER[compare.target];
-    const ratio = compare.target ? b.km / SIZE_LADDER[compare.target - 1].km : 1;
-    cosmosInfo(`RADIO: ${b.approx ? '~' : ''}${fmtKm(b.km)}${compare.target ? ` · ${ratio.toLocaleString('es-CO', { maximumFractionDigits: 1 })}× ${SIZE_LADDER[compare.target - 1].name}` : ''}`,
-        b.name, b.text, [
-            ['◀ ANTERIOR', () => { if (compare.target > 0) { compare.target--; showCompareCard(); } }],
-            ['SIGUIENTE ▶', () => { if (compare.target < SIZE_LADDER.length - 1) { compare.target++; showCompareCard(); } }]
+    const prev = SIZE_LADDER[compare.target - 1];
+    const ratio = prev ? b.km / prev.km : 1;
+    const earths = Math.pow(b.km / EARTH_KM, 3);
+    const fits = b.km > EARTH_KM * 1.5 ? ` Por volumen cabrían ${fmtCount(earths)} Tierras${prev ? ` y ${fmtCount(Math.pow(ratio, 3))} veces ${prev.name}` : ''}.` : '';
+    cosmosInfo(`${compare.target + 1}/${SIZE_LADDER.length} · RADIO: ${b.approx ? '~' : ''}${fmtKm(b.km)}${prev ? ` · ${ratio.toLocaleString('es-CO', { maximumFractionDigits: 1 })}× ${prev.name}` : ''}`,
+        b.name, b.text + fits, [
+            ['◀ ANTERIOR', () => compareStep(-1)],
+            ['SIGUIENTE ▶', () => compareStep(1)]
         ]);
 }
+// flechas del teclado y rueda del mouse para recorrer la escalera
+document.addEventListener('keydown', (e) => {
+    if (!cosmos.active || cosmos.mode !== 'compare' || e.target.closest('input, textarea, select')) return;
+    if (e.key === 'ArrowRight') compareStep(1);
+    if (e.key === 'ArrowLeft') compareStep(-1);
+});
+let compareWheelT = 0;
+renderer.domElement.addEventListener('wheel', (e) => {
+    if (!cosmos.active || cosmos.mode !== 'compare') return;
+    const now = performance.now();
+    if (now - compareWheelT < 350) return;
+    compareWheelT = now;
+    compareStep(e.deltaY > 0 ? 1 : -1);
+}, { passive: true });
 
 cosmos.views.compare = {
     start() {

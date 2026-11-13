@@ -82,7 +82,8 @@ function buildOrrery() {
             const au = planetPosAU(id, orrery.jd, tmp).length();
             const dE = planetPosAU(id, orrery.jd, sc).distanceTo(planetPosAU('earth', orrery.jd, new THREE.Vector3()));
             cosmosInfo(`${au.toFixed(2)} UA DEL SOL · ${(dE * 149.6).toFixed(0)} MILLONES DE KM DE LA TIERRA`, astroName(id),
-                `Su luz tarda ${(dE * 8.317).toFixed(1)} minutos en llegar a la Tierra en esta fecha.`, [['VISITAR', () => exitCosmos(id)]]);
+                `Su luz tarda ${(dE * 8.317).toFixed(1)} minutos en llegar a la Tierra en esta fecha.`, [['VISITAR', () => exitCosmos(id)],
+                    ...((canLand(id) || (typeof DESCENTS !== 'undefined' && DESCENTS[id])) ? [['VIAJAR (RUTA REAL)', () => { exitCosmos(id); setTimeout(() => startLanding(id, { mode: 'trip' }), 450); }]] : [])]);
         } });
     });
     // cinturón de asteroides (2.1–3.3 UA) y de Kuiper (30–50 UA)

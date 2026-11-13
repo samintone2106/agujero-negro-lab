@@ -203,7 +203,8 @@ cosmos.views.galaxy = {
                 const label = makeMoonLabel(m.name);
                 obj.add(label);
                 root.add(obj);
-                return { obj, label, always: m.name === 'SOL' || m.name === 'SGR A*', select: () => cosmosInfo(m.kicker, m.title, m.text, m.actions || []) };
+                return { obj, label, always: m.name === 'SOL' || m.name === 'SGR A*', select: () => cosmosInfo(m.kicker, m.title, m.text,
+                    [...(m.actions || []), ['VOLAR AHÍ', () => cosmosFlyTo(obj.getWorldPosition(new THREE.Vector3()), m.name === 'SGR A*' ? 120 : 45)]]) };
             });
             cosmos.built.galaxy = { root, gal, markers };
         }
@@ -254,16 +255,21 @@ cosmos.views.neighborhood = {
                     obj.add(makeMoonLabel(f.es.toUpperCase()));
                     root.add(obj);
                     const ly = Math.round(f.star[4] * LY_PER_PC);
-                    markers.push({ obj, select: () => cosmosInfo(`${ly.toLocaleString('es-CO')} AÑOS LUZ · MAGNITUD ${f.star[2]}`, f.es, f.fact) });
+                    markers.push({ obj, select: () => cosmosInfo(`${ly.toLocaleString('es-CO')} AÑOS LUZ · MAGNITUD ${f.star[2]}`, f.es, `${f.fact} ${lightYearText(ly)}`,
+                        [['VOLAR AHÍ', () => cosmosFlyTo(obj.position, Math.max(6, ly * 0.08))], ['VOLVER AL SOL', () => cosmosFlyTo(new THREE.Vector3(), 60)]]) });
                 });
-                cosmos.built.neighborhood = { root, markers, count: near.length };
+                // constelaciones en 3D (js/cosmos/explore.js)
+                const cons = buildConstellations();
+                root.add(cons.group);
+                markers.push(...cons.markers);
+                cosmos.built.neighborhood = { root, markers, count: near.length, cons: cons.group };
             }
             const b = cosmos.built.neighborhood;
             this.markers = b.markers;
             cosmos.scene.add(b.root);
             cosmosInfo('ESCALA: 1,000 AÑOS LUZ', 'Nuestro vecindario',
-                `${b.count.toLocaleString('es-CO')} estrellas reales en su posición 3D (catálogo HYG). Betelgeuse y Rigel parecen vecinas en Orión, pero una está a ~550 años luz y la otra a ~860. Toca un nombre.`,
-                [['VOLVER A LA GALAXIA', () => enterCosmos('galaxy')]]);
+                `${b.count.toLocaleString('es-CO')} estrellas reales en su posición 3D (catálogo HYG). Las líneas azules son constelaciones: desde la Tierra parecen planas, pero sus estrellas están lejísimos unas de otras. Toca un nombre para volar hasta allá.`,
+                [['CONSTELACIONES', () => { b.cons.visible = !b.cons.visible; }], ['VOLVER A LA GALAXIA', () => enterCosmos('galaxy')]]);
         };
         cosmos.camera.position.set(0, 60, 160);
         cosmos.controls.target.set(0, 0, 0);

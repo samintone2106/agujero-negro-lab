@@ -442,6 +442,31 @@ body.surface-mode:not(.descent-mode) .play-hud { display: block; }
     background: rgba(5, 5, 14, 0.55); border: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(10px);
     font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #94a3b8; white-space: nowrap;
 }
+/* Pasaporte */
+.passport-card { width: min(100%, 30rem); max-height: min(86dvh, 40rem); overflow-y: auto; }
+#passport[hidden] { display: none !important; }
+.pass-stamps { display: flex; flex-wrap: wrap; gap: 6px; }
+.pass-stamp { padding: 4px 9px; border-radius: 999px; font: 600 10px 'JetBrains Mono', monospace; color: #64748b; border: 1px dashed rgba(148, 163, 184, .35); }
+.pass-stamp.is-got { color: #052e1c; background: #6ee7b7; border: 1px solid #6ee7b7; }
+.pass-achs { display: grid; gap: 6px; }
+.pass-ach { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 12px; background: rgba(255, 255, 255, .03); border: 1px solid rgba(255, 255, 255, .06); opacity: .55; }
+.pass-ach.is-got { opacity: 1; border-color: rgba(110, 231, 183, .4); background: rgba(110, 231, 183, .07); }
+.pass-ach > span { font-size: 20px; width: 26px; text-align: center; }
+.pass-ach b { display: block; font-size: 12px; color: #fff; }
+.pass-ach small { font-size: 11px; color: #94a3b8; }
+
+/* ¿Sabías que? */
+.fact-pop { position: fixed; z-index: 35; right: 12px; top: 9rem; width: min(calc(100vw - 24px), 21rem); border-radius: 16px; padding: 12px 14px;
+    border-color: rgba(252, 211, 77, .45); animation: landIn .22s cubic-bezier(0.23, 1, 0.32, 1); }
+@media (max-width: 767px) { .fact-pop { top: auto; bottom: 12px; } }
+#fact-pop[hidden] { display: none !important; }
+body.cosmos-mode #fact-pop, body.surface-mode #fact-pop, body.journey-mode #fact-pop, body.gg-mode #fact-pop, body.egress-mode #fact-pop { display: none !important; }
+.fact-pop-text { margin-top: 8px; font-size: 14px; line-height: 1.45; color: #fffbeb; min-height: 3.6em; }
+.fact-pop-text.is-on { animation: vyIn .25s cubic-bezier(0.23, 1, 0.32, 1); }
+.fact-timer { margin-top: 8px; height: 2px; border-radius: 2px; background: rgba(255, 255, 255, .08); overflow: hidden; }
+.fact-timer > div { height: 100%; width: 100%; background: #fcd34d; transform-origin: left; transform: scaleX(0); }
+@media (prefers-reduced-motion: reduce) { .fact-pop, .fact-pop-text.is-on { animation: none; } }
+
 /* Juego del agujero negro */
 .gg-start { width: 100%; min-height: 36px; border-radius: 10px; font: 700 11px 'JetBrains Mono', monospace; letter-spacing: .1em;
     color: #1a0610; background: #fb7185; transition: background .15s, transform .15s cubic-bezier(0.23, 1, 0.32, 1); }
